@@ -108,7 +108,7 @@ export default function Portfolio() {
                                 <p className="text-gray-600 dark:text-gray-300 text-sm mb-6 flex-grow transition-colors duration-300">{item.description}</p>
 
                                 <div className="space-y-2 mb-6">
-                                    {item.metrics.map((metric, i) => (
+                                    {item.metrics?.map((metric: string, i: number) => (
                                         <div key={i} className="flex items-center text-xs text-blue-600 dark:text-blue-300 font-medium transition-colors duration-300">
                                             <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2" />
                                             {metric}
