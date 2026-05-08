@@ -1,34 +1,83 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, PlayCircle } from "lucide-react";
+import { ArrowRight, PlayCircle, FileText, Image as ImageIcon, Video, Eye } from "lucide-react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const portfolioItems = [
+const defaultPortfolioItems = [
     {
         title: "Real Estate Appointment Setter",
         description: "An inbound/outbound hybrid agent that calls Facebook lead form submissions within 5 seconds, asks 4 qualification questions, and books directly to Calendly.",
         metrics: ["34% Conversion Rate", "< 5s Response Time", "Follow Up Boss Integration"],
         color: "from-blue-500/20 to-indigo-500/20",
-        borderColor: "border-blue-500/30"
+        borderColor: "border-blue-500/30",
+        type: "voice"
     },
     {
         title: "Customer Support Router for E-commerce",
         description: "A 24/7 inbound agent that handles 'Where is my order?' queries by checking Shopify via API, and intelligently routes complex issues to human agents.",
         metrics: ["60% Ticket Deflection", "24/7 Availability", "Shopify API Sync"],
         color: "from-purple-500/20 to-pink-500/20",
-        borderColor: "border-purple-500/30"
+        borderColor: "border-purple-500/30",
+        type: "voice"
     },
     {
         title: "Solar Pre-Qualification Outbound AI",
         description: "A high-volume outbound dialer designed to verify homeownership, calculate rough shade estimates, and schedule virtual consultations.",
         metrics: ["400+ Calls/Day", "12% Meeting Set Rate", "GoHighLevel Sync"],
         color: "from-orange-500/20 to-red-500/20",
-        borderColor: "border-orange-500/30"
+        borderColor: "border-orange-500/30",
+        type: "voice"
     }
 ];
 
 export default function Portfolio() {
+    const [portfolioItems, setPortfolioItems] = useState<any[]>(defaultPortfolioItems);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPortfolios = async () => {
+            try {
+                const res = await fetch("/api/portfolio");
+                if (res.ok) {
+                    const { data } = await res.json();
+                    if (data && data.length > 0) {
+                        setPortfolioItems([...defaultPortfolioItems, ...data]);
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch portfolios:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchPortfolios();
+    }, []);
+
+    const getIcon = (type: string) => {
+        switch (type) {
+            case 'image': return <ImageIcon className="w-4 h-4 mr-2" />;
+            case 'video': return <Video className="w-4 h-4 mr-2" />;
+            case 'pdf': return <FileText className="w-4 h-4 mr-2" />;
+            default: return <PlayCircle className="w-4 h-4 mr-2" />;
+        }
+    };
+
+    const getButtonText = (type: string) => {
+        switch (type) {
+            case 'image': return "View Image";
+            case 'video': return "Watch Video";
+            case 'pdf': return "View Document";
+            default: return "Listen to Demo";
+        }
+    };
+
+    const getLinkHref = (item: any) => {
+        return item.type === 'voice' || !item.media_url ? "/playground" : item.media_url;
+    };
+
     return (
         <section className="py-24 bg-gray-50 dark:bg-zinc-950 relative border-t border-black/5 dark:border-white/5 transition-colors duration-300" id="portfolio">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -67,12 +116,23 @@ export default function Portfolio() {
                                     ))}
                                 </div>
 
-                                <Link
-                                    href="/playground"
-                                    className="inline-flex items-center text-sm font-semibold text-black dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300"
-                                >
-                                    <PlayCircle className="w-4 h-4 mr-2" /> Listen to Demo
-                                </Link>
+                                {item.type === 'image' || item.type === 'pdf' || item.type === 'video' ? (
+                                    <a
+                                        href={getLinkHref(item)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center text-sm font-semibold text-black dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300"
+                                    >
+                                        {getIcon(item.type)} {getButtonText(item.type)}
+                                    </a>
+                                ) : (
+                                    <Link
+                                        href={getLinkHref(item)}
+                                        className="inline-flex items-center text-sm font-semibold text-black dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300"
+                                    >
+                                        {getIcon(item.type || 'voice')} {getButtonText(item.type || 'voice')}
+                                    </Link>
+                                )}
                             </div>
                         </motion.div>
                     ))}
