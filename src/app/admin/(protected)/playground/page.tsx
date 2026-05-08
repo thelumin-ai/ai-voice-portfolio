@@ -1,16 +1,32 @@
-export default function PlaygroundPage() {
+import { getPlaygroundApps } from './actions'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link'
+import { PlusCircle } from 'lucide-react'
+import { SortableList } from './SortableList'
+
+export default async function PlaygroundAdminPage() {
+  const { data: apps } = await getPlaygroundApps()
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Playground Manager</h1>
-          <p className="text-muted-foreground mt-2">Manage interactive AI voice agents.</p>
-        </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Playground Manager</h1>
+        <Button asChild>
+          <Link href="/admin/playground/new">
+            <PlusCircle className="mr-2 h-4 w-4" /> Add App
+          </Link>
+        </Button>
       </div>
-      <div className="p-12 text-center border rounded-lg border-dashed dark:border-zinc-800">
-        <h3 className="text-lg font-medium">Coming Soon</h3>
-        <p className="text-muted-foreground">The playground management module is being built in Phase 3.</p>
-      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Manage AI Demos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SortableList initialItems={apps || []} />
+        </CardContent>
+      </Card>
     </div>
   )
 }

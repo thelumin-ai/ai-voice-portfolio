@@ -1,16 +1,24 @@
-export default function BlogPage() {
+import { getBlogPosts } from './actions'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { PenSquare } from 'lucide-react'
+import { BlogList } from './BlogList'
+
+export default async function BlogAdminPage() {
+  const { data: posts } = await getBlogPosts()
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Blog & Insights</h1>
-          <p className="text-muted-foreground mt-2">Manage articles and case studies.</p>
-        </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Blog & Insights</h1>
+        <Button asChild>
+          <Link href="/admin/blog/new">
+            <PenSquare className="mr-2 h-4 w-4" /> Write Post
+          </Link>
+        </Button>
       </div>
-      <div className="p-12 text-center border rounded-lg border-dashed dark:border-zinc-800">
-        <h3 className="text-lg font-medium">Coming Soon</h3>
-        <p className="text-muted-foreground">The blog management module is being built in Phase 3.</p>
-      </div>
+
+      <BlogList initialPosts={posts || []} />
     </div>
   )
 }
