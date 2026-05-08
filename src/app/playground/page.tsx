@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { ChevronRight, ShieldCheck, Zap, Activity, Home, Sun, Headphones, PhoneOutgoing } from "lucide-react";
 import WebRTCVoiceDemo from "@/components/WebRTCVoiceDemo";
+import { getPlaygroundApps } from "@/app/admin/(protected)/playground/actions";
 
 // Add the `vapiAgentId` property to each config. Reads from Vercel environment variables.
-const agentConfigs = [
+const defaultAgentConfigs = [
     { id: "real-estate", vapiAgentId: process.env.NEXT_PUBLIC_VAPI_AGENT_REAL_ESTATE || "087efbdc-3fcf-4329-a12e-819eb64d3882", name: "Real Estate Agent", icon: Home, desc: "Qualifies buyers/sellers and books property walkthroughs." },
     { id: "solar", vapiAgentId: process.env.NEXT_PUBLIC_VAPI_AGENT_SOLAR || "087efbdc-3fcf-4329-a12e-819eb64d3882", name: "Solar Sales Agent", icon: Sun, desc: "Verifies homeownership and estimates utility bills." },
     { id: "support", vapiAgentId: process.env.NEXT_PUBLIC_VAPI_AGENT_SUPPORT || "087efbdc-3fcf-4329-a12e-819eb64d3882", name: "Customer Support", icon: Headphones, desc: "Answers basic business and routing questions." },
@@ -15,13 +16,35 @@ const agentConfigs = [
 ];
 
 export default function Playground() {
-    const [selectedAgent, setSelectedAgent] = useState(agentConfigs[0]);
+    const [agentConfigs, setAgentConfigs] = useState<any[]>(defaultAgentConfigs);
+    const [selectedAgent, setSelectedAgent] = useState(defaultAgentConfigs[0]);
     const [showConsultPopup, setShowConsultPopup] = useState(false);
 
     // In a real application, you'd trigger this popup after a call ends
     // For the demo, we'll simulate it by observing the 'ended' state of the WebRTCDemo
     // OR just showing it after some timeout. For simplicity in this mock, we'll
     // assume the user interacts and we show it eventually, or via a button.
+
+    useEffect(() => {
+        const fetchApps = async () => {
+            const { data } = await getPlaygroundApps();
+            if (data && data.length > 0) {
+                const published = data.filter((a: any) => a.status === 'published');
+                if (published.length > 0) {
+                    const mapped = published.map((a: any, i: number) => ({
+                        id: a.id,
+                        vapiAgentId: a.embed_url || "087efbdc-3fcf-4329-a12e-819eb64d3882",
+                        name: a.title,
+                        icon: defaultAgentConfigs[i % defaultAgentConfigs.length].icon,
+                        desc: a.description
+                    }));
+                    setAgentConfigs(mapped);
+                    setSelectedAgent(mapped[0]);
+                }
+            }
+        };
+        fetchApps();
+    }, []);
 
     return (
         <div className="bg-gray-50 dark:bg-zinc-950 min-h-screen pt-24 pb-16 font-sans transition-colors duration-300">

@@ -55,7 +55,7 @@ export default function Portfolio() {
                         color: colors[index % colors.length].color,
                         borderColor: colors[index % colors.length].borderColor,
                     }));
-                    setPortfolioItems([...defaultPortfolioItems, ...mappedData]);
+                    setPortfolioItems(mappedData.length > 0 ? mappedData : defaultPortfolioItems);
                 }
             } catch (error) {
                 console.error("Failed to fetch portfolios:", error);

@@ -31,7 +31,35 @@ const steps = [
     },
 ];
 
+import { useEffect, useState } from "react";
+import { getProcessSteps } from "@/app/admin/(protected)/process-steps/actions";
+
 export default function HowItWorks() {
+    const [processSteps, setProcessSteps] = useState<any[]>(steps);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchSteps = async () => {
+            try {
+                const data = await getProcessSteps();
+                if (data.data && data.data.length > 0) {
+                    const mappedData = data.data.filter(s => s.status === 'published').map((s, index) => ({
+                        ...s,
+                        // map icon from default steps based on index, or fallback
+                        icon: steps[index]?.icon || Rocket
+                    }));
+                    setProcessSteps(mappedData.length > 0 ? mappedData : steps);
+                }
+            } catch (error) {
+                console.error("Failed to fetch process steps:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchSteps();
+    }, []);
+
     return (
         <section className="py-24 bg-white dark:bg-black relative border-t border-black/5 dark:border-white/5 overflow-hidden transition-colors duration-300" id="how-it-works">
             {/* Background stylistic line */}
@@ -59,7 +87,7 @@ export default function HowItWorks() {
                 </div>
 
                 <div className="max-w-4xl mx-auto">
-                    {steps.map((step, index) => (
+                    {processSteps.map((step, index) => (
                         <motion.div
                             key={step.title}
                             initial={{ opacity: 0, y: 20 }}

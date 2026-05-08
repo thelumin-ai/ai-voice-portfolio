@@ -25,7 +25,42 @@ const categories = [
     }
 ];
 
+import { useEffect, useState } from "react";
+import { getTechStack } from "@/app/admin/(protected)/tech-stack/actions";
+
 export default function TechStack() {
+    const [groupedTech, setGroupedTech] = useState<any[]>(categories);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTech = async () => {
+            try {
+                const { data } = await getTechStack();
+                if (data && data.length > 0) {
+                    const published = data.filter(t => t.status === 'published');
+                    if (published.length > 0) {
+                        // Group by category
+                        const grouped = published.reduce((acc: any, curr: any) => {
+                            if (!acc[curr.category]) {
+                                acc[curr.category] = { name: curr.category, tools: [] };
+                            }
+                            acc[curr.category].tools.push({ name: curr.name, icon_url: curr.icon_url });
+                            return acc;
+                        }, {});
+                        setGroupedTech(Object.values(grouped));
+                        setIsLoading(false);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch tech stack:", error);
+            }
+            setIsLoading(false);
+        };
+
+        fetchTech();
+    }, []);
+
     return (
         <section className="py-24 bg-white dark:bg-zinc-950 relative border-t border-black/5 dark:border-white/5 transition-colors duration-300">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -50,7 +85,7 @@ export default function TechStack() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                    {categories.map((category, index) => (
+                    {groupedTech.map((category, index) => (
                         <motion.div
                             key={category.name}
                             initial={{ opacity: 0, y: 20 }}
@@ -61,12 +96,20 @@ export default function TechStack() {
                         >
                             <h3 className="text-lg font-semibold text-black dark:text-white mb-4 border-b border-black/10 dark:border-white/10 pb-4 transition-colors duration-300">{category.name}</h3>
                             <ul className="space-y-3">
-                                {category.tools.map(tool => (
-                                    <li key={tool} className="flex items-center text-gray-600 dark:text-gray-400 text-sm transition-colors duration-300">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-3" />
-                                        {tool}
-                                    </li>
-                                ))}
+                                {category.tools.map((tool: any) => {
+                                    const toolName = typeof tool === 'string' ? tool : tool.name;
+                                    const toolIcon = typeof tool === 'string' ? null : tool.icon_url;
+                                    return (
+                                        <li key={toolName} className="flex items-center text-gray-600 dark:text-gray-400 text-sm transition-colors duration-300">
+                                            {toolIcon ? (
+                                                <img src={toolIcon} alt={toolName} className="w-4 h-4 mr-3 object-contain" />
+                                            ) : (
+                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-3" />
+                                            )}
+                                            {toolName}
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         </motion.div>
                     ))}

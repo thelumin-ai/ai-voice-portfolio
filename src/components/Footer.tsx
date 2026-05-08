@@ -1,7 +1,14 @@
 import Link from 'next/link';
 import { Github, Linkedin, Twitter } from 'lucide-react';
+import { getSiteSettings } from '@/app/admin/(protected)/settings/actions';
 
-export default function Footer() {
+export default async function Footer() {
+    const { data: settings } = await getSiteSettings();
+    const twitterUrl = settings?.social_links?.twitter;
+    const linkedinUrl = settings?.social_links?.linkedin;
+    const githubUrl = settings?.social_links?.github;
+    const footerText = settings?.footer_text || `© ${new Date().getFullYear()} Abimbola Akinsanmi. All rights reserved.`;
+
     return (
         <footer className="border-t border-black/10 dark:border-white/10 bg-gray-50 dark:bg-black py-12 transition-colors duration-300">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -14,14 +21,25 @@ export default function Footer() {
                             Designing intelligent voice systems that instantly call leads, qualify prospects, and schedule appointments automatically.
                         </p>
                         <div className="flex space-x-4 pt-2">
-                            <a href="https://www.linkedin.com/in/luminous1automation/?skipRedirect=true" target="_blank" rel="noopener noreferrer" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
-                                <span className="sr-only">LinkedIn</span>
-                                <Linkedin className="h-5 w-5" />
-                            </a>
-                            <a href="https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021?ref=project_share" target="_blank" rel="noopener noreferrer" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
-                                <span className="sr-only">Upwork</span>
-                                Upwork
-                            </a>
+                            {twitterUrl && (
+                                <a href={twitterUrl} target="_blank" rel="noopener noreferrer" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+                                    <span className="sr-only">Twitter</span>
+                                    <Twitter className="h-5 w-5" />
+                                </a>
+                            )}
+                            {linkedinUrl && (
+                                <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+                                    <span className="sr-only">LinkedIn</span>
+                                    <Linkedin className="h-5 w-5" />
+                                </a>
+                            )}
+                            {githubUrl && (
+                                <a href={githubUrl} target="_blank" rel="noopener noreferrer" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+                                    <span className="sr-only">GitHub</span>
+                                    <Github className="h-5 w-5" />
+                                </a>
+                            )}
+                            {/* Fallback if no links to show something or just empty */}
                         </div>
                     </div>
 
@@ -59,7 +77,7 @@ export default function Footer() {
                 </div>
                 <div className="mt-12 border-t border-black/10 dark:border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between transition-colors duration-300">
                     <p className="text-sm text-gray-500">
-                        &copy; {new Date().getFullYear()} Abimbola Akinsanmi. All rights reserved.
+                        {footerText}
                     </p>
                 </div>
             </div>
