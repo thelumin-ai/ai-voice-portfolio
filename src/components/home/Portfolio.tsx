@@ -1,36 +1,45 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, PlayCircle, FileText, Image as ImageIcon, Video, Eye } from "lucide-react";
+import { PlayCircle, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { getPortfolioProjects } from "@/app/admin/portfolio/actions";
 
 const defaultPortfolioItems = [
     {
         title: "Real Estate Appointment Setter",
-        description: "An inbound/outbound hybrid agent that calls Facebook lead form submissions within 5 seconds, asks 4 qualification questions, and books directly to Calendly.",
-        metrics: ["34% Conversion Rate", "< 5s Response Time", "Follow Up Boss Integration"],
+        short_description: "An inbound/outbound hybrid agent that calls Facebook lead form submissions within 5 seconds, asks 4 qualification questions, and books directly to Calendly.",
+        metrics: [{ value: "34%", label: "Conversion Rate" }, { value: "< 5s", label: "Response Time" }],
         color: "from-blue-500/20 to-indigo-500/20",
         borderColor: "border-blue-500/30",
-        type: "voice"
+        demo_link: "/playground"
     },
     {
         title: "Customer Support Router for E-commerce",
-        description: "A 24/7 inbound agent that handles 'Where is my order?' queries by checking Shopify via API, and intelligently routes complex issues to human agents.",
-        metrics: ["60% Ticket Deflection", "24/7 Availability", "Shopify API Sync"],
+        short_description: "A 24/7 inbound agent that handles 'Where is my order?' queries by checking Shopify via API, and intelligently routes complex issues to human agents.",
+        metrics: [{ value: "60%", label: "Ticket Deflection" }, { value: "24/7", label: "Availability" }],
         color: "from-purple-500/20 to-pink-500/20",
         borderColor: "border-purple-500/30",
-        type: "voice"
+        demo_link: "/playground"
     },
     {
         title: "Solar Pre-Qualification Outbound AI",
-        description: "A high-volume outbound dialer designed to verify homeownership, calculate rough shade estimates, and schedule virtual consultations.",
-        metrics: ["400+ Calls/Day", "12% Meeting Set Rate", "GoHighLevel Sync"],
+        short_description: "A high-volume outbound dialer designed to verify homeownership, calculate rough shade estimates, and schedule virtual consultations.",
+        metrics: [{ value: "400+", label: "Calls/Day" }, { value: "12%", label: "Meeting Set Rate" }],
         color: "from-orange-500/20 to-red-500/20",
         borderColor: "border-orange-500/30",
-        type: "voice"
+        demo_link: "/playground"
     }
 ];
+
+const colors = [
+    { color: "from-blue-500/20 to-indigo-500/20", borderColor: "border-blue-500/30" },
+    { color: "from-purple-500/20 to-pink-500/20", borderColor: "border-purple-500/30" },
+    { color: "from-orange-500/20 to-red-500/20", borderColor: "border-orange-500/30" },
+    { color: "from-green-500/20 to-emerald-500/20", borderColor: "border-green-500/30" },
+    { color: "from-pink-500/20 to-rose-500/20", borderColor: "border-pink-500/30" },
+]
 
 export default function Portfolio() {
     const [portfolioItems, setPortfolioItems] = useState<any[]>(defaultPortfolioItems);
@@ -39,12 +48,14 @@ export default function Portfolio() {
     useEffect(() => {
         const fetchPortfolios = async () => {
             try {
-                const res = await fetch("/api/portfolio");
-                if (res.ok) {
-                    const { data } = await res.json();
-                    if (data && data.length > 0) {
-                        setPortfolioItems([...defaultPortfolioItems, ...data]);
-                    }
+                const data = await getPortfolioProjects();
+                if (data && data.length > 0) {
+                    const mappedData = data.filter(p => p.status === 'published').map((p, index) => ({
+                        ...p,
+                        color: colors[index % colors.length].color,
+                        borderColor: colors[index % colors.length].borderColor,
+                    }));
+                    setPortfolioItems([...defaultPortfolioItems, ...mappedData]);
                 }
             } catch (error) {
                 console.error("Failed to fetch portfolios:", error);
@@ -55,28 +66,6 @@ export default function Portfolio() {
 
         fetchPortfolios();
     }, []);
-
-    const getIcon = (type: string) => {
-        switch (type) {
-            case 'image': return <ImageIcon className="w-4 h-4 mr-2" />;
-            case 'video': return <Video className="w-4 h-4 mr-2" />;
-            case 'pdf': return <FileText className="w-4 h-4 mr-2" />;
-            default: return <PlayCircle className="w-4 h-4 mr-2" />;
-        }
-    };
-
-    const getButtonText = (type: string) => {
-        switch (type) {
-            case 'image': return "View Image";
-            case 'video': return "Watch Video";
-            case 'pdf': return "View Document";
-            default: return "Listen to Demo";
-        }
-    };
-
-    const getLinkHref = (item: any) => {
-        return item.type === 'voice' || !item.media_url ? "/playground" : item.media_url;
-    };
 
     return (
         <section className="py-24 bg-gray-50 dark:bg-zinc-950 relative border-t border-black/5 dark:border-white/5 transition-colors duration-300" id="portfolio">
@@ -98,41 +87,39 @@ export default function Portfolio() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: index * 0.1 }}
-                            className={`p-8 rounded-2xl bg-gradient-to-br ${item.color} border border-black/5 dark:${item.borderColor} backdrop-blur-md relative overflow-hidden group shadow-sm dark:shadow-none bg-white dark:bg-transparent transition-colors duration-300`}
+                            className={`p-8 rounded-2xl bg-gradient-to-br ${item.color} border border-black/5 dark:${item.borderColor} backdrop-blur-md relative overflow-hidden group shadow-sm dark:shadow-none bg-white dark:bg-transparent transition-colors duration-300 flex flex-col`}
                         >
-                            {/* Hover effect glow */}
                             <div className="absolute inset-0 bg-black/5 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                             <div className="relative z-10 flex flex-col h-full">
+                                {item.cover_image_url && (
+                                    <img src={item.cover_image_url} alt={item.title} className="w-full h-40 object-cover rounded-lg mb-4" />
+                                )}
+                                
+                                {item.industry_tag && (
+                                    <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-2 uppercase tracking-wider">
+                                        {item.industry_tag}
+                                    </span>
+                                )}
+                                
                                 <h3 className="text-xl font-bold text-black dark:text-white mb-3 transition-colors duration-300">{item.title}</h3>
-                                <p className="text-gray-600 dark:text-gray-300 text-sm mb-6 flex-grow transition-colors duration-300">{item.description}</p>
+                                <p className="text-gray-600 dark:text-gray-300 text-sm mb-6 flex-grow transition-colors duration-300">{item.short_description}</p>
 
                                 <div className="space-y-2 mb-6">
-                                    {item.metrics?.map((metric: string, i: number) => (
+                                    {item.metrics?.map((metric: any, i: number) => (
                                         <div key={i} className="flex items-center text-xs text-blue-600 dark:text-blue-300 font-medium transition-colors duration-300">
                                             <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2" />
-                                            {metric}
+                                            {metric.value} {metric.label}
                                         </div>
                                     ))}
                                 </div>
 
-                                {item.type === 'image' || item.type === 'pdf' || item.type === 'video' ? (
-                                    <a
-                                        href={getLinkHref(item)}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center text-sm font-semibold text-black dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300"
-                                    >
-                                        {getIcon(item.type)} {getButtonText(item.type)}
-                                    </a>
-                                ) : (
-                                    <Link
-                                        href={getLinkHref(item)}
-                                        className="inline-flex items-center text-sm font-semibold text-black dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300"
-                                    >
-                                        {getIcon(item.type || 'voice')} {getButtonText(item.type || 'voice')}
-                                    </Link>
-                                )}
+                                <Link
+                                    href={item.demo_link || "/playground"}
+                                    className="inline-flex items-center text-sm font-semibold text-black dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 mt-auto"
+                                >
+                                    <PlayCircle className="w-4 h-4 mr-2" /> View Project
+                                </Link>
                             </div>
                         </motion.div>
                     ))}
