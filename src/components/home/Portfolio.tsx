@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { PlayCircle, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getPortfolioProjects } from "@/app/admin/portfolio/actions";
+import { getPortfolioProjects } from "@/app/admin/(protected)/portfolio/actions";
 
 const defaultPortfolioItems = [
     {
