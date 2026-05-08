@@ -35,6 +35,7 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
       case_study_body: '',
       metrics: [],
       integrations: [],
+      media_files: [],
       demo_link: '',
       cover_image_url: '',
       status: 'published',
@@ -49,9 +50,54 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
 
   const { fields: integrationFields, append: appendIntegration, remove: removeIntegration } = useFieldArray({
     control: form.control,
-    // @ts-ignore - useFieldArray typing for array of primitives is tricky, we'll map it to an object temporarily
-    name: "integrations", 
+    name: "integrations" as never, 
   })
+
+  const { fields: mediaFields, append: appendMedia, remove: removeMedia } = useFieldArray({
+    control: form.control,
+    name: "media_files",
+  })
+
+  const [uploadingMedia, setUploadingMedia] = useState(false)
+
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setUploadingMedia(true)
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        const fileExt = file.name.split('.').pop()
+        const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`
+        const filePath = `portfolio_files/${fileName}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('portfolio_media')
+          .upload(filePath, file)
+
+        if (uploadError) throw uploadError
+
+        const { data } = supabase.storage.from('portfolio_media').getPublicUrl(filePath)
+        
+        let type: 'image' | 'video' | 'audio' | 'json' = 'image'
+        if (file.type.startsWith('video/')) type = 'video'
+        else if (file.type.startsWith('audio/')) type = 'audio'
+        else if (file.type === 'application/json' || fileExt === 'json') type = 'json'
+
+        appendMedia({
+          url: data.publicUrl,
+          type,
+          name: file.name
+        })
+      }
+    } catch (error: any) {
+      alert(`Error uploading media: ${error.message}`)
+    } finally {
+      setUploadingMedia(false)
+      if (e.target) e.target.value = ''
+    }
+  }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -176,6 +222,63 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
               <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
             </label>
             <input type="hidden" {...form.register('cover_image_url')} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Additional Media Files (Images, Video, Audio, JSON)</label>
+            <label className="cursor-pointer flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50">
+              <UploadCloud className="w-4 h-4 mr-2" />
+              <span>{uploadingMedia ? 'Uploading...' : 'Add Files'}</span>
+              <input type="file" className="hidden" multiple accept="image/*,video/*,audio/*,.json" onChange={handleMediaUpload} disabled={uploadingMedia} />
+            </label>
+          </div>
+          
+          <div className="space-y-3">
+            {mediaFields.map((field, index) => (
+              <div key={field.id} className="flex gap-4 items-center p-3 border rounded-md dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/50">
+                <div className="flex-1 flex gap-4 items-center">
+                  {form.watch(`media_files.${index}.type`) === 'image' && (
+                    <img src={form.watch(`media_files.${index}.url`)} alt="preview" className="w-12 h-12 object-cover rounded" />
+                  )}
+                  {form.watch(`media_files.${index}.type`) === 'video' && <div className="w-12 h-12 flex items-center justify-center bg-gray-200 dark:bg-zinc-700 rounded text-xs font-bold">VID</div>}
+                  {form.watch(`media_files.${index}.type`) === 'audio' && <div className="w-12 h-12 flex items-center justify-center bg-gray-200 dark:bg-zinc-700 rounded text-xs font-bold">AUD</div>}
+                  {form.watch(`media_files.${index}.type`) === 'json' && <div className="w-12 h-12 flex items-center justify-center bg-gray-200 dark:bg-zinc-700 rounded text-xs font-bold">JSON</div>}
+                  
+                  <div className="flex-1 space-y-2">
+                    <input
+                      {...form.register(`media_files.${index}.name`)}
+                      placeholder="File name or description"
+                      className="w-full text-sm px-2 py-1 border rounded bg-white dark:bg-zinc-900 dark:border-zinc-600"
+                    />
+                    <div className="text-xs text-gray-500 truncate w-64 md:w-96" title={form.watch(`media_files.${index}.url`)}>
+                      {form.watch(`media_files.${index}.url`)}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                  <select
+                    {...form.register(`media_files.${index}.type`)}
+                    className="text-xs px-2 py-1 border rounded dark:bg-zinc-900 dark:border-zinc-700"
+                  >
+                    <option value="image">Image</option>
+                    <option value="video">Video</option>
+                    <option value="audio">Audio</option>
+                    <option value="json">JSON</option>
+                  </select>
+                  <Button type="button" variant="destructive" size="sm" onClick={() => removeMedia(index)}>
+                    <Trash2 className="w-3 h-3 mr-1" /> Remove
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {mediaFields.length === 0 && (
+              <p className="text-sm text-gray-500 dark:text-zinc-400 text-center py-4">No additional media files added yet.</p>
+            )}
           </div>
         </CardContent>
       </Card>
