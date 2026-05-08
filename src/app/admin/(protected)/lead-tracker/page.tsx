@@ -1,16 +1,17 @@
-export default function LeadTrackerPage() {
+import { getLeads } from './actions'
+import { LeadList } from './LeadList'
+
+export default async function LeadTrackerAdminPage() {
+  const { data: leads } = await getLeads()
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Lead Tracker</h1>
-          <p className="text-muted-foreground mt-2">View and manage inbound leads.</p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Lead Tracker</h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">Manage and track inbound leads from your website.</p>
       </div>
-      <div className="p-12 text-center border rounded-lg border-dashed dark:border-zinc-800">
-        <h3 className="text-lg font-medium">Coming Soon</h3>
-        <p className="text-muted-foreground">The lead CRM is being built in Phase 3.</p>
-      </div>
+
+      <LeadList initialLeads={leads || []} />
     </div>
   )
 }
