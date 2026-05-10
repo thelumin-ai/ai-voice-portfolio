@@ -14,6 +14,7 @@ interface Props {
     title: string
     industry_tag: string
     status: string
+    cover_image_url: string
   }
 }
 
@@ -43,45 +44,64 @@ export function SortableItem({ id, item }: Props) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center justify-between p-4 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 rounded-lg shadow-sm ${
-        isDragging ? 'opacity-50 ring-2 ring-blue-500' : ''
+      className={`group relative overflow-hidden bg-zinc-900/40 rounded-2xl border border-zinc-800/50 backdrop-blur-sm transition-all duration-300 ${
+        isDragging ? 'opacity-70 scale-105 shadow-2xl shadow-blue-500/20 ring-2 ring-blue-500 z-50' : 'hover:border-zinc-700/50 hover:shadow-lg hover:shadow-black/50'
       }`}
     >
-      <div className="flex items-center gap-4">
-        <button
-          className="cursor-grab p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical className="h-5 w-5" />
-        </button>
-        <div>
-          <h3 className="font-medium text-gray-900 dark:text-white">{item.title}</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{item.industry_tag}</p>
+      <div className="flex flex-col sm:flex-row h-full">
+        {/* Image Section */}
+        <div className="relative w-full sm:w-48 h-32 sm:h-full bg-zinc-950 flex-shrink-0">
+           {item.cover_image_url ? (
+             <img src={item.cover_image_url} alt={item.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
+           ) : (
+             <div className="w-full h-full flex items-center justify-center bg-zinc-800/50 text-zinc-500">No Image</div>
+           )}
+           <div className="absolute inset-0 bg-gradient-to-r from-transparent to-zinc-900/90 sm:to-zinc-900/40" />
         </div>
-      </div>
-      
-      <div className="flex items-center gap-4">
-        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          item.status === 'published' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-          item.status === 'draft' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
-          'bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-gray-400'
-        }`}>
-          {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-        </span>
-        
-        <Link
-          href={`/admin/portfolio/${id}`}
-          className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
-        >
-          <Edit2 className="h-4 w-4" />
-        </Link>
-        <button
-          onClick={handleDelete}
-          className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+
+        {/* Content Section */}
+        <div className="flex-1 p-5 flex flex-col justify-center">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="font-bold text-lg text-white group-hover:text-blue-400 transition-colors">{item.title}</h3>
+              <p className="text-sm font-medium text-zinc-400 mt-1 uppercase tracking-wider">{item.industry_tag}</p>
+            </div>
+            <span className={`px-2.5 py-1 text-xs font-bold rounded-md border ${
+              item.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+              item.status === 'draft' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+              'bg-zinc-800 text-zinc-400 border-zinc-700'
+            }`}>
+              {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+            </span>
+          </div>
+        </div>
+
+        {/* Actions Section */}
+        <div className="flex sm:flex-col items-center justify-between sm:justify-center gap-2 p-4 sm:p-5 bg-zinc-950/30 sm:border-l border-zinc-800/50">
+          <button
+            className="cursor-grab p-2.5 rounded-lg bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all active:cursor-grabbing"
+            {...attributes}
+            {...listeners}
+            title="Drag to reorder"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+          
+          <div className="flex sm:flex-col items-center gap-2">
+            <Link
+              href={`/admin/portfolio/${id}`}
+              className="p-2.5 rounded-lg bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-blue-600 transition-all"
+            >
+              <Edit2 className="h-4 w-4" />
+            </Link>
+            <button
+              onClick={handleDelete}
+              className="p-2.5 rounded-lg bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-red-600 transition-all"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )

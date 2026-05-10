@@ -25,6 +25,7 @@ interface PortfolioItem {
   industry_tag: string
   status: string
   display_order: number
+  cover_image_url: string
 }
 
 export function SortableList({ initialItems }: { initialItems: PortfolioItem[] }) {
