@@ -44,41 +44,54 @@ export function SortableItem({ id, item }: { id: string; item: PlaygroundItem })
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center justify-between p-4 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg shadow-sm"
+      className={`group relative p-5 bg-black border border-zinc-800 rounded-xl shadow-sm transition-all duration-300 overflow-hidden ${
+        isDragging ? 'shadow-2xl shadow-green-500/10 ring-1 ring-green-500/50 z-50 scale-[1.02]' : 'hover:border-zinc-700 hover:bg-zinc-950 hover:shadow-lg hover:shadow-black'
+      }`}
     >
-      <div className="flex items-center gap-4 flex-1">
-        <div
-          {...attributes}
-          {...listeners}
-          className="cursor-grab hover:bg-gray-100 dark:hover:bg-zinc-800 p-2 rounded"
-        >
-          <GripVertical className="h-5 w-5 text-gray-500" />
+      <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-5 flex-1">
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab p-2 rounded-lg text-zinc-600 hover:text-white hover:bg-zinc-800 transition-all flex-shrink-0"
+            title="Drag to reorder"
+          >
+            <GripVertical className="h-5 w-5" />
+          </div>
+          
+          <div className="w-12 h-12 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-center p-2 shadow-inner flex-shrink-0 relative">
+            <span className="text-zinc-500 font-mono text-xs font-bold">&lt;/&gt;</span>
+            <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-black ${
+              item.status === 'published' ? 'bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]' :
+              item.status === 'draft' ? 'bg-yellow-500' : 'bg-zinc-500'
+            }`} />
+          </div>
+          
+          <div>
+            <h3 className="text-lg font-bold text-white font-mono group-hover:text-green-400 transition-colors tracking-tight">{item.title}</h3>
+            <p className="text-xs font-mono text-zinc-500 mt-1 uppercase tracking-widest">{item.category}</p>
+          </div>
         </div>
-        
-        <div>
-          <h3 className="font-medium text-gray-900 dark:text-gray-100">{item.title}</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{item.category}</p>
-        </div>
-      </div>
 
-      <div className="flex items-center gap-4">
-        <span className={`px-2 py-1 text-xs rounded-full ${
-          item.status === 'published' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-          item.status === 'draft' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
-          'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
-        }`}>
-          {item.status}
-        </span>
-        
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href={`/admin/playground/${id}`}>
-              <Edit className="h-4 w-4" />
-            </Link>
-          </Button>
-          <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50" onClick={handleDelete}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center gap-4 w-full sm:w-auto justify-end border-t sm:border-t-0 border-zinc-800/50 pt-4 sm:pt-0">
+          <span className={`px-2 py-1 text-[10px] font-mono uppercase tracking-wider rounded-md border ${
+            item.status === 'published' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+            item.status === 'draft' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+            'bg-zinc-800 text-zinc-400 border-zinc-700'
+          }`}>
+            SYS.{item.status}
+          </span>
+          
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" asChild className="bg-zinc-900 text-zinc-400 hover:text-white hover:bg-green-600/80 border border-zinc-800 hover:border-transparent transition-all rounded-lg font-mono">
+              <Link href={`/admin/playground/${id}`}>
+                <Edit className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button variant="ghost" size="icon" className="bg-zinc-900 text-zinc-400 hover:text-white hover:bg-red-600/80 border border-zinc-800 hover:border-transparent transition-all rounded-lg" onClick={handleDelete}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

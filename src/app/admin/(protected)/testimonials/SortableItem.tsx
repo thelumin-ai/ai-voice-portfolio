@@ -43,43 +43,57 @@ export function SortableItem({ id, item }: { id: string; item: TestimonialItem }
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center justify-between p-4 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg shadow-sm"
+      className={`group relative p-6 bg-zinc-900/60 border border-zinc-800 rounded-2xl shadow-sm backdrop-blur-sm transition-all duration-300 overflow-hidden ${
+        isDragging ? 'shadow-2xl shadow-blue-500/20 ring-2 ring-blue-500 z-50 scale-[1.02]' : 'hover:border-zinc-600/50 hover:bg-zinc-800/80'
+      }`}
     >
-      <div className="flex items-center gap-4 flex-1">
-        <div
-          {...attributes}
-          {...listeners}
-          className="cursor-grab hover:bg-gray-100 dark:hover:bg-zinc-800 p-2 rounded"
-        >
-          <GripVertical className="h-5 w-5 text-gray-500" />
-        </div>
-        
-        <div>
-          <h3 className="font-medium text-gray-900 dark:text-gray-100">
-            {item.client_name}
-            {item.company && <span className="text-gray-500 dark:text-gray-400 font-normal"> - {item.company}</span>}
-          </h3>
-        </div>
+      {/* Quote Watermark */}
+      <div className="absolute -top-4 -right-4 text-9xl text-zinc-800/30 font-serif leading-none select-none pointer-events-none group-hover:text-blue-900/20 transition-colors duration-500">
+        &ldquo;
       </div>
 
-      <div className="flex items-center gap-4">
-        <span className={`px-2 py-1 text-xs rounded-full ${
-          item.status === 'published' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-          item.status === 'draft' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
-          'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
-        }`}>
-          {item.status}
-        </span>
-        
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href={`/admin/testimonials/${id}`}>
-              <Edit className="h-4 w-4" />
-            </Link>
-          </Button>
-          <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50" onClick={handleDelete}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
+      <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-5 w-full sm:w-auto">
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab p-2 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-700 transition-all flex-shrink-0"
+            title="Drag to reorder"
+          >
+            <GripVertical className="h-5 w-5" />
+          </div>
+          
+          <div>
+            <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
+              {item.client_name}
+            </h3>
+            {item.company && (
+              <p className="text-sm font-medium text-zinc-400 mt-0.5 tracking-wide uppercase">
+                {item.company}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 w-full sm:w-auto justify-end border-t sm:border-t-0 border-zinc-800/50 pt-4 sm:pt-0">
+          <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md border ${
+            item.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+            item.status === 'draft' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+            'bg-zinc-800 text-zinc-400 border-zinc-700'
+          }`}>
+            {item.status}
+          </span>
+          
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" asChild className="bg-zinc-800 text-zinc-300 hover:text-white hover:bg-blue-600 border border-zinc-700 hover:border-transparent transition-all rounded-lg">
+              <Link href={`/admin/testimonials/${id}`}>
+                <Edit className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button variant="ghost" size="icon" className="bg-zinc-800 text-zinc-300 hover:text-white hover:bg-red-600 border border-zinc-700 hover:border-transparent transition-all rounded-lg" onClick={handleDelete}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

@@ -24,42 +24,43 @@ export default async function UseCasesPage() {
 
       <div className="bg-zinc-900/40 rounded-2xl border border-zinc-800/50 overflow-hidden backdrop-blur-sm">
         {usecases && usecases.length > 0 ? (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-zinc-800/50 bg-zinc-900/50">
-                <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Industry Name</th>
-                <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider">URL Slug</th>
-                <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Status</th>
-                <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/50">
-              {usecases.map((usecase) => (
-                <tr key={usecase.id} className="hover:bg-zinc-800/30 transition-colors group">
-                  <td className="py-4 px-6">
-                    <span className="font-semibold text-zinc-200 group-hover:text-white transition-colors">{usecase.name}</span>
-                  </td>
-                  <td className="py-4 px-6 text-sm text-zinc-500 font-mono">
-                    /use-cases/{usecase.industry_slug}
-                  </td>
-                  <td className="py-4 px-6">
-                    <span className={`px-2.5 py-1 text-xs font-medium rounded-md border ${
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+            {usecases.map((usecase) => (
+              <div key={usecase.id} className="group relative bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden hover:border-blue-500/50 transition-all duration-300">
+                {/* Abstract Glow Background */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/20 transition-all duration-500" />
+                
+                <div className="p-6 relative z-10 flex flex-col h-full">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-zinc-800/80 border border-zinc-700 flex items-center justify-center shadow-inner group-hover:scale-110 group-hover:bg-blue-900/30 group-hover:border-blue-700/50 transition-all duration-300">
+                      <Layers className="w-6 h-6 text-zinc-400 group-hover:text-blue-400" />
+                    </div>
+                    <span className={`px-2.5 py-1 text-xs font-bold rounded-md border backdrop-blur-md ${
                       usecase.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
                       usecase.status === 'draft' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
-                      'bg-zinc-800 text-zinc-400 border-zinc-700'
+                      'bg-zinc-800/80 text-zinc-400 border-zinc-700'
                     }`}>
-                      {usecase.status}
+                      {usecase.status.toUpperCase()}
                     </span>
-                  </td>
-                  <td className="py-4 px-6 text-right">
+                  </div>
+
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">{usecase.name}</h3>
+                    <p className="text-sm font-mono text-zinc-500 mb-6 truncate" title={`/use-cases/${usecase.industry_slug}`}>/use-cases/{usecase.industry_slug}</p>
+                  </div>
+
+                  <div className="pt-4 border-t border-zinc-800/50 flex justify-between items-center opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="text-xs text-zinc-500 font-medium tracking-wider uppercase">Manage Configurations</span>
                     <Link href={`/admin/use-cases/${usecase.id}`}>
-                      <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent hover:border-zinc-700 transition-all"><Pencil className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="sm" className="bg-zinc-800 text-zinc-300 hover:text-white hover:bg-blue-600 border border-zinc-700 hover:border-transparent transition-all rounded-lg">
+                        <Pencil className="w-4 h-4 mr-2" /> Edit
+                      </Button>
                     </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="p-12 text-center flex flex-col items-center justify-center">
             <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">

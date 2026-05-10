@@ -44,43 +44,49 @@ export function SortableItem({ id, item }: { id: string; item: ProcessStepItem }
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center justify-between p-4 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg shadow-sm"
+      className={`group relative flex items-center justify-between p-5 bg-zinc-900/60 border border-zinc-800 rounded-2xl shadow-sm backdrop-blur-sm transition-all duration-300 ${
+        isDragging ? 'shadow-2xl shadow-blue-500/20 ring-2 ring-blue-500 z-50 scale-[1.02]' : 'hover:border-blue-500/50 hover:bg-zinc-800/80'
+      }`}
     >
-      <div className="flex items-center gap-4 flex-1">
+      <div className="flex items-center gap-6 flex-1">
         <div
           {...attributes}
           {...listeners}
-          className="cursor-grab hover:bg-gray-100 dark:hover:bg-zinc-800 p-2 rounded"
+          className="cursor-grab p-2 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-700 transition-all"
+          title="Drag to reorder"
         >
-          <GripVertical className="h-5 w-5 text-gray-500" />
+          <GripVertical className="h-5 w-5" />
         </div>
         
-        <div className="w-8 h-8 flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-full font-bold">
-          {item.display_order + 1}
+        <div className="relative">
+            <div className="absolute inset-0 bg-blue-500 rounded-full blur-md opacity-20 group-hover:opacity-60 transition-opacity" />
+            <div className="relative w-12 h-12 flex items-center justify-center bg-zinc-950 border border-blue-500/30 text-blue-400 rounded-full font-black text-lg shadow-inner">
+            {item.display_order + 1}
+            </div>
         </div>
         
         <div className="flex-1 pr-4">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100">{item.title}</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{item.description}</p>
+          <h3 className="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">{item.title}</h3>
+          <p className="text-sm text-zinc-400 line-clamp-1">{item.description}</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <span className={`px-2 py-1 text-xs rounded-full ${
-          item.status === 'published' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-          item.status === 'draft' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
-          'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+      <div className="flex flex-col sm:flex-row items-center gap-4 pl-4 border-l border-zinc-800">
+        <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md border ${
+          item.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+          item.status === 'draft' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+          'bg-zinc-800 text-zinc-400 border-zinc-700'
         }`}>
           {item.status}
         </span>
         
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" asChild>
+          <Button variant="ghost" size="icon" asChild className="bg-zinc-800 text-zinc-300 hover:text-white hover:bg-blue-600 border border-zinc-700 hover:border-transparent transition-all rounded-lg">
             <Link href={`/admin/process-steps/${id}`}>
               <Edit className="h-4 w-4" />
             </Link>
           </Button>
-          <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50" onClick={handleDelete}>
+          <Button variant="ghost" size="icon" className="bg-zinc-800 text-zinc-300 hover:text-white hover:bg-red-600 border border-zinc-700 hover:border-transparent transition-all rounded-lg" onClick={handleDelete}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
