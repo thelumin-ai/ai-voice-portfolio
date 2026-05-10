@@ -5,7 +5,7 @@ export const serviceSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   icon_name: z.string().min(1, 'Icon name is required'),
   status: z.enum(['published', 'draft', 'archived']),
-  display_order: z.number().int().default(0),
+  display_order: z.number().int().optional(),
 })
 
 export type ServiceFormValues = z.infer<typeof serviceSchema>

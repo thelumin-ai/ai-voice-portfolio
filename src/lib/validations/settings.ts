@@ -9,7 +9,7 @@ export const settingsSchema = z.object({
     github: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   }),
   profile_image_url: z.string().optional().or(z.literal("")),
-  consultation_provider: z.enum(['upwork', 'fiverr', 'calendly']).default('upwork'),
+  consultation_provider: z.enum(['upwork', 'fiverr', 'calendly']).optional(),
   consultation_link_upwork: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   consultation_link_fiverr: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   consultation_link_calendly: z.string().url("Must be a valid URL").optional().or(z.literal("")),

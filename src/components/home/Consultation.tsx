@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Calendar } from "lucide-react";
+import { Calendar, ArrowRight } from "lucide-react";
 
 import { useState } from "react";
 

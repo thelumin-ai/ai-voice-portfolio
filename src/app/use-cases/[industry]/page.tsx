@@ -1,5 +1,7 @@
 import { getUseCaseBySlug } from "@/app/admin/(protected)/use-cases/actions";
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ChevronRight, CheckCircle2 } from "lucide-react";
 
 export default async function IndustryPage({ params }: { params: Promise<{ industry: string }> }) {
     const { industry } = await params;
