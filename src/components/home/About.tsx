@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 
-export default function About() {
+export default function About({ profileImageUrl }: { profileImageUrl?: string }) {
     return (
         <section className="py-24 bg-gray-50 dark:bg-black relative border-t border-black/5 dark:border-white/5 overflow-hidden transition-colors duration-300" id="about">
             <div className="absolute top-1/2 right-0 w-96 h-96 bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
@@ -23,18 +23,18 @@ export default function About() {
                             <div className="absolute -bottom-4 -right-4 w-24 h-24 border-b-2 border-r-2 border-blue-500/30 rounded-br-xl" />
 
                             <div className="aspect-[4/5] bg-gray-200 dark:bg-zinc-900 rounded-2xl border border-black/10 dark:border-white/10 overflow-hidden relative transition-colors duration-300">
-                                {/* Placeholder for Abimbola's picture */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent z-10" />
-                                <img
-                                    src="https://www.upwork.com/profile-portraits/c1f0MmKCe7L4GHTyIJqYDiWObG81jSfHZe7KtyFqXt2upsHb-VOhj3OplpEyrHwSmV"
-                                    alt="Abimbola Akinsanmi - AI Voice & Business Automation Expert"
-                                    className="w-full h-full object-cover transition-all duration-700"
-                                />
-                                <div className="absolute bottom-6 left-6 z-20">
+                                <div className="relative z-10 w-full h-[500px] rounded-2xl overflow-hidden border border-black/10 dark:border-white/10 shadow-sm dark:shadow-none bg-white dark:bg-black">
+                            <img
+                                src={profileImageUrl || "https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop"}
+                                alt="Abimbola Akinsanmi - AI Engineer"
+                                className="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-500"
+                            />
+                            {/* Overlay info */} <div className="absolute bottom-6 left-6 z-20">
                                     <h3 className="text-2xl font-bold text-white">Abimbola Akinsanmi</h3>
                                     <p className="text-blue-400 font-medium">Business Automation & AI Voice Expert</p>
                                 </div>
                             </div>
+                          </div>
                         </div>
                     </motion.div>
 

@@ -93,7 +93,7 @@ export default function Portfolio() {
 
                             <div className="relative z-10 flex flex-col h-full">
                                 {item.cover_image_url && (
-                                    <img src={item.cover_image_url} alt={item.title} className="w-full h-40 object-cover rounded-lg mb-4" />
+                                    <img src={item.cover_image_url} alt={item.title} className="w-full aspect-video object-cover rounded-lg mb-4" />
                                 )}
                                 
                                 {item.industry_tag && (

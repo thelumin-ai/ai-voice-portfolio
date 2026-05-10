@@ -122,12 +122,18 @@ export default function Playground() {
                         </div>
                     </div>
 
-                    {/* Center Console - WebRTC Demo */}
+                    {/* Center Console - WebRTC Demo or Iframe */}
                     <div className="lg:col-span-3">
-                        <WebRTCVoiceDemo
-                            agentRole={selectedAgent.name}
-                            vapiAgentId={selectedAgent.vapiAgentId}
-                        />
+                        {selectedAgent.vapiAgentId.startsWith('http') ? (
+                            <div className="w-full h-[600px] rounded-2xl overflow-hidden border border-black/10 dark:border-white/10 shadow-sm bg-white dark:bg-black">
+                                <iframe src={selectedAgent.vapiAgentId} className="w-full h-full border-0" allow="microphone" />
+                            </div>
+                        ) : (
+                            <WebRTCVoiceDemo
+                                agentRole={selectedAgent.name}
+                                vapiAgentId={selectedAgent.vapiAgentId}
+                            />
+                        )}
 
                         <div className="mt-8 bg-blue-100 dark:bg-blue-900/10 border border-blue-500/20 rounded-xl p-6 text-center lg:hidden block transition-colors duration-300">
                             <p className="text-gray-700 dark:text-gray-300 mb-4 transition-colors duration-300">Want this exact system deployed into your business?</p>

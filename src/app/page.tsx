@@ -33,7 +33,20 @@ import Testimonials from "@/components/home/Testimonials";
 import About from "@/components/home/About";
 import Consultation from "@/components/home/Consultation";
 
-export default function Home() {
+import { getSiteSettings } from "./admin/(protected)/settings/actions";
+
+export default async function Home() {
+  const { data: settings } = await getSiteSettings();
+  
+  let consultationLink = "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021";
+  if (settings?.consultation_provider === 'fiverr' && settings?.consultation_link_fiverr) {
+      consultationLink = settings.consultation_link_fiverr;
+  } else if (settings?.consultation_provider === 'calendly' && settings?.consultation_link_calendly) {
+      consultationLink = settings.consultation_link_calendly;
+  } else if (settings?.consultation_link_upwork) {
+      consultationLink = settings.consultation_link_upwork;
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-black w-full overflow-hidden">
       <Hero />
@@ -44,8 +57,8 @@ export default function Home() {
       <Testimonials />
       <HowItWorks />
       <TechStack />
-      <About />
-      <Consultation />
+      <About profileImageUrl={settings?.profile_image_url} />
+      <Consultation consultationLink={consultationLink} />
     </div>
   );
 }

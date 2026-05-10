@@ -19,6 +19,19 @@ export function TechStackForm({ initialData }: TechStackFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  const PRESET_CATEGORIES = [
+    "Frontend Framework",
+    "Backend & APIs",
+    "Database & Auth",
+    "AI & Machine Learning",
+    "Voice AI & Telephony",
+    "DevOps & Deployment"
+  ];
+  
+  const initialCategoryIsPreset = !initialData?.category || PRESET_CATEGORIES.includes(initialData.category);
+  const [isOtherCategory, setIsOtherCategory] = useState(!initialCategoryIsPreset);
+  
   const supabase = createClient()
 
   const form = useForm<TechStackFormValues>({
@@ -100,11 +113,41 @@ export function TechStackForm({ initialData }: TechStackFormProps) {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Category</label>
-              <input
-                {...form.register('category')}
-                className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
-                placeholder="e.g. Frontend Framework"
-              />
+              {!isOtherCategory ? (
+                  <select
+                    className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+                    value={form.watch('category') || ''}
+                    onChange={(e) => {
+                        if (e.target.value === 'Other') {
+                            setIsOtherCategory(true)
+                            form.setValue('category', '')
+                        } else {
+                            form.setValue('category', e.target.value)
+                        }
+                    }}
+                  >
+                    <option value="" disabled>Select a category</option>
+                    {PRESET_CATEGORIES.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                    <option value="Other">Other (Custom)</option>
+                  </select>
+              ) : (
+                  <div className="flex gap-2">
+                      <input
+                        {...form.register('category')}
+                        className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+                        placeholder="Type custom category..."
+                        autoFocus
+                      />
+                      <Button type="button" variant="outline" onClick={() => {
+                          setIsOtherCategory(false);
+                          form.setValue('category', PRESET_CATEGORIES[0]);
+                      }}>
+                          Back
+                      </Button>
+                  </div>
+              )}
               {form.formState.errors.category && (
                 <p className="text-sm text-red-500">{form.formState.errors.category.message}</p>
               )}

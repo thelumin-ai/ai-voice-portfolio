@@ -8,6 +8,8 @@ import { updateSiteSettings } from './actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
+import { UploadCloud } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 export function SettingsForm({ initialData }: { initialData: SettingsFormValues }) {
   const router = useRouter()
@@ -18,6 +20,30 @@ export function SettingsForm({ initialData }: { initialData: SettingsFormValues 
     resolver: zodResolver(settingsSchema),
     defaultValues: initialData,
   })
+
+  const supabase = createClient()
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `profile_${Math.random()}.${fileExt}`
+      const filePath = `profile_images/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('portfolio_media') // Using same bucket for simplicity
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data } = supabase.storage.from('portfolio_media').getPublicUrl(filePath)
+      form.setValue('profile_image_url', data.publicUrl)
+    } catch (error: any) {
+      alert(`Error uploading image: ${error.message}`)
+    }
+  }
 
   const onSubmit = async (values: SettingsFormValues) => {
     setIsSubmitting(true)
@@ -116,6 +142,109 @@ export function SettingsForm({ initialData }: { initialData: SettingsFormValues 
             {form.formState.errors.social_links?.github && (
               <p className="text-sm text-red-500">{form.formState.errors.social_links.github.message}</p>
             )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile Image</CardTitle>
+          <CardDescription>Your main profile image used on the site.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            {form.watch('profile_image_url') && (
+              <img src={form.watch('profile_image_url') as string} alt="Profile" className="w-20 h-20 object-cover rounded-full" />
+            )}
+            <label className="cursor-pointer flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-md hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
+              <UploadCloud className="w-5 h-5 mr-2" />
+              <span>Upload Image</span>
+              <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+            </label>
+            <input type="hidden" {...form.register('profile_image_url')} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Consultation & Booking</CardTitle>
+          <CardDescription>Configure where users go when they click "Book Consultation".</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2 max-w-sm">
+            <label className="text-sm font-medium">Active Provider</label>
+            <select
+              {...form.register('consultation_provider')}
+              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+            >
+              <option value="upwork">Upwork</option>
+              <option value="fiverr">Fiverr</option>
+              <option value="calendly">Calendly</option>
+            </select>
+          </div>
+
+          <div className="space-y-2 max-w-2xl">
+            <label className="text-sm font-medium">Upwork Service Link</label>
+            <input
+              {...form.register('consultation_link_upwork')}
+              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              placeholder="https://www.upwork.com/..."
+            />
+          </div>
+
+          <div className="space-y-2 max-w-2xl">
+            <label className="text-sm font-medium">Fiverr Gig Link</label>
+            <input
+              {...form.register('consultation_link_fiverr')}
+              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              placeholder="https://www.fiverr.com/..."
+            />
+          </div>
+
+          <div className="space-y-2 max-w-2xl">
+            <label className="text-sm font-medium">Calendly Booking Link</label>
+            <input
+              {...form.register('consultation_link_calendly')}
+              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              placeholder="https://calendly.com/..."
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>AI Integration Keys</CardTitle>
+          <CardDescription>API Keys for AI Blog generation tools. These are stored securely.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 max-w-2xl">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">OpenAI API Key</label>
+            <input
+              {...form.register('openai_api_key')}
+              type="password"
+              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              placeholder="sk-..."
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Anthropic API Key (Claude)</label>
+            <input
+              {...form.register('anthropic_api_key')}
+              type="password"
+              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              placeholder="sk-ant-..."
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Gemini API Key</label>
+            <input
+              {...form.register('gemini_api_key')}
+              type="password"
+              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              placeholder="AIzaSy..."
+            />
           </div>
         </CardContent>
       </Card>

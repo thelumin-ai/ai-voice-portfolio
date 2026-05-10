@@ -6,7 +6,7 @@ import { Calendar } from "lucide-react";
 
 import { useState } from "react";
 
-export default function Consultation() {
+export default function Consultation({ consultationLink = "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021" }: { consultationLink?: string }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
@@ -107,11 +107,19 @@ export default function Consultation() {
                                         <button 
                                             type="submit" 
                                             disabled={isSubmitting}
-                                            className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-blue-500 px-8 py-3 font-bold text-white shadow-[0_0_40px_-10px_rgba(59,130,246,0.6)] hover:bg-blue-400 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="w-full inline-flex items-center justify-center rounded-lg bg-blue-500 px-8 py-3 font-bold text-white shadow-[0_0_40px_-10px_rgba(59,130,246,0.6)] hover:bg-blue-400 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {isSubmitting ? 'Sending...' : 'Request Consultation'}
                                         </button>
-                                        <span className="text-gray-500 text-sm">or <a href="https://www.upwork.com/services/product/development-it-abimbola-18892689911195383021?ref=project_share" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">book directly on Upwork</a></span>
+                                        <a href={consultationLink} target="_blank" rel="noopener noreferrer" className="block w-full">
+                                            <button
+                                                type="button"
+                                                className="w-full flex items-center justify-center px-8 py-3 border border-white/10 rounded-lg text-white hover:bg-white/5 font-bold transition-all"
+                                            >
+                                                Book via Provider Platform
+                                                <ArrowRight className="ml-2 h-5 w-5" />
+                                            </button>
+                                        </a>
                                     </div>
                                     {submitStatus === 'error' && <p className="text-red-400 text-sm mt-2">There was an error sending your message. Please try again.</p>}
                                 </form>

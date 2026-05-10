@@ -1,49 +1,62 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { PhoneIncoming, PhoneOutgoing, UserCheck, RefreshCw, CalendarCheck, Clock } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getServices } from "@/app/admin/(protected)/services/actions";
 
-const solutions = [
+const defaultSolutions = [
     {
         title: "AI Voice & Chat Agents",
         description: "Never miss a lead. AI agents handle level-one support, answer FAQs, and direct customers 24/7 across voice and text.",
-        icon: PhoneIncoming,
+        icon_name: "PhoneIncoming",
         href: "/#solutions"
     },
     {
         title: "Omni-Channel Outreach",
         description: "Scale your outbound infinitely. AI cold callers and automated SMS sequences reach hundreds of leads simultaneously.",
-        icon: PhoneOutgoing,
+        icon_name: "PhoneOutgoing",
         href: "/#solutions"
     },
     {
         title: "Automated Lead Qualification",
         description: "Intelligently ask qualifying questions via chat or voice, grade the prospect, and route hot leads to closers.",
-        icon: UserCheck,
-        href: "/#solutions"
-    },
-    {
-        title: "CRM & ERP Automations",
-        description: "Automatically log transcripts, sync data between platforms, and trigger webhooks to update deal stages.",
-        icon: RefreshCw,
-        href: "/#solutions"
-    },
-    {
-        title: "Smart Appointment Booking",
-        description: "Integrates with your calendar to find slots, handle timezones, and lock in meetings directly from the conversation.",
-        icon: CalendarCheck,
-        href: "/#solutions"
-    },
-    {
-        title: "Missed Opportunity Recovery",
-        description: "Instantly text, email, or call back anyone who drops off, rescuing lost revenue automatically.",
-        icon: Clock,
+        icon_name: "UserCheck",
         href: "/#solutions"
     }
 ];
 
 export default function Solutions() {
+    const [solutions, setSolutions] = useState<any[]>(defaultSolutions);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchServices = async () => {
+            try {
+                const { data } = await getServices();
+                if (data && data.length > 0) {
+                    const published = data.filter(s => s.status === 'published');
+                    if (published.length > 0) {
+                        setSolutions(published.map(s => ({ ...s, href: "/#solutions" })));
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch services:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchServices();
+    }, []);
+
+    // Helper to render icon by name
+    const renderIcon = (iconName: string) => {
+        const IconComponent = (LucideIcons as any)[iconName] || LucideIcons.CheckCircle;
+        return <IconComponent className="h-10 w-10 text-blue-600 dark:text-blue-400 mb-6 group-hover:scale-110 transition-transform" />;
+    };
+
     return (
         <section className="py-24 bg-gray-100 dark:bg-black relative transition-colors duration-300" id="solutions">
             <div className="absolute top-1/2 left-0 w-full h-[300px] bg-blue-900/10 blur-[100px] pointer-events-none rounded-full" />
@@ -80,7 +93,7 @@ export default function Solutions() {
                             <Link href={solution.href} className="block group h-full">
                                 <div className="glass-panel p-8 h-full transition-all duration-300 hover:border-blue-500/50 hover:bg-white/50 dark:hover:bg-white/5 relative overflow-hidden group shadow-sm dark:shadow-none bg-white/50 dark:bg-black/40">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-full translate-x-16 -translate-y-16 group-hover:bg-blue-500/20 transition-colors" />
-                                    <solution.icon className="h-10 w-10 text-blue-600 dark:text-blue-400 mb-6 group-hover:scale-110 transition-transform" />
+                                    {renderIcon(solution.icon_name || 'CheckCircle')}
                                     <h3 className="text-xl font-semibold text-black dark:text-white mb-3 transition-colors duration-300">{solution.title}</h3>
                                     <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed transition-colors duration-300">{solution.description}</p>
                                 </div>

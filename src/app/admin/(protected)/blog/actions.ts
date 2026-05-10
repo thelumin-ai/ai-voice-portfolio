@@ -37,6 +37,41 @@ export async function getBlogPost(id: string) {
   return { data }
 }
 
+export async function getPublishedBlogPosts() {
+  const supabase = await createClient()
+  
+  const { data, error } = await supabase
+    .from('blog_posts')
+    .select('*')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching published blog posts:', error)
+    return { error: 'Failed to fetch blog posts' }
+  }
+
+  return { data }
+}
+
+export async function getBlogPostBySlug(slug: string) {
+  const supabase = await createClient()
+  
+  const { data, error } = await supabase
+    .from('blog_posts')
+    .select('*')
+    .eq('slug', slug)
+    .eq('status', 'published')
+    .single()
+
+  if (error) {
+    console.error('Error fetching blog post by slug:', error)
+    return { error: 'Failed to fetch blog post' }
+  }
+
+  return { data }
+}
+
 export async function createBlogPost(data: BlogPostFormValues) {
   const supabase = await createClient()
   

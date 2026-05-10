@@ -36,57 +36,69 @@ export function BlogList({ initialPosts }: { initialPosts: BlogPost[] }) {
 
   if (posts.length === 0) {
     return (
-      <div className="text-center py-12 border border-dashed rounded-lg dark:border-zinc-800">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">No blog posts found</h3>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Click "Write Post" to create your first article.</p>
+      <div className="p-12 text-center flex flex-col items-center justify-center bg-zinc-900/40 rounded-2xl border border-zinc-800/50 backdrop-blur-sm">
+        <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+            <Edit className="w-8 h-8 text-zinc-500" />
+        </div>
+        <h3 className="text-lg font-medium text-zinc-200 mb-2">No Blog Posts Found</h3>
+        <p className="text-zinc-500 max-w-sm mx-auto">Click "Write Post" to create your first article.</p>
       </div>
     )
   }
 
   return (
-    <div className={`space-y-4 ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}>
-      {posts.map(post => (
-        <Card key={post.id}>
-          <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex-1">
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 text-lg">{post.title}</h3>
-              <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                <span>/{post.slug}</span>
-                <span>•</span>
-                <span>{new Date(post.created_at).toLocaleDateString()}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-              <span className={`px-2 py-1 text-xs rounded-full ${
-                post.status === 'published' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                post.status === 'draft' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
-              }`}>
-                {post.status}
-              </span>
-              
-              <div className="flex items-center gap-2">
-                {post.status === 'published' && (
-                  <Button variant="ghost" size="icon" asChild>
-                    <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
+    <div className={`bg-zinc-900/40 rounded-2xl border border-zinc-800/50 overflow-hidden backdrop-blur-sm ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}>
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="border-b border-zinc-800/50 bg-zinc-900/50">
+            <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Title</th>
+            <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider hidden sm:table-cell">Date</th>
+            <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Status</th>
+            <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-zinc-800/50">
+          {posts.map(post => (
+            <tr key={post.id} className="hover:bg-zinc-800/30 transition-colors group">
+              <td className="py-4 px-6">
+                <span className="font-semibold text-zinc-200 group-hover:text-white transition-colors block">{post.title}</span>
+                <span className="text-xs text-zinc-500 font-mono mt-1 block">/blog/{post.slug}</span>
+              </td>
+              <td className="py-4 px-6 text-sm text-zinc-400 hidden sm:table-cell">
+                {new Date(post.created_at).toLocaleDateString()}
+              </td>
+              <td className="py-4 px-6">
+                <span className={`px-2.5 py-1 text-xs font-medium rounded-md border inline-block ${
+                  post.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                  post.status === 'draft' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                  'bg-zinc-800 text-zinc-400 border-zinc-700'
+                }`}>
+                  {post.status}
+                </span>
+              </td>
+              <td className="py-4 px-6 text-right">
+                <div className="flex items-center justify-end gap-1">
+                  {post.status === 'published' && (
+                    <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-white hover:bg-zinc-800" asChild>
+                      <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-white hover:bg-zinc-800" asChild>
+                    <Link href={`/admin/blog/${post.id}`}>
+                      <Edit className="h-4 w-4" />
+                    </Link>
                   </Button>
-                )}
-                <Button variant="ghost" size="icon" asChild>
-                  <Link href={`/admin/blog/${post.id}`}>
-                    <Edit className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50" onClick={() => handleDelete(post.id)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+                  <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-950/30" onClick={() => handleDelete(post.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

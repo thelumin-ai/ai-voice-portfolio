@@ -9,13 +9,14 @@ export default async function BlogAdminPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Blog & Insights</h1>
-        <Button asChild>
-          <Link href="/admin/blog/new">
-            <PenSquare className="mr-2 h-4 w-4" /> Write Post
-          </Link>
-        </Button>
+      <div className="flex justify-between items-center bg-zinc-900/50 p-6 rounded-2xl border border-zinc-800/50 backdrop-blur-sm">
+        <div>
+          <h1 className="text-2xl font-black text-white tracking-tight mb-1">Blog & Insights</h1>
+          <p className="text-sm text-zinc-400">Manage your published articles and drafts.</p>
+        </div>
+        <Link href="/admin/blog/new">
+          <Button className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20"><PenSquare className="w-4 h-4 mr-2" /> Write Post</Button>
+        </Link>
       </div>
 
       <BlogList initialPosts={posts || []} />

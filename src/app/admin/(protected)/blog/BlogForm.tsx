@@ -8,7 +8,7 @@ import { createBlogPost, updateBlogPost } from './actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
-import { UploadCloud } from 'lucide-react'
+import { UploadCloud, Bot, Loader2, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface BlogFormProps {
@@ -20,6 +20,12 @@ export function BlogForm({ initialData }: BlogFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const supabase = createClient()
+
+  const [showAiWriter, setShowAiWriter] = useState(false)
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiProvider, setAiProvider] = useState('openai')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
 
   const form = useForm<BlogPostFormValues>({
     resolver: zodResolver(blogPostSchema),
@@ -64,6 +70,37 @@ export function BlogForm({ initialData }: BlogFormProps) {
       form.setValue('cover_image_url', data.publicUrl)
     } catch (error: any) {
       alert(`Error uploading image: ${error.message}`)
+    }
+  }
+
+  const handleGenerateAI = async () => {
+    if (!aiPrompt.trim()) {
+      setAiError("Please enter a prompt")
+      return
+    }
+    
+    setIsGenerating(true)
+    setAiError(null)
+
+    try {
+      const response = await fetch('/api/generate-blog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: aiPrompt, provider: aiProvider })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate')
+      }
+
+      form.setValue('content', data.content)
+      setShowAiWriter(false)
+    } catch (err: any) {
+      setAiError(err.message)
+    } finally {
+      setIsGenerating(false)
     }
   }
 
@@ -138,7 +175,42 @@ export function BlogForm({ initialData }: BlogFormProps) {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <label className="text-sm font-medium">Content (Markdown Support)</label>
+              <Button type="button" variant="outline" size="sm" onClick={() => setShowAiWriter(!showAiWriter)} className="text-purple-500 border-purple-200 hover:bg-purple-50 dark:hover:bg-purple-900/20">
+                <Sparkles className="w-4 h-4 mr-2" /> AI Writer
+              </Button>
             </div>
+            
+            {showAiWriter && (
+              <div className="p-4 bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30 rounded-lg space-y-4 mb-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-semibold text-purple-700 dark:text-purple-400 flex items-center"><Bot className="w-4 h-4 mr-2" /> Generate with AI</h4>
+                  <select 
+                    value={aiProvider} 
+                    onChange={(e) => setAiProvider(e.target.value)}
+                    className="text-sm px-2 py-1 border rounded dark:bg-zinc-900 dark:border-zinc-700"
+                  >
+                    <option value="openai">OpenAI (GPT-4o)</option>
+                    <option value="anthropic">Anthropic (Claude 3 Opus)</option>
+                    <option value="gemini">Google (Gemini 1.5 Pro)</option>
+                  </select>
+                </div>
+                <textarea 
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder="e.g. Write a 1000-word blog post about how AI voice agents are replacing traditional call centers in the real estate industry. Use a professional but engaging tone."
+                  className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700 text-sm"
+                  rows={3}
+                />
+                {aiError && <p className="text-xs text-red-500">{aiError}</p>}
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowAiWriter(false)}>Cancel</Button>
+                  <Button type="button" size="sm" className="bg-purple-600 hover:bg-purple-700 text-white" onClick={handleGenerateAI} disabled={isGenerating}>
+                    {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</> : 'Generate Post'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <textarea
               {...form.register('content')}
               rows={15}

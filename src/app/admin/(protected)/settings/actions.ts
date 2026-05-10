@@ -18,13 +18,29 @@ export async function getSiteSettings(): Promise<{ data?: SettingsFormValues; er
 
   // Transform KV pairs into a single object matching the schema
   const settingsObj: any = {
-    social_links: { twitter: '', linkedin: '', github: '' }
+    social_links: { twitter: '', linkedin: '', github: '' },
+    profile_image_url: '',
+    consultation_provider: 'upwork',
+    consultation_link_upwork: '',
+    consultation_link_fiverr: '',
+    consultation_link_calendly: '',
+    openai_api_key: '',
+    anthropic_api_key: '',
+    gemini_api_key: ''
   }
 
   data?.forEach(row => {
     if (row.setting_key === 'contact_email') settingsObj.contact_email = row.setting_value
     if (row.setting_key === 'footer_text') settingsObj.footer_text = row.setting_value
     if (row.setting_key === 'social_links') settingsObj.social_links = { ...settingsObj.social_links, ...row.setting_value }
+    if (row.setting_key === 'profile_image_url') settingsObj.profile_image_url = row.setting_value
+    if (row.setting_key === 'consultation_provider') settingsObj.consultation_provider = row.setting_value || 'upwork'
+    if (row.setting_key === 'consultation_link_upwork') settingsObj.consultation_link_upwork = row.setting_value
+    if (row.setting_key === 'consultation_link_fiverr') settingsObj.consultation_link_fiverr = row.setting_value
+    if (row.setting_key === 'consultation_link_calendly') settingsObj.consultation_link_calendly = row.setting_value
+    if (row.setting_key === 'openai_api_key') settingsObj.openai_api_key = row.setting_value
+    if (row.setting_key === 'anthropic_api_key') settingsObj.anthropic_api_key = row.setting_value
+    if (row.setting_key === 'gemini_api_key') settingsObj.gemini_api_key = row.setting_value
   })
 
   return { data: settingsObj }
@@ -39,6 +55,14 @@ export async function updateSiteSettings(data: SettingsFormValues) {
     { setting_key: 'contact_email', setting_value: validatedData.contact_email || '' },
     { setting_key: 'footer_text', setting_value: validatedData.footer_text || '' },
     { setting_key: 'social_links', setting_value: validatedData.social_links },
+    { setting_key: 'profile_image_url', setting_value: validatedData.profile_image_url || '' },
+    { setting_key: 'consultation_provider', setting_value: validatedData.consultation_provider },
+    { setting_key: 'consultation_link_upwork', setting_value: validatedData.consultation_link_upwork || '' },
+    { setting_key: 'consultation_link_fiverr', setting_value: validatedData.consultation_link_fiverr || '' },
+    { setting_key: 'consultation_link_calendly', setting_value: validatedData.consultation_link_calendly || '' },
+    { setting_key: 'openai_api_key', setting_value: validatedData.openai_api_key || '' },
+    { setting_key: 'anthropic_api_key', setting_value: validatedData.anthropic_api_key || '' },
+    { setting_key: 'gemini_api_key', setting_value: validatedData.gemini_api_key || '' },
   ]
 
   for (const update of updates) {

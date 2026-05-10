@@ -1,22 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import {
-  LayoutDashboard,
-  FolderOpen,
-  Briefcase,
-  Layers,
-  MessageSquare,
-  Wrench,
-  ListOrdered,
-  Users,
-  PlayCircle,
-  Search,
-  FileText,
-  Settings,
-  LogOut
-} from 'lucide-react'
-import { LogoutButton } from './LogoutButton'
+import { AdminSidebar } from './AdminSidebar'
 
 export default async function AdminLayout({
   children,
@@ -33,67 +17,33 @@ export default async function AdminLayout({
     redirect('/admin/login')
   }
 
-  const navigation = [
-    { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'Portfolio', href: '/admin/portfolio', icon: FolderOpen },
-    { name: 'Services/Solutions', href: '/admin/solutions', icon: Briefcase },
-    { name: 'Use Cases', href: '/admin/use-cases', icon: Layers },
-    { name: 'Testimonials', href: '/admin/testimonials', icon: MessageSquare },
-    { name: 'Tech Stack', href: '/admin/tech-stack', icon: Wrench },
-    { name: 'Process Steps', href: '/admin/process', icon: ListOrdered },
-    { name: 'Lead Tracker', href: '/admin/leads', icon: Users },
-    { name: 'Playground Manager', href: '/admin/playground', icon: PlayCircle },
-    { name: 'SEO & Meta', href: '/admin/seo', icon: Search },
-    { name: 'Blog/Insights', href: '/admin/blog', icon: FileText },
-    { name: 'Settings', href: '/admin/settings', icon: Settings },
-  ]
-
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-zinc-950 transition-colors duration-300">
-      {/* Sidebar */}
-      <div className="w-64 bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-white/10 flex flex-col transition-colors duration-300">
-        <div className="h-16 flex items-center px-6 border-b border-gray-200 dark:border-white/10">
-          <h1 className="text-lg font-bold text-gray-900 dark:text-white">Admin Panel</h1>
-        </div>
-        
-        <nav className="flex-1 overflow-y-auto py-4">
-          <ul className="space-y-1 px-3">
-            {navigation.map((item) => {
-              const Icon = item.icon
-              return (
-                <li key={item.name}>
-                  <Link
-                    href={item.href}
-                    className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-                  >
-                    <Icon className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
-                    {item.name}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </nav>
-
-        <div className="p-4 border-t border-gray-200 dark:border-white/10">
-          <LogoutButton />
-        </div>
-      </div>
+    <div className="flex h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-blue-500/30">
+      <AdminSidebar />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Subtle background glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-[300px] bg-blue-600/5 blur-[120px] pointer-events-none z-0" />
+
         {/* Header */}
-        <header className="h-16 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-white/10 flex items-center justify-between px-6 transition-colors duration-300">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Dashboard</h2>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600 dark:text-gray-400">{user.email}</span>
-            {/* Theme toggle could go here */}
+        <header className="h-16 border-b border-zinc-900/50 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-8 relative z-10">
+          <h2 className="text-sm font-semibold text-zinc-400 tracking-wider uppercase">Dashboard Console</h2>
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center overflow-hidden">
+                 <span className="text-xs font-bold text-zinc-300">{user.email?.charAt(0).toUpperCase()}</span>
+              </div>
+              <span className="text-sm font-medium text-zinc-300 hidden sm:block">{user.email}</span>
+            </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
+        <main className="flex-1 overflow-y-auto p-8 relative z-10 custom-scrollbar">
+          <div className="max-w-6xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>
