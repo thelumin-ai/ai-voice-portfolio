@@ -236,6 +236,17 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
                   </label>
                 )}
               </div>
+              {form.watch('media_url') && (form.watch('project_type') === 'audio' || form.watch('project_type') === 'video') && (
+                <div className="mt-2 p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg">
+                  <p className="text-[10px] uppercase font-bold text-zinc-400 mb-2">Media Preview</p>
+                  {form.watch('project_type') === 'audio' ? (
+                    <audio src={form.watch('media_url')} controls className="w-full h-8" />
+                  ) : (
+                    <video src={form.watch('media_url')} controls className="w-full aspect-video rounded-md" />
+                  )}
+                  <p className="text-[10px] text-zinc-500 mt-1 truncate">{form.watch('media_url')}</p>
+                </div>
+              )}
               <p className="text-[10px] text-gray-500 italic">
                 {form.watch('project_type') === 'webrtc' 
                   ? "Enter the UUID of your agent from the platform." 
