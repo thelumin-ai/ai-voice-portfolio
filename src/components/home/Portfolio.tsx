@@ -45,9 +45,12 @@ const colors = [
     { color: "from-pink-500/20 to-rose-500/20", borderColor: "border-pink-500/30" },
 ]
 
-export default function Portfolio() {
-    const [portfolioItems, setPortfolioItems] = useState<any[]>(defaultPortfolioItems);
+export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
+    const [allItems, setAllItems] = useState<any[]>(defaultPortfolioItems);
     const [selectedProject, setSelectedProject] = useState<any | null>(null);
+
+    // On the home page, show max 4. On the /portfolio page, show everything.
+    const portfolioItems = showAll ? allItems : allItems.slice(0, 4);
 
     useEffect(() => {
         const fetchPortfolios = async () => {
@@ -61,18 +64,16 @@ export default function Portfolio() {
                     }));
                     
                     if (published.length > 0) {
-                        // Keep all real items, and if less than 3, add the unique demo items that don't clash
+                        // Always show ALL real projects. Fill with demo items only if under 4.
                         const combined = [...published];
-                        
-                        // Only add defaults if we have very few items
-                        if (combined.length < 3) {
+                        if (combined.length < 4) {
                             defaultPortfolioItems.forEach(defItem => {
-                                if (combined.length < 3 && !combined.find(p => p.title === defItem.title)) {
+                                if (!combined.find(p => p.title === defItem.title)) {
                                     combined.push(defItem);
                                 }
                             });
                         }
-                        setPortfolioItems(combined);
+                        setAllItems(combined);
                     }
                 }
             } catch (error) {
@@ -92,7 +93,7 @@ export default function Portfolio() {
                         viewport={{ once: true }}
                         className="text-3xl md:text-5xl font-bold tracking-tight text-black dark:text-white mb-6 transition-colors duration-300"
                     >
-                        Systems I've <span className="text-blue-600 dark:text-blue-500">Built</span>
+                        {showAll ? <>All <span className="text-blue-600 dark:text-blue-500">Projects</span></> : <>Systems I've <span className="text-blue-600 dark:text-blue-500">Built</span></>}
                     </motion.h2>
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
@@ -101,8 +102,23 @@ export default function Portfolio() {
                         transition={{ delay: 0.1 }}
                         className="text-lg text-gray-600 dark:text-gray-400 transition-colors duration-300"
                     >
-                        Real-world AI voice architectures driving measurable revenue for my clients.
+                        {showAll
+                            ? `${allItems.length} projects — click any card to explore the demo, call recording, or video.`
+                            : 'Real-world AI voice architectures driving measurable revenue for my clients.'}
                     </motion.p>
+                    {!showAll && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.2 }}
+                            className="mt-6"
+                        >
+                            <a href="/portfolio" className="inline-flex items-center text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                                View All Projects →
+                            </a>
+                        </motion.div>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
