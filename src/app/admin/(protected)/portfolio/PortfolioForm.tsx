@@ -28,8 +28,11 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
       ...initialData,
       project_type: (initialData as any).project_type || 'webrtc',
       media_url: (initialData as any).media_url || '',
+      cover_image_url: (initialData as any).cover_image_url || '',
       metrics: initialData.metrics || [],
       integrations: initialData.integrations || [],
+      media_files: initialData.media_files || [],
+      status: initialData.status || 'published',
     } : {
       title: '',
       industry_tag: '',

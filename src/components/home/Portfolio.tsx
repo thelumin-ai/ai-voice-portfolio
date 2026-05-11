@@ -200,11 +200,7 @@ export default function Portfolio() {
                                             src={selectedProject.media_url}
                                             controls 
                                             preload="auto"
-                                            crossOrigin="anonymous"
                                             className="w-full max-w-md shadow-lg rounded-full"
-                                            onError={(e) => {
-                                                console.error("Audio Load Error:", e);
-                                            }}
                                         >
                                             Your browser does not support the audio element.
                                         </audio>
@@ -244,12 +240,11 @@ export default function Portfolio() {
                                             />
                                         ) : (
                                             <video 
-                                                key={selectedProject.media_url} 
+                                                key={selectedProject.media_url}
+                                                src={selectedProject.media_url}
                                                 controls 
                                                 className="w-full h-full"
-                                                onError={(e) => console.error("Video Load Error", e)}
                                             >
-                                                <source src={selectedProject.media_url} />
                                                 Your browser does not support the video tag.
                                             </video>
                                         )}
