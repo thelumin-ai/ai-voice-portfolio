@@ -35,7 +35,6 @@ const steps = [
 
 export default function HowItWorks() {
     const [processSteps, setProcessSteps] = useState<any[]>(steps);
-    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchSteps = async () => {
@@ -53,18 +52,15 @@ export default function HowItWorks() {
                 }
             } catch (error) {
                 console.error("Failed to fetch process steps:", error);
-            } finally {
-                setIsLoading(false);
             }
         };
-
         fetchSteps();
     }, []);
 
     return (
         <section className="py-24 bg-white dark:bg-black relative border-t border-black/5 dark:border-white/5 overflow-hidden transition-colors duration-300" id="how-it-works">
-            {/* Background stylistic line */}
-            <div className="absolute top-0 bottom-0 left-1/2 w-px bg-gradient-to-b from-blue-500/0 via-blue-500/20 to-blue-500/0 hidden md:block" />
+            {/* Background stylistic line (The Tree Trunk) */}
+            <div className="absolute top-0 bottom-0 left-1/2 w-[2px] bg-gradient-to-b from-blue-500/0 via-blue-500/30 to-blue-500/0 hidden md:block" />
 
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="text-center max-w-3xl mx-auto mb-20">
@@ -74,7 +70,7 @@ export default function HowItWorks() {
                         viewport={{ once: true }}
                         className="text-3xl md:text-5xl font-bold tracking-tight text-black dark:text-white mb-6 transition-colors duration-300"
                     >
-                        How We Build <span className="text-gradient">Your System</span>
+                        How We Build <span className="text-blue-600 dark:text-blue-500">Your System</span>
                     </motion.h2>
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
@@ -87,35 +83,40 @@ export default function HowItWorks() {
                     </motion.p>
                 </div>
 
-                <div className="max-w-4xl mx-auto">
+                <div className="max-w-6xl mx-auto">
                     {processSteps.map((step, index) => (
                         <motion.div
                             key={step.title + index}
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
-                            transition={{ delay: index * 0.1 }}
-                            className={`relative flex items-center mb-12 last:mb-0 ${index % 2 === 0 ? "md:flex-row-reverse" : "md:flex-row"
-                                } flex-col`}
+                            transition={{ delay: index * 0.1, duration: 0.5 }}
+                            className={`relative flex items-center mb-24 last:mb-0 ${index % 2 === 0 ? "md:flex-row-reverse" : "md:flex-row"} flex-col`}
                         >
-                            {/* Timeline dot */}
-                            <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-white dark:bg-black border-4 border-blue-500/20 items-center justify-center z-10 transition-colors duration-300">
-                                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                            {/* Timeline dot (The Tree Node) */}
+                            <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-white dark:bg-black border-4 border-blue-500/20 items-center justify-center z-10 transition-colors duration-300 shadow-lg shadow-blue-500/10">
+                                <div className="w-4 h-4 rounded-full bg-blue-500 animate-pulse" />
                             </div>
 
-                            {/* Content box */}
-                            <div className={`w-full md:w-1/2 ${index % 2 === 0 ? "md:pl-16" : "md:pr-16"
-                                } mb-8 md:mb-0`}>
-                                <div className="glass-panel bg-white/50 dark:bg-zinc-900/50 p-8 relative overflow-hidden group hover:border-blue-500/30 transition-colors duration-300 border border-black/10 dark:border-white/10">
-                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500/0 via-blue-500/50 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <div className="flex items-center mb-4 text-blue-600 dark:text-blue-400">
-                                        <span className="text-sm font-bold tracking-wider mr-4 opacity-50">STEP 0{index + 1}</span>
-                                        <step.icon className="h-6 w-6" />
+                            {/* Content box (The Tree Branch) */}
+                            <div className={`w-full md:w-[45%] ${index % 2 === 0 ? "md:pl-12" : "md:pr-12"} mb-8 md:mb-0`}>
+                                <div className="glass-panel bg-white/60 dark:bg-zinc-900/60 p-10 rounded-3xl relative overflow-hidden group hover:border-blue-500/40 transition-all duration-500 border border-black/5 dark:border-white/5 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500/0 via-blue-500/60 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <div className="flex items-center mb-6">
+                                        <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 mr-4">
+                                            <step.icon className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] font-black tracking-[0.2em] text-blue-600 dark:text-blue-500 uppercase">Step 0{index + 1}</span>
+                                            <h3 className="text-2xl font-bold text-black dark:text-white transition-colors duration-300">{step.title}</h3>
+                                        </div>
                                     </div>
-                                    <h3 className="text-xl font-semibold text-black dark:text-white mb-3 transition-colors duration-300">{step.title}</h3>
-                                    <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed transition-colors duration-300">{step.description}</p>
+                                    <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed transition-colors duration-300">{step.description}</p>
                                 </div>
                             </div>
+                            
+                            {/* Empty space for the other side */}
+                            <div className="hidden md:block md:w-[45%]" />
                         </motion.div>
                     ))}
                 </div>

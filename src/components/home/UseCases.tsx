@@ -1,17 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import * as LucideIcons from "lucide-react";
 import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
 import { getUseCases } from "@/app/admin/(protected)/use-cases/actions";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Grid } from "swiper/modules";
-import type { Swiper as SwiperType } from "swiper";
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/grid";
 
 const defaultUseCases = [
     {
@@ -21,7 +15,6 @@ const defaultUseCases = [
         cover_image_url: "https://images.unsplash.com/photo-1560184897-ae75f418493e?q=80&w=1000&auto=format&fit=crop",
         headline: "Speed-to-Lead AI Calling",
         problem: "Leads go cold in minutes. AI agents call instantly, qualify prospects, and book showings on autopilot.",
-        features: ["Instant callback < 5s", "Live transfers to agents", "Smart showing scheduler"],
         results: [{ stat: "300%", label: "Increase in connect rate" }]
     },
     {
@@ -31,7 +24,6 @@ const defaultUseCases = [
         cover_image_url: "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?q=80&w=1000&auto=format&fit=crop",
         headline: "High-Volume Pre-Qualification",
         problem: "Sales reps waste hours dialing un-qualified homeowners or renters.",
-        features: ["Utility bill size filtering", "Homeowner verification", "Virtual consultation booking"],
         results: [{ stat: "12hrs", label: "Saved per rep weekly" }]
     },
     {
@@ -41,79 +33,12 @@ const defaultUseCases = [
         cover_image_url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=1000&auto=format&fit=crop",
         headline: "24/7 Booking & Dispatch",
         problem: "Missed calls mean missed revenue. Customers call competitors when you don't answer.",
-        features: ["After-hours answering", "Appointment booking", "Emergency dispatch routing"],
         results: [{ stat: "40%", label: "More bookings captured" }]
-    },
-    {
-        name: "Consulting & Agencies",
-        icon_name: "Briefcase",
-        industry_slug: "consulting",
-        cover_image_url: "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1000&auto=format&fit=crop",
-        headline: "Client Intake Automation",
-        problem: "Manual intake processes slow down onboarding and frustrate potential clients.",
-        features: ["Automated discovery calls", "Smart intake forms via voice", "CRM auto-sync"],
-        results: [{ stat: "60%", label: "Faster client onboarding" }]
-    },
-    {
-        name: "Finance & Insurance",
-        icon_name: "BarChart",
-        industry_slug: "finance",
-        cover_image_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop",
-        headline: "Compliance-Ready Outreach",
-        problem: "Regulatory requirements make manual outreach slow and risky.",
-        features: ["Scripted compliance calls", "Consent management", "Audit trail recording"],
-        results: [{ stat: "99%", label: "Compliance adherence" }]
-    },
-    {
-        name: "Customer Support",
-        icon_name: "Headphones",
-        industry_slug: "customer-support",
-        cover_image_url: "https://images.unsplash.com/photo-1596524430615-b46475ddff6e?q=80&w=1000&auto=format&fit=crop",
-        headline: "Tier-1 Support Automation",
-        problem: "Support teams are overwhelmed with repetitive tickets that don't need human agents.",
-        features: ["FAQ resolution via voice", "Smart ticket creation", "Seamless human handoff"],
-        results: [{ stat: "70%", label: "Tickets auto-resolved" }]
-    },
-    {
-        name: "Healthcare",
-        icon_name: "Heart",
-        industry_slug: "healthcare",
-        cover_image_url: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=1000&auto=format&fit=crop",
-        headline: "Patient Care Automation",
-        problem: "Clinics lose patients when calls go unanswered or follow-ups are missed.",
-        features: ["Appointment scheduling", "Medication reminders", "Insurance verification"],
-        results: [{ stat: "50%", label: "Reduction in no-shows" }]
-    },
-    {
-        name: "E-commerce",
-        icon_name: "ShoppingCart",
-        industry_slug: "e-commerce",
-        cover_image_url: "https://images.unsplash.com/photo-1557821552-17105176677c?q=80&w=1000&auto=format&fit=crop",
-        headline: "Abandoned Cart Recovery",
-        problem: "Millions in revenue lost to abandoned carts. Email is ignored; voice is personal.",
-        features: ["Personalized offers", "Order status tracking", "Upsell opportunities"],
-        results: [{ stat: "25%", label: "Recovery rate increase" }]
-    },
-    {
-        name: "Automotive",
-        icon_name: "Car",
-        industry_slug: "automotive",
-        cover_image_url: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=1000&auto=format&fit=crop",
-        headline: "Dealership Lead Follow-up",
-        problem: "Sales teams take hours to call back hot internet leads. AI calls in seconds.",
-        features: ["Test drive booking", "Trade-in valuation", "Service appointment set"],
-        results: [{ stat: "3x", label: "More test drives set" }]
     }
 ];
 
-const getIcon = (iconName: string) => {
-    return (LucideIcons as any)[iconName] || LucideIcons.Briefcase;
-};
-
 export default function UseCases() {
     const [useCases, setUseCases] = useState<any[]>(defaultUseCases);
-    const [isLoading, setIsLoading] = useState(true);
-    const swiperRef = useRef<SwiperType | null>(null);
 
     useEffect(() => {
         const fetchCases = async () => {
@@ -127,13 +52,14 @@ export default function UseCases() {
                 }
             } catch (error) {
                 console.error("Failed to fetch use cases:", error);
-            } finally {
-                setIsLoading(false);
             }
         };
-
         fetchCases();
     }, []);
+
+    const getIcon = (iconName: string) => {
+        return (LucideIcons as any)[iconName] || LucideIcons.Briefcase;
+    };
 
     return (
         <section className="py-24 bg-white dark:bg-black border-t border-black/5 dark:border-white/5 relative transition-colors duration-300" id="use-cases">
@@ -169,62 +95,46 @@ export default function UseCases() {
                     </motion.div>
                 </div>
 
-                <div className="relative pb-12">
-                    <Swiper
-                        modules={[Pagination, Grid]}
-                        spaceBetween={16}
-                        slidesPerView={2}
-                        grid={{
-                            rows: 2,
-                            fill: 'row'
-                        }}
-                        breakpoints={{
-                            1024: { 
-                                slidesPerView: 3,
-                                grid: { rows: 3 }
-                            },
-                        }}
-                        pagination={{ clickable: true }}
-                        onSwiper={(swiper) => { swiperRef.current = swiper; }}
-                        className="pb-10 h-auto"
-                    >
-                        {useCases.map((useCase, i) => {
-                            const IconComponent = getIcon(useCase.icon_name || 'Briefcase');
-                            return (
-                            <SwiperSlide key={useCase.id || useCase.name} className="!h-auto mb-4">
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    whileInView={{ opacity: 1, scale: 1 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: (i % 6) * 0.1 }}
-                                >
-                                    <Link href={`/use-cases/${useCase.industry_slug}`} className="block group">
-                                        <div className="relative overflow-hidden rounded-2xl border border-black/10 dark:border-white/10 aspect-[4/3] flex flex-col justify-end p-6 shadow-md dark:shadow-none hover:shadow-xl dark:hover:shadow-none transition-all duration-500 group">
-                                            {/* Background Image */}
-                                            <div className="absolute inset-0 z-0">
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20 z-10" />
-                                                <img
-                                                    src={useCase.cover_image_url || 'https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop'}
-                                                    alt={useCase.name}
-                                                    className="w-full h-full object-cover transform scale-100 group-hover:scale-110 transition-transform duration-700"
-                                                />
-                                            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {useCases.map((useCase, i) => {
+                        const Icon = getIcon(useCase.icon_name);
+                        return (
+                            <motion.div
+                                key={useCase.industry_slug + i}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: i * 0.1 }}
+                            >
+                                <Link href={`/use-cases/${useCase.industry_slug}`} className="block group">
+                                    <div className="relative overflow-hidden rounded-2xl border border-black/10 dark:border-white/10 aspect-[4/5] flex flex-col justify-end p-8 shadow-md dark:shadow-none hover:shadow-2xl dark:hover:shadow-none transition-all duration-500 group">
+                                        {/* Background Image */}
+                                        <div className="absolute inset-0 z-0">
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent z-10" />
+                                            <img
+                                                src={useCase.cover_image_url || 'https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop'}
+                                                alt={useCase.name}
+                                                className="w-full h-full object-cover transform scale-100 group-hover:scale-110 transition-transform duration-700"
+                                            />
+                                        </div>
 
-                                            <div className="relative z-20 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                                                <div className={`w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 border border-white/20 transition-all duration-500 group-hover:bg-blue-600 group-hover:border-blue-500/50`}>
-                                                    <IconComponent className="h-6 w-6 text-white transition-colors duration-500" />
-                                                </div>
-                                                <h3 className="text-xl font-semibold text-white mb-2">{useCase.name}</h3>
-                                                <div className="flex items-center text-xs font-medium text-gray-300 opacity-0 transform translate-y-4 group-hover:text-blue-300 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 delay-100">
-                                                    Explore Agents <ArrowRight className="ml-2 h-3 w-3" />
-                                                </div>
+                                        <div className="relative z-20 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                                            <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 border border-white/20 group-hover:bg-blue-600 group-hover:border-blue-500/50 transition-all duration-500">
+                                                <Icon className="h-6 w-6 text-white" />
+                                            </div>
+                                            <h3 className="text-2xl font-bold text-white mb-2">{useCase.name}</h3>
+                                            <p className="text-gray-300 text-sm mb-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500 line-clamp-2">
+                                                {useCase.headline}
+                                            </p>
+                                            <div className="flex items-center text-xs font-bold text-blue-400 opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100">
+                                                EXPLORE AGENTS <ArrowRight className="ml-2 h-3 w-3" />
                                             </div>
                                         </div>
-                                    </Link>
-                                </motion.div>
-                            </SwiperSlide>
-                        )})}
-                    </Swiper>
+                                    </div>
+                                </Link>
+                            </motion.div>
+                        );
+                    })}
                 </div>
             </div>
         </section>
