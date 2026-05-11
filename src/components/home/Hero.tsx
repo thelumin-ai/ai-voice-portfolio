@@ -12,7 +12,7 @@ export default function Hero() {
                 <div className="absolute inset-0 bg-gradient-to-b from-blue-500/30 to-transparent blur-3xl rounded-full mix-blend-screen" />
             </div>
 
-            <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 z-10">
+            <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 z-10 max-w-[1400px]">
                 <div className="text-center max-w-4xl mx-auto">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}

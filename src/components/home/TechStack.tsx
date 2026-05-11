@@ -63,7 +63,7 @@ export default function TechStack() {
 
     return (
         <section className="py-24 bg-white dark:bg-zinc-950 relative border-t border-black/5 dark:border-white/5 transition-colors duration-300">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 max-w-[1400px]">
                 <div className="text-center max-w-3xl mx-auto mb-16">
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}

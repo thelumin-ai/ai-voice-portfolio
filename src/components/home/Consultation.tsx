@@ -51,7 +51,7 @@ export default function Consultation({ consultationLink = "https://www.upwork.co
                 <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-blue-900 via-transparent to-black pointer-events-none" />
             </div>
 
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 max-w-[1400px]">
                 <div className="glass-panel p-8 md:p-16 max-w-4xl mx-auto text-center border-blue-500/30 bg-black/60">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}

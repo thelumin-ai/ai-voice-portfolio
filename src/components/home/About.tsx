@@ -9,7 +9,7 @@ export default function About({ profileImageUrl }: { profileImageUrl?: string })
         <section className="py-24 bg-gray-50 dark:bg-black relative border-t border-black/5 dark:border-white/5 overflow-hidden transition-colors duration-300" id="about">
             <div className="absolute top-1/2 right-0 w-96 h-96 bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
 
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 max-w-[1400px]">
                 <div className="flex flex-col lg:flex-row items-center gap-16">
                     <motion.div
                         initial={{ opacity: 0, x: -30 }}
@@ -22,14 +22,14 @@ export default function About({ profileImageUrl }: { profileImageUrl?: string })
                             <div className="absolute -top-4 -left-4 w-24 h-24 border-t-2 border-l-2 border-blue-500/30 rounded-tl-xl" />
                             <div className="absolute -bottom-4 -right-4 w-24 h-24 border-b-2 border-r-2 border-blue-500/30 rounded-br-xl" />
 
-                            <div className="aspect-[3/4] rounded-2xl overflow-hidden relative border border-black/10 dark:border-white/10 shadow-sm dark:shadow-none bg-gray-200 dark:bg-zinc-900 transition-colors duration-300">
+                            <div className="aspect-[3/4] rounded-2xl overflow-hidden relative border border-black/10 dark:border-white/10 shadow-sm dark:shadow-none bg-gray-200 dark:bg-zinc-900 transition-colors duration-300 group cursor-pointer">
                             <img
                                 src={profileImageUrl || "https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop"}
                                 alt="Abimbola Akinsanmi - AI Engineer"
-                                className="w-full h-full object-cover object-top lg:filter lg:grayscale lg:hover:grayscale-0 transition-all duration-500"
+                                className="w-full h-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-700"
                             />
                             {/* Gradient overlay for text readability */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
                             {/* Overlay info */}
                             <div className="absolute bottom-6 left-6 z-20">
                                     <h3 className="text-2xl font-bold text-white">Abimbola Akinsanmi</h3>

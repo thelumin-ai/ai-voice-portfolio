@@ -62,7 +62,7 @@ export default function HowItWorks() {
             {/* Background stylistic line (The Tree Trunk) */}
             <div className="absolute top-0 bottom-0 left-1/2 w-[2px] bg-gradient-to-b from-blue-500/0 via-blue-500/30 to-blue-500/0 hidden md:block" />
 
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 max-w-[1400px]">
                 <div className="text-center max-w-3xl mx-auto mb-20">
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}

@@ -85,7 +85,7 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
 
     return (
         <section className="py-24 bg-gray-50 dark:bg-zinc-950 relative border-t border-black/5 dark:border-white/5 transition-colors duration-300" id="portfolio">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1400px]">
                 <div className="text-center max-w-3xl mx-auto mb-16">
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}

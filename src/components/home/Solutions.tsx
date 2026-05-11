@@ -70,7 +70,7 @@ export default function Solutions() {
     return (
         <section className="py-24 bg-gray-100 dark:bg-black relative transition-colors duration-300" id="solutions">
             <div className="absolute top-1/2 left-0 w-full h-[300px] bg-blue-900/10 blur-[100px] pointer-events-none rounded-full" />
-            <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 z-10">
+            <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 z-10 max-w-[1400px]">
                 <div className="text-center max-w-3xl mx-auto mb-16">
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}

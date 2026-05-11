@@ -32,6 +32,7 @@ import TechStack from "@/components/home/TechStack";
 import Testimonials from "@/components/home/Testimonials";
 import About from "@/components/home/About";
 import Consultation from "@/components/home/Consultation";
+import Estimator from "@/components/home/Estimator";
 
 import { getSiteSettings } from "./admin/(protected)/settings/actions";
 
@@ -54,6 +55,7 @@ export default async function Home() {
       <Solutions />
       <UseCases />
       <Portfolio />
+      <Estimator />
       <Testimonials />
       <HowItWorks />
       <TechStack />
