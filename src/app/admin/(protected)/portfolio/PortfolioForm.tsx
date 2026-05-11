@@ -96,6 +96,13 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
           type,
           name: file.name
         })
+
+        // If this is the primary media type for the project, auto-fill media_url
+        const projectType = form.getValues('project_type')
+        const currentMediaUrl = form.getValues('media_url')
+        if (!currentMediaUrl && ((projectType === 'audio' && type === 'audio') || (projectType === 'video' && type === 'video'))) {
+          form.setValue('media_url', data.publicUrl)
+        }
       }
     } catch (error: any) {
       alert(`Error uploading media: ${error.message}`)

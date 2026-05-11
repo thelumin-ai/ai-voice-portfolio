@@ -189,59 +189,70 @@ export default function Portfolio() {
                                     </div>
                                 )}
 
-                                {selectedProject.project_type === 'audio' && (
+                                {selectedProject.project_type === 'audio' && (() => {
+                                    // Resolve the audio source: media_url first, then first audio in media_files
+                                    const audioSrc = selectedProject.media_url ||
+                                        (selectedProject.media_files || []).find((f: any) => f.type === 'audio')?.url;
+                                    return (
                                     <div className="flex flex-col items-center justify-center py-12">
                                         <div className="w-24 h-24 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-8">
                                             <PlayCircle className="w-12 h-12 text-blue-600" />
                                         </div>
-                                        <h4 className="text-2xl font-bold mb-6 text-black dark:text-white">Call Recording Analysis</h4>
-                                        <audio 
-                                            key={selectedProject.media_url} 
-                                            src={selectedProject.media_url}
-                                            controls 
-                                            preload="auto"
-                                            className="w-full max-w-md shadow-lg rounded-full"
-                                        >
-                                            Your browser does not support the audio element.
-                                        </audio>
-                                        <div className="mt-6 flex flex-col items-center gap-2">
-                                            <p className="text-[10px] text-gray-500 text-center">
-                                                Having trouble? Ensure the link is a direct public URL.
-                                            </p>
+                                        <h4 className="text-2xl font-bold mb-6 text-black dark:text-white">Call Recording</h4>
+                                        {audioSrc ? (
+                                            <audio 
+                                                key={audioSrc} 
+                                                src={audioSrc}
+                                                controls 
+                                                preload="auto"
+                                                className="w-full max-w-md shadow-lg rounded-full"
+                                            >
+                                                Your browser does not support the audio element.
+                                            </audio>
+                                        ) : (
+                                            <p className="text-gray-500 text-sm">No audio file found. Please add an audio file in the admin panel.</p>
+                                        )}
+                                        {audioSrc && (
                                             <a 
-                                                href={selectedProject.media_url} 
+                                                href={audioSrc} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer"
-                                                className="text-[10px] text-blue-600 dark:text-blue-400 underline hover:text-blue-700 font-medium"
+                                                className="text-[10px] text-blue-600 dark:text-blue-400 underline mt-4"
                                             >
-                                                Open Direct Media Link
+                                                Open Direct Link
                                             </a>
-                                        </div>
+                                        )}
                                     </div>
-                                )}
+                                    );
+                                })()}
 
-                                {selectedProject.project_type === 'video' && (
+                                {selectedProject.project_type === 'video' && (() => {
+                                    const videoSrc = selectedProject.media_url ||
+                                        (selectedProject.media_files || []).find((f: any) => f.type === 'video')?.url;
+                                    return (
                                     <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-2xl">
-                                        {selectedProject.media_url?.includes('youtube.com') || selectedProject.media_url?.includes('youtu.be') ? (
+                                        {!videoSrc ? (
+                                            <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">No video source found.</div>
+                                        ) : videoSrc.includes('youtube.com') || videoSrc.includes('youtu.be') ? (
                                             <iframe
-                                                key={selectedProject.media_url}
-                                                src={selectedProject.media_url.includes('youtube.com/embed/') ? selectedProject.media_url : selectedProject.media_url.replace('watch?v=', 'embed/').split('&')[0].replace('youtu.be/', 'youtube.com/embed/')}
+                                                key={videoSrc}
+                                                src={videoSrc.includes('youtube.com/embed/') ? videoSrc : videoSrc.replace('watch?v=', 'embed/').split('&')[0].replace('youtu.be/', 'youtube.com/embed/')}
                                                 className="w-full h-full border-0"
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                 allowFullScreen
                                             />
-                                        ) : selectedProject.media_url?.includes('vimeo.com') ? (
+                                        ) : videoSrc.includes('vimeo.com') ? (
                                             <iframe
-                                                key={selectedProject.media_url}
-                                                src={`https://player.vimeo.com/video/${selectedProject.media_url.split('/').pop()}`}
+                                                key={videoSrc}
+                                                src={`https://player.vimeo.com/video/${videoSrc.split('/').pop()}`}
                                                 className="w-full h-full border-0"
                                                 allow="autoplay; fullscreen; picture-in-picture"
                                                 allowFullScreen
                                             />
                                         ) : (
                                             <video 
-                                                key={selectedProject.media_url}
-                                                src={selectedProject.media_url}
+                                                key={videoSrc}
+                                                src={videoSrc}
                                                 controls 
                                                 className="w-full h-full"
                                             >
@@ -249,7 +260,8 @@ export default function Portfolio() {
                                             </video>
                                         )}
                                     </div>
-                                )}
+                                    );
+                                })()}
                                 
                                 <div className="mt-12 pt-8 border-t border-black/5 dark:border-white/5 grid grid-cols-1 md:grid-cols-2 gap-12">
                                     <div>
