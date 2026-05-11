@@ -100,7 +100,7 @@ export default function UseCases() {
                     </motion.div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {useCases.map((useCase, i) => {
                         const Icon = getIcon(useCase.icon_name);
                         return (
@@ -112,7 +112,7 @@ export default function UseCases() {
                                 transition={{ delay: i * 0.1 }}
                             >
                                 <Link href={`/use-cases/${useCase.industry_slug}`} className="block group">
-                                    <div className="relative overflow-hidden rounded-2xl border border-black/10 dark:border-white/10 aspect-[3/4] flex flex-col justify-end p-8 shadow-md dark:shadow-none hover:shadow-2xl dark:hover:shadow-none transition-all duration-500 group">
+                                    <div className="relative overflow-hidden rounded-2xl border border-black/10 dark:border-white/10 aspect-video flex flex-col justify-end p-8 shadow-md dark:shadow-none hover:shadow-2xl dark:hover:shadow-none transition-all duration-500 group">
                                         {/* Background Image */}
                                         <div className="absolute inset-0 z-0">
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent z-10" />

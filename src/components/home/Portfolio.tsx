@@ -121,7 +121,7 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {portfolioItems.map((item, index) => (
                         <motion.div
                             key={item.title + index}
@@ -131,7 +131,7 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                             transition={{ delay: index * 0.1 }}
                             className="h-full"
                         >
-                            <div className={`p-8 rounded-3xl bg-gradient-to-br ${item.color} border border-black/5 dark:${item.borderColor} backdrop-blur-md relative overflow-hidden group shadow-sm dark:shadow-none bg-white/50 dark:bg-black/20 transition-all duration-500 hover:scale-[1.02] h-full flex flex-col`}>
+                            <div className={`p-8 rounded-3xl bg-gradient-to-br ${item.color} border border-black/5 dark:${item.borderColor} backdrop-blur-md relative overflow-hidden group shadow-sm dark:shadow-none bg-white/50 dark:bg-black/20 transition-all duration-500 hover:scale-[1.02] aspect-[3/2] flex flex-col`}>
                                 <div className="absolute inset-0 bg-white/10 dark:bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 
                                 <div className="relative z-10 flex flex-col h-full">
