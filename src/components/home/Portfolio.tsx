@@ -191,8 +191,9 @@ export default function Portfolio() {
                                             <PlayCircle className="w-12 h-12 text-blue-600" />
                                         </div>
                                         <h4 className="text-2xl font-bold mb-6 text-black dark:text-white">Call Recording Analysis</h4>
-                                        <audio controls className="w-full max-w-md">
-                                            <source src={selectedProject.media_url} type="audio/mpeg" />
+                                        <audio key={selectedProject.media_url} controls className="w-full max-w-md shadow-lg rounded-full">
+                                            <source src={selectedProject.media_url} />
+                                            Your browser does not support the audio element.
                                         </audio>
                                     </div>
                                 )}
@@ -201,14 +202,24 @@ export default function Portfolio() {
                                     <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-2xl">
                                         {selectedProject.media_url?.includes('youtube.com') || selectedProject.media_url?.includes('youtu.be') ? (
                                             <iframe
-                                                src={selectedProject.media_url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                                                key={selectedProject.media_url}
+                                                src={selectedProject.media_url.includes('youtube.com/embed/') ? selectedProject.media_url : selectedProject.media_url.replace('watch?v=', 'embed/').split('&')[0].replace('youtu.be/', 'youtube.com/embed/')}
                                                 className="w-full h-full border-0"
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                 allowFullScreen
                                             />
+                                        ) : selectedProject.media_url?.includes('vimeo.com') ? (
+                                            <iframe
+                                                key={selectedProject.media_url}
+                                                src={`https://player.vimeo.com/video/${selectedProject.media_url.split('/').pop()}`}
+                                                className="w-full h-full border-0"
+                                                allow="autoplay; fullscreen; picture-in-picture"
+                                                allowFullScreen
+                                            />
                                         ) : (
-                                            <video controls className="w-full h-full">
-                                                <source src={selectedProject.media_url} type="video/mp4" />
+                                            <video key={selectedProject.media_url} controls className="w-full h-full">
+                                                <source src={selectedProject.media_url} />
+                                                Your browser does not support the video tag.
                                             </video>
                                         )}
                                     </div>
