@@ -27,7 +27,7 @@ CREATE POLICY "Portfolio Authenticated Upload" ON storage.objects
 
 -- 5. Allow authenticated users to update/delete their files
 CREATE POLICY "Portfolio Authenticated Update" ON storage.objects
-  FOR UPDATE WITH CHECK (bucket_id = 'portfolio_media' AND auth.role() = 'authenticated');
+  FOR UPDATE USING (bucket_id = 'portfolio_media' AND auth.role() = 'authenticated');
 
 CREATE POLICY "Portfolio Authenticated Delete" ON storage.objects
-  FOR DELETE WITH CHECK (bucket_id = 'portfolio_media' AND auth.role() = 'authenticated');
+  FOR DELETE USING (bucket_id = 'portfolio_media' AND auth.role() = 'authenticated');
