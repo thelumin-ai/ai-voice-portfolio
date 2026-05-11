@@ -4,10 +4,10 @@ import { motion } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 import { getTechStack } from "@/app/admin/(protected)/tech-stack/actions";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Autoplay } from "swiper/modules";
+import { Pagination, Autoplay } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import "swiper/css";
+import "swiper/css/pagination";
 
 const defaultCategories = [
     {
@@ -87,19 +87,21 @@ export default function TechStack() {
                     </motion.p>
                 </div>
 
-                <div className="relative">
+                <div className="relative pb-12">
                     <Swiper
-                        modules={[Navigation, Autoplay]}
-                        spaceBetween={24}
-                        slidesPerView={1}
+                        modules={[Pagination, Autoplay]}
+                        spaceBetween={16}
+                        slidesPerView={2}
                         breakpoints={{
-                            640: { slidesPerView: 2 },
-                            1024: { slidesPerView: 3 },
+                            480: { slidesPerView: 3 },
+                            640: { slidesPerView: 4 },
+                            1024: { slidesPerView: 6 },
                         }}
+                        pagination={{ clickable: true }}
                         autoplay={{ delay: 4000, disableOnInteraction: false }}
-                        loop={groupedTech.length > 3}
+                        loop={groupedTech.length > 6}
                         onSwiper={(swiper) => { swiperRef.current = swiper; }}
-                        className="pb-4"
+                        className="pb-10"
                     >
                         {groupedTech.map((category, index) => (
                             <SwiperSlide key={category.name}>
@@ -134,23 +136,7 @@ export default function TechStack() {
                         ))}
                     </Swiper>
 
-                    {/* Navigation Arrows */}
-                    <div className="flex justify-center gap-3 mt-8">
-                        <button
-                            onClick={() => swiperRef.current?.slidePrev()}
-                            className="w-10 h-10 rounded-full border border-black/10 dark:border-white/20 flex items-center justify-center text-black dark:text-white hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all duration-300"
-                            aria-label="Previous category"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </button>
-                        <button
-                            onClick={() => swiperRef.current?.slideNext()}
-                            className="w-10 h-10 rounded-full border border-black/10 dark:border-white/20 flex items-center justify-center text-black dark:text-white hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all duration-300"
-                            aria-label="Next category"
-                        >
-                            <ChevronRight className="w-5 h-5" />
-                        </button>
-                    </div>
+                    {/* Dots handled by pagination */}
                 </div>
             </div>
         </section>

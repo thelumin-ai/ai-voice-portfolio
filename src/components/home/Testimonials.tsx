@@ -5,9 +5,10 @@ import { motion } from "framer-motion";
 import { getTestimonials } from "@/app/admin/(protected)/testimonials/actions";
 import { Star, PlayCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Autoplay } from "swiper/modules";
+import { Pagination, Autoplay } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
+import "swiper/css/pagination";
 
 export default function Testimonials() {
     const [testimonials, setTestimonials] = useState<any[]>([]);
@@ -56,19 +57,21 @@ export default function Testimonials() {
                     </motion.p>
                 </div>
 
-                <div className="relative">
+                <div className="relative pb-12">
                     <Swiper
-                        modules={[Navigation, Autoplay]}
-                        spaceBetween={32}
-                        slidesPerView={1}
+                        modules={[Pagination, Autoplay]}
+                        spaceBetween={16}
+                        slidesPerView={2}
                         breakpoints={{
-                            768: { slidesPerView: 2 },
-                            1024: { slidesPerView: 3 },
+                            480: { slidesPerView: 3 },
+                            640: { slidesPerView: 4 },
+                            1024: { slidesPerView: 6 },
                         }}
+                        pagination={{ clickable: true }}
                         autoplay={{ delay: 6000, disableOnInteraction: false }}
-                        loop={testimonials.length > 3}
+                        loop={testimonials.length > 6}
                         onSwiper={(swiper) => { swiperRef.current = swiper; }}
-                        className="pb-4"
+                        className="pb-10"
                     >
                         {testimonials.map((testimonial, index) => (
                             <SwiperSlide key={testimonial.id}>
@@ -112,23 +115,7 @@ export default function Testimonials() {
                         ))}
                     </Swiper>
 
-                    {/* Navigation Arrows */}
-                    <div className="flex justify-center gap-3 mt-8">
-                        <button
-                            onClick={() => swiperRef.current?.slidePrev()}
-                            className="w-10 h-10 rounded-full border border-black/10 dark:border-white/20 flex items-center justify-center text-black dark:text-white hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all duration-300"
-                            aria-label="Previous testimonial"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </button>
-                        <button
-                            onClick={() => swiperRef.current?.slideNext()}
-                            className="w-10 h-10 rounded-full border border-black/10 dark:border-white/20 flex items-center justify-center text-black dark:text-white hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all duration-300"
-                            aria-label="Next testimonial"
-                        >
-                            <ChevronRight className="w-5 h-5" />
-                        </button>
-                    </div>
+                    {/* Dots handled by pagination */}
                 </div>
             </div>
         </section>

@@ -37,3 +37,27 @@
     @apply bg-white/40 dark:bg-black/40 backdrop-blur-lg border border-black/10 dark:border-white/10 rounded-2xl;
   }
 }
+/* Swiper Pagination Styles */
+.swiper-pagination-bullet {
+  background: rgba(59, 130, 246, 0.3) !important;
+  opacity: 1 !important;
+  transition: all 0.3s ease;
+}
+
+.swiper-pagination-bullet-active {
+  background: #3b82f6 !important;
+  width: 24px !important;
+  border-radius: 4px !important;
+}
+
+.dark .swiper-pagination-bullet {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark .swiper-pagination-bullet-active {
+  background: #3b82f6 !important;
+}
+
+.swiper-pagination {
+  bottom: 0 !important;
+}

@@ -5,9 +5,10 @@ import { MessageSquare, Cpu, Headphones, Zap, Rocket, ChevronLeft, ChevronRight 
 import { useEffect, useState, useRef } from "react";
 import { getProcessSteps } from "@/app/admin/(protected)/process-steps/actions";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Autoplay } from "swiper/modules";
+import { Pagination, Autoplay } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
+import "swiper/css/pagination";
 
 const defaultSteps = [
     {
@@ -89,19 +90,21 @@ export default function HowItWorks() {
                     </motion.p>
                 </div>
 
-                <div className="relative">
+                <div className="relative pb-12">
                     <Swiper
-                        modules={[Navigation, Autoplay]}
-                        spaceBetween={24}
-                        slidesPerView={1}
+                        modules={[Pagination, Autoplay]}
+                        spaceBetween={16}
+                        slidesPerView={2}
                         breakpoints={{
-                            640: { slidesPerView: 2 },
-                            1024: { slidesPerView: 3 },
+                            480: { slidesPerView: 3 },
+                            640: { slidesPerView: 4 },
+                            1024: { slidesPerView: 6 },
                         }}
+                        pagination={{ clickable: true }}
                         autoplay={{ delay: 5000, disableOnInteraction: false }}
-                        loop={processSteps.length > 3}
+                        loop={processSteps.length > 6}
                         onSwiper={(swiper) => { swiperRef.current = swiper; }}
-                        className="pb-4"
+                        className="pb-10"
                     >
                         {processSteps.map((step, index) => (
                             <SwiperSlide key={step.title + index}>
@@ -126,23 +129,7 @@ export default function HowItWorks() {
                         ))}
                     </Swiper>
 
-                    {/* Navigation Arrows */}
-                    <div className="flex justify-center gap-3 mt-8">
-                        <button
-                            onClick={() => swiperRef.current?.slidePrev()}
-                            className="w-10 h-10 rounded-full border border-black/10 dark:border-white/20 flex items-center justify-center text-black dark:text-white hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all duration-300"
-                            aria-label="Previous step"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </button>
-                        <button
-                            onClick={() => swiperRef.current?.slideNext()}
-                            className="w-10 h-10 rounded-full border border-black/10 dark:border-white/20 flex items-center justify-center text-black dark:text-white hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all duration-300"
-                            aria-label="Next step"
-                        >
-                            <ChevronRight className="w-5 h-5" />
-                        </button>
-                    </div>
+                    {/* Dots handled by pagination */}
                 </div>
             </div>
         </section>
