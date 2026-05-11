@@ -3,17 +3,114 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, CheckCircle2 } from "lucide-react";
 
+// Fallback data for when the database is empty
+const fallbackUseCases: Record<string, any> = {
+    "real-estate": {
+        name: "Real Estate",
+        industry_slug: "real-estate",
+        headline: "Instant Lead Calling",
+        subhead: "AI voice agents that call leads within seconds, qualify prospects, and book showings — automatically.",
+        problem: "Online leads convert best when called within 5 minutes. Most agents take hours or even days to respond, losing the deal before it even starts.",
+        features: ["Speed to lead < 5s", "Live hot-transfers to agents", "Automated showing scheduling", "Lead qualification scoring", "CRM auto-sync"],
+        flow: [
+            { step: "Lead Captured", desc: "A new lead submits a form on your website or landing page." },
+            { step: "AI Calls Instantly", desc: "Within seconds, the AI agent calls the lead to qualify them." },
+            { step: "Qualification", desc: "The AI asks budget, timeline, and location preference questions." },
+            { step: "Hot Transfer", desc: "Qualified leads are instantly transferred to your best available agent." },
+        ],
+        results: [{ stat: "300%", label: "Increase in connect rate" }, { stat: "<5s", label: "Speed to lead" }],
+    },
+    "solar": {
+        name: "Solar & Energy",
+        industry_slug: "solar",
+        headline: "High-Volume Pre-Qualification",
+        subhead: "AI agents that pre-qualify solar leads at scale, filtering by homeownership, utility costs, and roof eligibility.",
+        problem: "Sales reps waste hours dialing un-qualified homeowners or renters. Manual dialing can't keep up with lead volume.",
+        features: ["Utility bill size filtering", "Homeowner verification", "Virtual consultation booking", "Roof eligibility screening", "Automated follow-ups"],
+        flow: [
+            { step: "Lead Ingested", desc: "Leads arrive from Facebook ads, Google, or purchased lists." },
+            { step: "AI Pre-Screen", desc: "The agent verifies homeownership and asks about utility costs." },
+            { step: "Qualification", desc: "Eligible leads are scored and prioritized." },
+            { step: "Consultation Booked", desc: "Qualified homeowners are booked for a virtual or in-person consultation." },
+        ],
+        results: [{ stat: "12hrs", label: "Saved per rep weekly" }, { stat: "4x", label: "Lead throughput" }],
+    },
+    "home-services": {
+        name: "Home Services",
+        industry_slug: "home-services",
+        headline: "24/7 Booking & Dispatch",
+        subhead: "Never miss a service call again. AI agents answer, book, and dispatch — even after hours.",
+        problem: "Missed calls mean missed revenue. Customers call competitors when you don't answer the phone.",
+        features: ["After-hours answering", "Appointment booking", "Emergency dispatch routing", "Service type classification", "Customer callback scheduling"],
+        flow: [
+            { step: "Customer Calls", desc: "A homeowner calls your business line for plumbing, HVAC, or electrical work." },
+            { step: "AI Answers", desc: "The voice agent picks up 24/7, identifies the service needed." },
+            { step: "Booking", desc: "The agent books the appointment based on crew availability." },
+            { step: "Dispatch", desc: "Emergency calls are flagged and dispatched immediately." },
+        ],
+        results: [{ stat: "40%", label: "More bookings captured" }, { stat: "24/7", label: "Availability" }],
+    },
+    "consulting": {
+        name: "Consulting & Agencies",
+        industry_slug: "consulting",
+        headline: "Client Intake Automation",
+        subhead: "Streamline your client onboarding with AI-powered discovery calls and intake automation.",
+        problem: "Manual intake processes slow down onboarding and frustrate potential clients who want to get started quickly.",
+        features: ["Automated discovery calls", "Smart intake forms via voice", "CRM auto-sync", "Project scope estimation", "Meeting scheduling"],
+        flow: [
+            { step: "Lead Inquires", desc: "A potential client reaches out via your website or referral." },
+            { step: "AI Discovery Call", desc: "The AI agent conducts a structured discovery conversation." },
+            { step: "Intake Captured", desc: "All requirements, budget, and timeline data are captured automatically." },
+            { step: "Handoff to Team", desc: "A fully briefed summary is delivered to your consulting team." },
+        ],
+        results: [{ stat: "60%", label: "Faster client onboarding" }, { stat: "3x", label: "More discovery calls" }],
+    },
+    "finance": {
+        name: "Finance & Insurance",
+        industry_slug: "finance",
+        headline: "Compliance-Ready Outreach",
+        subhead: "AI agents that handle regulated outreach with built-in compliance guardrails and audit trails.",
+        problem: "Regulatory requirements make manual outreach slow and risky. One wrong word can mean costly fines.",
+        features: ["Scripted compliance calls", "Consent management", "Audit trail recording", "Do-not-call list integration", "Regulatory script adherence"],
+        flow: [
+            { step: "Campaign Setup", desc: "Configure compliant scripts and targeting parameters." },
+            { step: "AI Outreach", desc: "The agent makes calls following strict regulatory guidelines." },
+            { step: "Consent Captured", desc: "All consent and opt-in/opt-out decisions are recorded." },
+            { step: "Audit Ready", desc: "Complete call recordings and transcripts are stored for audit." },
+        ],
+        results: [{ stat: "99%", label: "Compliance adherence" }, { stat: "50%", label: "Cost reduction" }],
+    },
+    "customer-support": {
+        name: "Customer Support",
+        industry_slug: "customer-support",
+        headline: "Tier-1 Support Automation",
+        subhead: "Resolve common support tickets instantly with AI voice agents, and seamlessly hand off complex issues to humans.",
+        problem: "Support teams are overwhelmed with repetitive tickets that don't need human agents, causing long wait times for everyone.",
+        features: ["FAQ resolution via voice", "Smart ticket creation", "Seamless human handoff", "Sentiment analysis", "Multi-language support"],
+        flow: [
+            { step: "Customer Calls", desc: "A customer calls your support line with an issue." },
+            { step: "AI Triages", desc: "The agent identifies the issue type and attempts resolution." },
+            { step: "Auto-Resolve", desc: "Common issues like password resets or billing questions are handled instantly." },
+            { step: "Human Handoff", desc: "Complex issues are seamlessly transferred to a live agent with full context." },
+        ],
+        results: [{ stat: "70%", label: "Tickets auto-resolved" }, { stat: "< 30s", label: "Average resolution time" }],
+    },
+};
+
 export default async function IndustryPage({ params }: { params: Promise<{ industry: string }> }) {
     const { industry } = await params;
     
-    // Fetch dynamic data
+    // Fetch dynamic data from DB
     const { data: useCase, error } = await getUseCaseBySlug(industry);
 
-    if (error || !useCase) {
+    // Fall back to hardcoded data if DB is empty
+    const fallback = fallbackUseCases[industry];
+    
+    if ((error || !useCase) && !fallback) {
         notFound();
     }
 
-    const data = useCase;
+    const data = useCase || fallback;
 
     return (
         <div className="bg-black min-h-screen pt-24 pb-16">
