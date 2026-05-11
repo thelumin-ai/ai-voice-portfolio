@@ -16,6 +16,7 @@ export default function Navbar({ consultationLink = "https://www.upwork.com/serv
         { href: "/#solutions", label: "Solutions" },
         { href: "/#use-cases", label: "Use Cases" },
         { href: "/portfolio", label: "Portfolio" },
+        { href: "/#estimator", label: "Price Estimator" },
         { href: "/#how-it-works", label: "How It Works" },
         { href: "/#about", label: "About" },
         { href: "/blog", label: "Blog" },
@@ -23,7 +24,7 @@ export default function Navbar({ consultationLink = "https://www.upwork.com/serv
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b border-black/10 dark:border-white/10 bg-white/80 dark:bg-black/80 backdrop-blur-md transition-colors duration-300">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1400px]">
                 <div className="flex h-16 items-center justify-between">
                     <div className="flex-shrink-0">
                         <Link href="/" className="text-xl font-bold tracking-tighter text-black dark:text-white">
