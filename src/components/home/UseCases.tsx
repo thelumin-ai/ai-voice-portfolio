@@ -71,6 +71,36 @@ const defaultUseCases = [
         problem: "Support teams are overwhelmed with repetitive tickets that don't need human agents.",
         features: ["FAQ resolution via voice", "Smart ticket creation", "Seamless human handoff"],
         results: [{ stat: "70%", label: "Tickets auto-resolved" }]
+    },
+    {
+        name: "Healthcare",
+        icon_name: "Heart",
+        industry_slug: "healthcare",
+        cover_image_url: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=1000&auto=format&fit=crop",
+        headline: "Patient Care Automation",
+        problem: "Clinics lose patients when calls go unanswered or follow-ups are missed.",
+        features: ["Appointment scheduling", "Medication reminders", "Insurance verification"],
+        results: [{ stat: "50%", label: "Reduction in no-shows" }]
+    },
+    {
+        name: "E-commerce",
+        icon_name: "ShoppingCart",
+        industry_slug: "e-commerce",
+        cover_image_url: "https://images.unsplash.com/photo-1557821552-17105176677c?q=80&w=1000&auto=format&fit=crop",
+        headline: "Abandoned Cart Recovery",
+        problem: "Millions in revenue lost to abandoned carts. Email is ignored; voice is personal.",
+        features: ["Personalized offers", "Order status tracking", "Upsell opportunities"],
+        results: [{ stat: "25%", label: "Recovery rate increase" }]
+    },
+    {
+        name: "Automotive",
+        icon_name: "Car",
+        industry_slug: "automotive",
+        cover_image_url: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=1000&auto=format&fit=crop",
+        headline: "Dealership Lead Follow-up",
+        problem: "Sales teams take hours to call back hot internet leads. AI calls in seconds.",
+        features: ["Test drive booking", "Trade-in valuation", "Service appointment set"],
+        results: [{ stat: "3x", label: "More test drives set" }]
     }
 ];
 

@@ -41,6 +41,18 @@ const defaultSolutions = [
         icon_name: "CalendarCheck",
         href: "/#solutions"
     },
+    {
+        title: "Custom AI Dashboards",
+        description: "Get full visibility into your AI's performance with real-time analytics, call transcripts, and conversion tracking.",
+        icon_name: "BarChart3",
+        href: "/#solutions"
+    },
+    {
+        title: "Multi-Language Support",
+        description: "Deploy AI voice agents that speak and understand over 50+ languages with native-level fluency and local accents.",
+        icon_name: "Languages",
+        href: "/#solutions"
+    },
 ];
 
 export default function Solutions() {
