@@ -54,12 +54,22 @@ export default function Portfolio() {
             try {
                 const data = await getPortfolioProjects();
                 if (data && data.length > 0) {
-                    const mappedData = data.filter(p => p.status === 'published').map((p, index) => ({
+                    const published = data.filter(p => p.status === 'published').map((p, index) => ({
                         ...p,
                         color: colors[index % colors.length].color,
                         borderColor: colors[index % colors.length].borderColor,
                     }));
-                    setPortfolioItems(mappedData.length > 0 ? mappedData : defaultPortfolioItems);
+                    
+                    if (published.length > 0) {
+                        // If we have real data, we show it. 
+                        // But if we have fewer than 3, we append the defaults to keep the UI full
+                        if (published.length < 3) {
+                            const combined = [...published, ...defaultPortfolioItems.slice(published.length)];
+                            setPortfolioItems(combined);
+                        } else {
+                            setPortfolioItems(published);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error("Failed to fetch portfolios:", error);

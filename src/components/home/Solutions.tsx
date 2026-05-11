@@ -48,7 +48,12 @@ export default function Solutions() {
                 if (data && data.length > 0) {
                     const published = data.filter((s: any) => s.status === 'published');
                     if (published.length > 0) {
-                        setSolutions(published);
+                        if (published.length < 6) {
+                            const combined = [...published, ...defaultSolutions.slice(published.length)];
+                            setSolutions(combined);
+                        } else {
+                            setSolutions(published);
+                        }
                     }
                 }
             } catch (error) {

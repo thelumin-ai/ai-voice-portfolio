@@ -47,7 +47,12 @@ export default function UseCases() {
                 if (data && data.length > 0) {
                     const published = data.filter((u: any) => u.status === 'published');
                     if (published.length > 0) {
-                        setUseCases(published);
+                        if (published.length < 3) {
+                            const combined = [...published, ...defaultUseCases.slice(published.length)];
+                            setUseCases(combined);
+                        } else {
+                            setUseCases(published);
+                        }
                     }
                 }
             } catch (error) {

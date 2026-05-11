@@ -44,7 +44,14 @@ export default function TechStack() {
                             acc[curr.category].tools.push({ name: curr.name, icon_url: curr.icon_url });
                             return acc;
                         }, {});
-                        setGroupedTech(Object.values(grouped));
+                        const groupedArray = Object.values(grouped);
+                        
+                        if (groupedArray.length < 3) {
+                            const combined = [...groupedArray, ...defaultCategories.slice(groupedArray.length)];
+                            setGroupedTech(combined);
+                        } else {
+                            setGroupedTech(groupedArray);
+                        }
                     }
                 }
             } catch (error) {
