@@ -15,6 +15,8 @@ export const useCaseSchema = z.object({
       stat: z.string().min(1, 'Stat is required'),
       label: z.string().min(1, 'Label is required')
   })).optional(),
+  cover_image_url: z.string().optional(),
+  icon_name: z.string().optional(),
   status: z.enum(['published', 'draft', 'archived']),
   display_order: z.number().int().optional(),
 })

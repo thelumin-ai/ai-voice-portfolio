@@ -8,7 +8,14 @@ import { createUseCase, updateUseCase } from './actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash } from 'lucide-react'
+import { Plus, Trash, UploadCloud } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+
+const ICON_OPTIONS = [
+  'Home', 'Sun', 'Hammer', 'Briefcase', 'BarChart', 'Headphones',
+  'PhoneIncoming', 'PhoneOutgoing', 'UserCheck', 'Building', 'Car',
+  'ShoppingCart', 'Heart', 'GraduationCap', 'Utensils', 'Plane',
+];
 
 interface UseCaseFormProps {
   initialData?: UseCaseFormValues & { id: string }
@@ -30,13 +37,33 @@ export function UseCaseForm({ initialData }: UseCaseFormProps) {
       features: [''],
       flow: [{ step: '', desc: '' }],
       results: [{ stat: '', label: '' }],
+      cover_image_url: '',
+      icon_name: 'Briefcase',
       status: 'published',
       display_order: 0,
     },
   })
 
-  // We have to manage features as objects for useFieldArray to work easily
-  // Alternatively, we can use simple state and sync it. Let's use simple state for arrays of strings.
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const supabase = createClient();
+      const ext = file.name.split('.').pop();
+      const path = `use-cases/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('portfolio_media').upload(path, file);
+      if (uploadError) throw uploadError;
+      const { data: { publicUrl } } = supabase.storage.from('portfolio_media').getPublicUrl(path);
+      form.setValue('cover_image_url', publicUrl);
+    } catch (err: any) {
+      console.error('Upload failed:', err);
+    } finally {
+      setIsUploading(false);
+    }
+  };
   const [features, setFeatures] = useState<string[]>(initialData?.features || ['']);
   
   const { fields: flowFields, append: appendFlow, remove: removeFlow } = useFieldArray({
@@ -136,16 +163,49 @@ export function UseCaseForm({ initialData }: UseCaseFormProps) {
             />
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                  <label className="text-sm font-medium">Icon</label>
+                  <select
+                    {...form.register('icon_name')}
+                    className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+                  >
+                    {ICON_OPTIONS.map(icon => (
+                      <option key={icon} value={icon}>{icon}</option>
+                    ))}
+                  </select>
+              </div>
+              <div className="space-y-2">
+                  <label className="text-sm font-medium">Status</label>
+                  <select
+                    {...form.register('status')}
+                    className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+                  >
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                    <option value="archived">Archived</option>
+                  </select>
+              </div>
+          </div>
+
+          {/* Cover Image */}
           <div className="space-y-2">
-              <label className="text-sm font-medium">Status</label>
-              <select
-                {...form.register('status')}
-                className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
-              >
-                <option value="published">Published</option>
-                <option value="draft">Draft</option>
-                <option value="archived">Archived</option>
-              </select>
+              <label className="text-sm font-medium">Cover Image</label>
+              <div className="flex gap-4 items-center">
+                  <input
+                    {...form.register('cover_image_url')}
+                    className="flex-1 px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+                    placeholder="Paste URL or upload an image"
+                  />
+                  <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-zinc-800 text-white rounded-md hover:bg-zinc-700 transition-colors text-sm">
+                    <UploadCloud className="w-4 h-4" />
+                    {isUploading ? 'Uploading...' : 'Upload'}
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploading} />
+                  </label>
+              </div>
+              {form.watch('cover_image_url') && (
+                <img src={form.watch('cover_image_url')} alt="Preview" className="mt-2 w-full max-h-48 object-cover rounded-lg border dark:border-zinc-700" />
+              )}
           </div>
         </CardContent>
       </Card>

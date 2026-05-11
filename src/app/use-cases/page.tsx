@@ -1,6 +1,7 @@
 import { getUseCases } from "@/app/admin/(protected)/use-cases/actions";
 import Link from "next/link";
-import { ArrowRight, Home, Sun, Hammer, Briefcase, BarChart, Headphones } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 
 export const metadata = {
     title: "AI Voice Agent Use Cases | Abimbola.AI",
@@ -13,10 +14,10 @@ const defaultUseCases = [
         name: "Real Estate",
         icon_name: "Home",
         industry_slug: "real-estate",
-        cover_image_url: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop",
-        headline: "Instant Lead Calling",
-        problem: "Online leads convert best when called within 5 minutes. Most agents take hours.",
-        features: ["Speed to lead < 5s", "Live hot-transfers to agents", "Automated showing scheduling"],
+        cover_image_url: "https://images.unsplash.com/photo-1560184897-ae75f418493e?q=80&w=1000&auto=format&fit=crop",
+        headline: "Speed-to-Lead AI Calling",
+        problem: "Leads go cold in minutes. AI agents call instantly, qualify prospects, and book showings on autopilot.",
+        features: ["Instant callback < 5s", "Live transfers to agents", "Smart showing scheduler"],
         results: [{ stat: "300%", label: "Increase in connect rate" }],
         status: "published",
     },
@@ -25,7 +26,7 @@ const defaultUseCases = [
         name: "Solar & Energy",
         icon_name: "Sun",
         industry_slug: "solar",
-        cover_image_url: "https://images.unsplash.com/photo-1509391366360-5f2122bc158b?q=80&w=1000&auto=format&fit=crop",
+        cover_image_url: "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?q=80&w=1000&auto=format&fit=crop",
         headline: "High-Volume Pre-Qualification",
         problem: "Sales reps waste hours dialing un-qualified homeowners or renters.",
         features: ["Utility bill size filtering", "Homeowner verification", "Virtual consultation booking"],
@@ -37,7 +38,7 @@ const defaultUseCases = [
         name: "Home Services",
         icon_name: "Hammer",
         industry_slug: "home-services",
-        cover_image_url: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1000&auto=format&fit=crop",
+        cover_image_url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=1000&auto=format&fit=crop",
         headline: "24/7 Booking & Dispatch",
         problem: "Missed calls mean missed revenue. Customers call competitors when you don't answer.",
         features: ["After-hours answering", "Appointment booking", "Emergency dispatch routing"],
@@ -49,7 +50,7 @@ const defaultUseCases = [
         name: "Consulting & Agencies",
         icon_name: "Briefcase",
         industry_slug: "consulting",
-        cover_image_url: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=1000&auto=format&fit=crop",
+        cover_image_url: "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1000&auto=format&fit=crop",
         headline: "Client Intake Automation",
         problem: "Manual intake processes slow down onboarding and frustrate potential clients.",
         features: ["Automated discovery calls", "Smart intake forms via voice", "CRM auto-sync"],
@@ -61,7 +62,7 @@ const defaultUseCases = [
         name: "Finance & Insurance",
         icon_name: "BarChart",
         industry_slug: "finance",
-        cover_image_url: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1000&auto=format&fit=crop",
+        cover_image_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop",
         headline: "Compliance-Ready Outreach",
         problem: "Regulatory requirements make manual outreach slow and risky.",
         features: ["Scripted compliance calls", "Consent management", "Audit trail recording"],
@@ -73,7 +74,7 @@ const defaultUseCases = [
         name: "Customer Support",
         icon_name: "Headphones",
         industry_slug: "customer-support",
-        cover_image_url: "https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=1000&auto=format&fit=crop",
+        cover_image_url: "https://images.unsplash.com/photo-1596524430615-b46475ddff6e?q=80&w=1000&auto=format&fit=crop",
         headline: "Tier-1 Support Automation",
         problem: "Support teams are overwhelmed with repetitive tickets that don't need human agents.",
         features: ["FAQ resolution via voice", "Smart ticket creation", "Seamless human handoff"],
@@ -82,8 +83,9 @@ const defaultUseCases = [
     },
 ];
 
-const iconMap: Record<string, any> = {
-    Home, Sun, Hammer, Briefcase, BarChart, Headphones,
+// Dynamic icon resolver - works with any Lucide icon name from the DB
+const getIcon = (iconName: string) => {
+    return (LucideIcons as any)[iconName] || LucideIcons.Briefcase;
 };
 
 export default async function UseCasesIndexPage() {
@@ -119,7 +121,7 @@ export default async function UseCasesIndexPage() {
                 {/* Use Cases Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {useCases.map((useCase: any) => {
-                        const IconComponent = iconMap[useCase.icon_name] || Briefcase;
+                        const IconComponent = getIcon(useCase.icon_name || 'Briefcase');
                         return (
                             <Link
                                 key={useCase.id || useCase.name}
