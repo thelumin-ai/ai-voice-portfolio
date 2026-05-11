@@ -201,9 +201,16 @@ export default function Portfolio() {
                                             controls 
                                             preload="auto"
                                             className="w-full max-w-md shadow-lg rounded-full"
+                                            onError={(e) => {
+                                                console.error("Audio Load Error:", e);
+                                                // We can't easily set state here without re-rendering the whole component but we can alert or show a console message
+                                            }}
                                         >
                                             Your browser does not support the audio element.
                                         </audio>
+                                        <p className="text-[10px] text-gray-500 mt-4 text-center">
+                                            Having trouble? Ensure the link is a direct public URL to an audio file (mp3/wav).
+                                        </p>
                                     </div>
                                 )}
 
@@ -226,7 +233,12 @@ export default function Portfolio() {
                                                 allowFullScreen
                                             />
                                         ) : (
-                                            <video key={selectedProject.media_url} controls className="w-full h-full">
+                                            <video 
+                                                key={selectedProject.media_url} 
+                                                controls 
+                                                className="w-full h-full"
+                                                onError={(e) => console.error("Video Load Error", e)}
+                                            >
                                                 <source src={selectedProject.media_url} />
                                                 Your browser does not support the video tag.
                                             </video>

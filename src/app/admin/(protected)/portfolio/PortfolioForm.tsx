@@ -202,17 +202,44 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">
-                {form.watch('project_type') === 'webrtc' ? 'Vapi/Retell Agent ID' : 'Media URL (Audio/Video)'}
+                {form.watch('project_type') === 'webrtc' ? 'Vapi/Retell Agent ID' : 'Media File / URL (Audio/Video)'}
               </label>
-              <input
-                {...form.register('media_url')}
-                className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
-                placeholder={form.watch('project_type') === 'webrtc' ? "e.g. 087efbdc-..." : "https://..."}
-              />
+              <div className="flex gap-2">
+                <input
+                  {...form.register('media_url')}
+                  className="flex-1 px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+                  placeholder={form.watch('project_type') === 'webrtc' ? "e.g. 087efbdc-..." : "https://..."}
+                />
+                {(form.watch('project_type') === 'audio' || form.watch('project_type') === 'video') && (
+                  <label className="cursor-pointer flex items-center justify-center px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+                    <UploadCloud className="w-4 h-4" />
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept={form.watch('project_type') === 'audio' ? 'audio/*' : 'video/*'} 
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+                        try {
+                          const fileExt = file.name.split('.').pop()
+                          const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`
+                          const filePath = `portfolio_assets/${fileName}`
+                          const { error: uploadError } = await supabase.storage.from('portfolio_media').upload(filePath, file)
+                          if (uploadError) throw uploadError
+                          const { data } = supabase.storage.from('portfolio_media').getPublicUrl(filePath)
+                          form.setValue('media_url', data.publicUrl)
+                        } catch (err: any) {
+                          alert(`Upload failed: ${err.message}`)
+                        }
+                      }} 
+                    />
+                  </label>
+                )}
+              </div>
               <p className="text-[10px] text-gray-500 italic">
                 {form.watch('project_type') === 'webrtc' 
                   ? "Enter the UUID of your agent from the platform." 
-                  : "Enter a direct link to the audio file or video (YouTube/Vimeo)."}
+                  : "Upload a file or enter a direct link to an audio file or video (YouTube/Vimeo)."}
               </p>
             </div>
 

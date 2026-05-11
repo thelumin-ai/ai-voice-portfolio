@@ -15,7 +15,7 @@ export default function Navbar({ consultationLink = "https://www.upwork.com/serv
         { href: "/", label: "Home" },
         { href: "/#solutions", label: "Solutions" },
         { href: "/#use-cases", label: "Use Cases" },
-        { href: "/#portfolio", label: "Portfolio" },
+        { href: "/portfolio", label: "Portfolio" },
         { href: "/#how-it-works", label: "How It Works" },
         { href: "/#about", label: "About" },
         { href: "/blog", label: "Blog" },
