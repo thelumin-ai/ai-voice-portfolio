@@ -61,14 +61,18 @@ export default function Portfolio() {
                     }));
                     
                     if (published.length > 0) {
-                        // If we have real data, we show it. 
-                        // But if we have fewer than 3, we append the defaults to keep the UI full
-                        if (published.length < 3) {
-                            const combined = [...published, ...defaultPortfolioItems.slice(published.length)];
-                            setPortfolioItems(combined);
-                        } else {
-                            setPortfolioItems(published);
+                        // Keep all real items, and if less than 3, add the unique demo items that don't clash
+                        const combined = [...published];
+                        
+                        // Only add defaults if we have very few items
+                        if (combined.length < 3) {
+                            defaultPortfolioItems.forEach(defItem => {
+                                if (combined.length < 3 && !combined.find(p => p.title === defItem.title)) {
+                                    combined.push(defItem);
+                                }
+                            });
                         }
+                        setPortfolioItems(combined);
                     }
                 }
             } catch (error) {
@@ -191,8 +195,13 @@ export default function Portfolio() {
                                             <PlayCircle className="w-12 h-12 text-blue-600" />
                                         </div>
                                         <h4 className="text-2xl font-bold mb-6 text-black dark:text-white">Call Recording Analysis</h4>
-                                        <audio key={selectedProject.media_url} controls className="w-full max-w-md shadow-lg rounded-full">
-                                            <source src={selectedProject.media_url} />
+                                        <audio 
+                                            key={selectedProject.media_url} 
+                                            src={selectedProject.media_url}
+                                            controls 
+                                            preload="auto"
+                                            className="w-full max-w-md shadow-lg rounded-full"
+                                        >
                                             Your browser does not support the audio element.
                                         </audio>
                                     </div>
