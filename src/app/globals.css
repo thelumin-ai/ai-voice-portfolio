@@ -24,7 +24,7 @@
 
 @layer base {
   html {
-    @apply text-[16px] lg:text-[18px];
+    @apply text-[16px] lg:text-[19px] xl:text-[20px];
   }
   body {
     @apply antialiased leading-relaxed;

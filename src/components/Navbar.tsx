@@ -39,7 +39,7 @@ export default function Navbar({ consultationLink = "https://www.upwork.com/serv
                                 <Link
                                     key={link.href}
                                     href={link.href}
-                                    className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors duration-200"
+                                    className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors duration-200 text-lg font-medium"
                                 >
                                     {link.label}
                                 </Link>
