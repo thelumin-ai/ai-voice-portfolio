@@ -23,6 +23,9 @@
 }
 
 @layer base {
+  html {
+    @apply text-[16px] lg:text-[18px];
+  }
   body {
     @apply antialiased leading-relaxed;
   }
