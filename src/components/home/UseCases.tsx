@@ -1,17 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Home, Sun, Hammer, Briefcase, BarChart, Headphones } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { getUseCases } from "@/app/admin/(protected)/use-cases/actions";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Autoplay } from "swiper/modules";
+import type { Swiper as SwiperType } from "swiper";
+import "swiper/css";
 
 const defaultUseCases = [
     {
         name: "Real Estate",
         icon_name: "Home",
         industry_slug: "real-estate",
-        color: "from-blue-600 to-cyan-500",
         cover_image_url: "https://images.unsplash.com/photo-1560184897-ae75f418493e?q=80&w=1000&auto=format&fit=crop",
         headline: "Speed-to-Lead AI Calling",
         problem: "Leads go cold in minutes. AI agents call instantly, qualify prospects, and book showings on autopilot.",
@@ -27,24 +31,57 @@ const defaultUseCases = [
         problem: "Sales reps waste hours dialing un-qualified homeowners or renters.",
         features: ["Utility bill size filtering", "Homeowner verification", "Virtual consultation booking"],
         results: [{ stat: "12hrs", label: "Saved per rep weekly" }]
+    },
+    {
+        name: "Home Services",
+        icon_name: "Hammer",
+        industry_slug: "home-services",
+        cover_image_url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=1000&auto=format&fit=crop",
+        headline: "24/7 Booking & Dispatch",
+        problem: "Missed calls mean missed revenue. Customers call competitors when you don't answer.",
+        features: ["After-hours answering", "Appointment booking", "Emergency dispatch routing"],
+        results: [{ stat: "40%", label: "More bookings captured" }]
+    },
+    {
+        name: "Consulting & Agencies",
+        icon_name: "Briefcase",
+        industry_slug: "consulting",
+        cover_image_url: "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1000&auto=format&fit=crop",
+        headline: "Client Intake Automation",
+        problem: "Manual intake processes slow down onboarding and frustrate potential clients.",
+        features: ["Automated discovery calls", "Smart intake forms via voice", "CRM auto-sync"],
+        results: [{ stat: "60%", label: "Faster client onboarding" }]
+    },
+    {
+        name: "Finance & Insurance",
+        icon_name: "BarChart",
+        industry_slug: "finance",
+        cover_image_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop",
+        headline: "Compliance-Ready Outreach",
+        problem: "Regulatory requirements make manual outreach slow and risky.",
+        features: ["Scripted compliance calls", "Consent management", "Audit trail recording"],
+        results: [{ stat: "99%", label: "Compliance adherence" }]
+    },
+    {
+        name: "Customer Support",
+        icon_name: "Headphones",
+        industry_slug: "customer-support",
+        cover_image_url: "https://images.unsplash.com/photo-1596524430615-b46475ddff6e?q=80&w=1000&auto=format&fit=crop",
+        headline: "Tier-1 Support Automation",
+        problem: "Support teams are overwhelmed with repetitive tickets that don't need human agents.",
+        features: ["FAQ resolution via voice", "Smart ticket creation", "Seamless human handoff"],
+        results: [{ stat: "70%", label: "Tickets auto-resolved" }]
     }
 ];
 
-const renderIcon = (iconName: string) => {
-    switch (iconName) {
-        case 'Home': return Home;
-        case 'Sun': return Sun;
-        case 'Hammer': return Hammer;
-        case 'Briefcase': return Briefcase;
-        case 'BarChart': return BarChart;
-        case 'Headphones': return Headphones;
-        default: return Briefcase;
-    }
+const getIcon = (iconName: string) => {
+    return (LucideIcons as any)[iconName] || LucideIcons.Briefcase;
 };
 
 export default function UseCases() {
     const [useCases, setUseCases] = useState<any[]>(defaultUseCases);
     const [isLoading, setIsLoading] = useState(true);
+    const swiperRef = useRef<SwiperType | null>(null);
 
     useEffect(() => {
         const fetchCases = async () => {
@@ -100,43 +137,75 @@ export default function UseCases() {
                     </motion.div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {useCases.map((useCase, i) => {
-                        const IconComponent = renderIcon(useCase.icon_name || 'Briefcase');
-                        return (
-                        <motion.div
-                            key={useCase.id || useCase.name}
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: i * 0.1 }}
+                <div className="relative">
+                    <Swiper
+                        modules={[Navigation, Autoplay]}
+                        spaceBetween={24}
+                        slidesPerView={1}
+                        breakpoints={{
+                            640: { slidesPerView: 2 },
+                            1024: { slidesPerView: 3 },
+                        }}
+                        autoplay={{ delay: 5000, disableOnInteraction: false }}
+                        loop={useCases.length > 3}
+                        onSwiper={(swiper) => { swiperRef.current = swiper; }}
+                        className="pb-4"
+                    >
+                        {useCases.map((useCase, i) => {
+                            const IconComponent = getIcon(useCase.icon_name || 'Briefcase');
+                            return (
+                            <SwiperSlide key={useCase.id || useCase.name}>
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    whileInView={{ opacity: 1, scale: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: i * 0.1 }}
+                                >
+                                    <Link href={`/use-cases/${useCase.industry_slug}`} className="block group">
+                                        <div className="relative overflow-hidden rounded-2xl border border-black/10 dark:border-white/10 aspect-[4/3] flex flex-col justify-end p-6 shadow-md dark:shadow-none hover:shadow-xl dark:hover:shadow-none transition-all duration-500 group">
+                                            {/* Background Image */}
+                                            <div className="absolute inset-0 z-0">
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20 z-10" />
+                                                <img
+                                                    src={useCase.cover_image_url || 'https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop'}
+                                                    alt={useCase.name}
+                                                    className="w-full h-full object-cover transform scale-100 group-hover:scale-110 transition-transform duration-700"
+                                                />
+                                            </div>
+
+                                            <div className="relative z-20 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                                                <div className={`w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 border border-white/20 transition-all duration-500 group-hover:bg-blue-600 group-hover:border-blue-500/50`}>
+                                                    <IconComponent className="h-6 w-6 text-white transition-colors duration-500" />
+                                                </div>
+                                                <h3 className="text-2xl font-semibold text-white mb-2">{useCase.name}</h3>
+                                                <div className="flex items-center text-sm font-medium text-gray-300 opacity-0 transform translate-y-4 group-hover:text-blue-300 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 delay-100">
+                                                    Explore Agents <ArrowRight className="ml-2 h-3 w-3" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </motion.div>
+                            </SwiperSlide>
+                        )})}
+                    </Swiper>
+
+                    {/* Navigation Arrows */}
+                    <div className="flex justify-center gap-3 mt-8">
+                        <button
+                            onClick={() => swiperRef.current?.slidePrev()}
+                            className="w-10 h-10 rounded-full border border-black/10 dark:border-white/20 flex items-center justify-center text-black dark:text-white hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all duration-300"
+                            aria-label="Previous use case"
                         >
-                            <Link href={`/use-cases/${useCase.industry_slug}`} className="block group">
-                                <div className="relative overflow-hidden rounded-2xl border border-black/10 dark:border-white/10 aspect-[4/3] flex flex-col justify-end p-6 shadow-md dark:shadow-none hover:shadow-xl dark:hover:shadow-none transition-all duration-500 group">
-
-                                    {/* Base Image always visible instead of color gradient */}
-                                    <div className="absolute inset-0 z-0">
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20 z-10" />
-                                        <img
-                                            src={useCase.cover_image_url || 'https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop'}
-                                            alt={useCase.name}
-                                            className="w-full h-full object-cover transform scale-100 group-hover:scale-110 transition-transform duration-700"
-                                        />
-                                    </div>
-
-                                    <div className="relative z-20 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                                        <div className={`w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 border border-white/20 transition-all duration-500 group-hover:bg-blue-600 group-hover:border-blue-500/50`}>
-                                            <IconComponent className="h-6 w-6 text-white transition-colors duration-500" />
-                                        </div>
-                                        <h3 className="text-2xl font-semibold text-white mb-2">{useCase.name}</h3>
-                                        <div className="flex items-center text-sm font-medium text-gray-300 opacity-0 transform translate-y-4 group-hover:text-blue-300 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 delay-100">
-                                            Explore Agents <ArrowRight className="ml-2 h-3 w-3" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </Link>
-                        </motion.div>
-                    )})}
+                            <LucideIcons.ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => swiperRef.current?.slideNext()}
+                            className="w-10 h-10 rounded-full border border-black/10 dark:border-white/20 flex items-center justify-center text-black dark:text-white hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all duration-300"
+                            aria-label="Next use case"
+                        >
+                            <LucideIcons.ChevronRight className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>

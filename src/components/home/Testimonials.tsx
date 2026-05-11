@@ -1,13 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { getTestimonials } from "@/app/admin/(protected)/testimonials/actions";
-import { Star, PlayCircle } from "lucide-react";
+import { Star, PlayCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Autoplay } from "swiper/modules";
+import type { Swiper as SwiperType } from "swiper";
+import "swiper/css";
 
 export default function Testimonials() {
     const [testimonials, setTestimonials] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const swiperRef = useRef<SwiperType | null>(null);
 
     useEffect(() => {
         const fetchTestimonials = async () => {
@@ -51,44 +56,79 @@ export default function Testimonials() {
                     </motion.p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {testimonials.map((testimonial, index) => (
-                        <motion.div
-                            key={testimonial.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: index * 0.1 }}
-                            className="glass-panel p-8 group border border-black/5 dark:border-white/5 bg-white dark:bg-black/40 shadow-sm dark:shadow-none transition-all duration-300 flex flex-col"
+                <div className="relative">
+                    <Swiper
+                        modules={[Navigation, Autoplay]}
+                        spaceBetween={32}
+                        slidesPerView={1}
+                        breakpoints={{
+                            768: { slidesPerView: 2 },
+                            1024: { slidesPerView: 3 },
+                        }}
+                        autoplay={{ delay: 6000, disableOnInteraction: false }}
+                        loop={testimonials.length > 3}
+                        onSwiper={(swiper) => { swiperRef.current = swiper; }}
+                        className="pb-4"
+                    >
+                        {testimonials.map((testimonial, index) => (
+                            <SwiperSlide key={testimonial.id}>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className="h-full"
+                                >
+                                    <div className="glass-panel p-8 group border border-black/5 dark:border-white/5 bg-white dark:bg-black/40 shadow-sm dark:shadow-none transition-all duration-300 flex flex-col h-full min-h-[280px]">
+                                        <div className="flex text-yellow-400 mb-4">
+                                            {[...Array(5)].map((_, i) => (
+                                                <Star key={i} className={`w-4 h-4 ${i < testimonial.rating ? 'fill-current' : 'text-gray-300 dark:text-gray-700'}`} />
+                                            ))}
+                                        </div>
+                                        
+                                        <p className="text-gray-700 dark:text-gray-300 mb-6 italic flex-grow">"{testimonial.content}"</p>
+                                        
+                                        <div className="flex items-center justify-between mt-auto pt-4 border-t border-black/5 dark:border-white/5">
+                                            <div>
+                                                <h4 className="font-bold text-black dark:text-white">{testimonial.client_name}</h4>
+                                                {testimonial.company && (
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400">{testimonial.company}</p>
+                                                )}
+                                            </div>
+                                            {testimonial.video_url && (
+                                                <a 
+                                                    href={testimonial.video_url} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                                                >
+                                                    <PlayCircle className="w-5 h-5" />
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
+
+                    {/* Navigation Arrows */}
+                    <div className="flex justify-center gap-3 mt-8">
+                        <button
+                            onClick={() => swiperRef.current?.slidePrev()}
+                            className="w-10 h-10 rounded-full border border-black/10 dark:border-white/20 flex items-center justify-center text-black dark:text-white hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all duration-300"
+                            aria-label="Previous testimonial"
                         >
-                            <div className="flex text-yellow-400 mb-4">
-                                {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className={`w-4 h-4 ${i < testimonial.rating ? 'fill-current' : 'text-gray-300 dark:text-gray-700'}`} />
-                                ))}
-                            </div>
-                            
-                            <p className="text-gray-700 dark:text-gray-300 mb-6 italic flex-grow">"{testimonial.content}"</p>
-                            
-                            <div className="flex items-center justify-between mt-auto pt-4 border-t border-black/5 dark:border-white/5">
-                                <div>
-                                    <h4 className="font-bold text-black dark:text-white">{testimonial.client_name}</h4>
-                                    {testimonial.company && (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">{testimonial.company}</p>
-                                    )}
-                                </div>
-                                {testimonial.video_url && (
-                                    <a 
-                                        href={testimonial.video_url} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
-                                    >
-                                        <PlayCircle className="w-5 h-5" />
-                                    </a>
-                                )}
-                            </div>
-                        </motion.div>
-                    ))}
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => swiperRef.current?.slideNext()}
+                            className="w-10 h-10 rounded-full border border-black/10 dark:border-white/20 flex items-center justify-center text-black dark:text-white hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all duration-300"
+                            aria-label="Next testimonial"
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>

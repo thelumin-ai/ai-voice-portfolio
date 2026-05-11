@@ -1,10 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { PlayCircle, Eye } from "lucide-react";
-import { useEffect, useState } from "react";
+import { PlayCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { getPortfolioProjects } from "@/app/admin/(protected)/portfolio/actions";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Autoplay } from "swiper/modules";
+import type { Swiper as SwiperType } from "swiper";
+import "swiper/css";
 
 const defaultPortfolioItems = [
     {
@@ -44,6 +48,7 @@ const colors = [
 export default function Portfolio() {
     const [portfolioItems, setPortfolioItems] = useState<any[]>(defaultPortfolioItems);
     const [isLoading, setIsLoading] = useState(true);
+    const swiperRef = useRef<SwiperType | null>(null);
 
     useEffect(() => {
         const fetchPortfolios = async () => {
@@ -79,50 +84,85 @@ export default function Portfolio() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {portfolioItems.map((item, index) => (
-                        <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: index * 0.1 }}
-                            className={`p-8 rounded-2xl bg-gradient-to-br ${item.color} border border-black/5 dark:${item.borderColor} backdrop-blur-md relative overflow-hidden group shadow-sm dark:shadow-none bg-white dark:bg-transparent transition-colors duration-300 flex flex-col`}
-                        >
-                            <div className="absolute inset-0 bg-black/5 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                            <div className="relative z-10 flex flex-col h-full">
-                                {item.cover_image_url && (
-                                    <img src={item.cover_image_url} alt={item.title} className="w-full aspect-video object-cover rounded-lg mb-4" />
-                                )}
-                                
-                                {item.industry_tag && (
-                                    <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-2 uppercase tracking-wider">
-                                        {item.industry_tag}
-                                    </span>
-                                )}
-                                
-                                <h3 className="text-xl font-bold text-black dark:text-white mb-3 transition-colors duration-300">{item.title}</h3>
-                                <p className="text-gray-600 dark:text-gray-300 text-sm mb-6 flex-grow transition-colors duration-300">{item.short_description}</p>
-
-                                <div className="space-y-2 mb-6">
-                                    {item.metrics?.map((metric: any, i: number) => (
-                                        <div key={i} className="flex items-center text-xs text-blue-600 dark:text-blue-300 font-medium transition-colors duration-300">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2" />
-                                            {metric.value} {metric.label}
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <Link
-                                    href={item.demo_link || "/playground"}
-                                    className="inline-flex items-center text-sm font-semibold text-black dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 mt-auto"
+                <div className="relative">
+                    <Swiper
+                        modules={[Navigation, Autoplay]}
+                        spaceBetween={32}
+                        slidesPerView={1}
+                        breakpoints={{
+                            768: { slidesPerView: 2 },
+                            1024: { slidesPerView: 3 },
+                        }}
+                        autoplay={{ delay: 5000, disableOnInteraction: false }}
+                        loop={portfolioItems.length > 3}
+                        onSwiper={(swiper) => { swiperRef.current = swiper; }}
+                        className="pb-4"
+                    >
+                        {portfolioItems.map((item, index) => (
+                            <SwiperSlide key={item.title + index}>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className="h-full"
                                 >
-                                    <PlayCircle className="w-4 h-4 mr-2" /> View Project
-                                </Link>
-                            </div>
-                        </motion.div>
-                    ))}
+                                    <div className={`p-8 rounded-2xl bg-gradient-to-br ${item.color} border border-black/5 dark:${item.borderColor} backdrop-blur-md relative overflow-hidden group shadow-sm dark:shadow-none bg-white dark:bg-transparent transition-colors duration-300 flex flex-col h-full min-h-[360px]`}>
+                                        <div className="absolute inset-0 bg-black/5 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                                        <div className="relative z-10 flex flex-col h-full">
+                                            {item.cover_image_url && (
+                                                <img src={item.cover_image_url} alt={item.title} className="w-full aspect-video object-cover rounded-lg mb-4" />
+                                            )}
+                                            
+                                            {item.industry_tag && (
+                                                <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-2 uppercase tracking-wider">
+                                                    {item.industry_tag}
+                                                </span>
+                                            )}
+                                            
+                                            <h3 className="text-xl font-bold text-black dark:text-white mb-3 transition-colors duration-300">{item.title}</h3>
+                                            <p className="text-gray-600 dark:text-gray-300 text-sm mb-6 flex-grow transition-colors duration-300">{item.short_description}</p>
+
+                                            <div className="space-y-2 mb-6">
+                                                {item.metrics?.map((metric: any, i: number) => (
+                                                    <div key={i} className="flex items-center text-xs text-blue-600 dark:text-blue-300 font-medium transition-colors duration-300">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2" />
+                                                        {metric.value} {metric.label}
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <Link
+                                                href={item.demo_link || "/playground"}
+                                                className="inline-flex items-center text-sm font-semibold text-black dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 mt-auto"
+                                            >
+                                                <PlayCircle className="w-4 h-4 mr-2" /> View Project
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
+
+                    {/* Navigation Arrows */}
+                    <div className="flex justify-center gap-3 mt-8">
+                        <button
+                            onClick={() => swiperRef.current?.slidePrev()}
+                            className="w-10 h-10 rounded-full border border-black/10 dark:border-white/20 flex items-center justify-center text-black dark:text-white hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all duration-300"
+                            aria-label="Previous project"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => swiperRef.current?.slideNext()}
+                            className="w-10 h-10 rounded-full border border-black/10 dark:border-white/20 flex items-center justify-center text-black dark:text-white hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all duration-300"
+                            aria-label="Next project"
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
