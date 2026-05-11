@@ -1,15 +1,15 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import * as LucideIcons from "lucide-react";
-import Link from "next/link";
-import { useEffect, useState, useRef } from "react";
 import { getServices } from "@/app/admin/(protected)/services/actions";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay } from "swiper/modules";
+import { Pagination, Grid } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 import "swiper/css/pagination";
+import "swiper/css/grid";
 
 const defaultSolutions = [
     {
@@ -66,9 +66,9 @@ export default function Solutions() {
             try {
                 const { data } = await getServices();
                 if (data && data.length > 0) {
-                    const published = data.filter(s => s.status === 'published');
+                    const published = data.filter((s: any) => s.status === 'published');
                     if (published.length > 0) {
-                        setSolutions(published.map(s => ({ ...s, href: "/#solutions" })));
+                        setSolutions(published);
                     }
                 }
             } catch (error) {
@@ -81,16 +81,13 @@ export default function Solutions() {
         fetchServices();
     }, []);
 
-    // Helper to render icon by name
-    const renderIcon = (iconName: string) => {
-        const IconComponent = (LucideIcons as any)[iconName] || LucideIcons.CheckCircle;
-        return <IconComponent className="h-10 w-10 text-blue-600 dark:text-blue-400 mb-6 group-hover:scale-110 transition-transform" />;
+    const getIcon = (iconName: string) => {
+        return (LucideIcons as any)[iconName] || LucideIcons.Zap;
     };
 
     return (
-        <section className="py-24 bg-gray-100 dark:bg-black relative transition-colors duration-300" id="solutions">
-            <div className="absolute top-1/2 left-0 w-full h-[300px] bg-blue-900/10 blur-[100px] pointer-events-none rounded-full" />
-            <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 z-10">
+        <section className="py-24 bg-gray-50 dark:bg-zinc-950 relative border-t border-black/5 dark:border-white/5 transition-colors duration-300" id="solutions">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center max-w-3xl mx-auto mb-16">
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
@@ -113,42 +110,45 @@ export default function Solutions() {
 
                 <div className="relative pb-12">
                     <Swiper
-                        modules={[Pagination, Autoplay]}
-                        spaceBetween={16}
+                        modules={[Pagination, Grid]}
+                        spaceBetween={24}
                         slidesPerView={2}
+                        grid={{
+                            rows: 2,
+                            fill: 'row'
+                        }}
                         breakpoints={{
-                            480: { slidesPerView: 3 },
-                            640: { slidesPerView: 4 },
-                            1024: { slidesPerView: 6 },
+                            1024: { 
+                                slidesPerView: 3,
+                                grid: { rows: 3 }
+                            },
                         }}
                         pagination={{ clickable: true }}
-                        autoplay={{ delay: 4000, disableOnInteraction: false }}
-                        loop={solutions.length > 6}
                         onSwiper={(swiper) => { swiperRef.current = swiper; }}
-                        className="pb-10"
+                        className="pb-10 h-auto"
                     >
-                        {solutions.map((solution, index) => (
-                            <SwiperSlide key={solution.title + index}>
+                        {solutions.map((solution, index) => {
+                            const IconComponent = getIcon(solution.icon_name);
+                            return (
+                            <SwiperSlide key={solution.title + index} className="!h-auto mb-6">
                                 <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    whileInView={{ opacity: 1, scale: 1 }}
                                     viewport={{ once: true }}
-                                    transition={{ delay: index * 0.1 }}
+                                    transition={{ delay: (index % 6) * 0.1 }}
+                                    className="h-full"
                                 >
-                                    <Link href={solution.href} className="block group h-full">
-                                        <div className="glass-panel p-8 h-full transition-all duration-300 hover:border-blue-500/50 hover:bg-white/50 dark:hover:bg-white/5 relative overflow-hidden group shadow-sm dark:shadow-none bg-white/50 dark:bg-black/40 min-h-[240px]">
-                                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-full translate-x-16 -translate-y-16 group-hover:bg-blue-500/20 transition-colors" />
-                                            {renderIcon(solution.icon_name || 'CheckCircle')}
-                                            <h3 className="text-xl font-semibold text-black dark:text-white mb-3 transition-colors duration-300">{solution.title}</h3>
-                                            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed transition-colors duration-300">{solution.description}</p>
+                                    <div className="glass-panel p-8 h-full bg-white dark:bg-black/40 border border-black/5 dark:border-white/5 shadow-sm dark:shadow-none hover:shadow-xl dark:hover:shadow-none transition-all duration-300 group flex flex-col min-h-[220px]">
+                                        <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-6 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                                            <IconComponent className="w-6 h-6" />
                                         </div>
-                                    </Link>
+                                        <h3 className="text-xl font-bold text-black dark:text-white mb-3 transition-colors duration-300">{solution.title}</h3>
+                                        <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed transition-colors duration-300 line-clamp-3">{solution.description}</p>
+                                    </div>
                                 </motion.div>
                             </SwiperSlide>
-                        ))}
+                        )})}
                     </Swiper>
-
-                    {/* Dots are handled by swiper pagination */}
                 </div>
             </div>
         </section>

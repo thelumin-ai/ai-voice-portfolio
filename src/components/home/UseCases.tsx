@@ -7,10 +7,11 @@ import * as LucideIcons from "lucide-react";
 import { ArrowRight } from "lucide-react";
 import { getUseCases } from "@/app/admin/(protected)/use-cases/actions";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay } from "swiper/modules";
+import { Pagination, Grid } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 import "swiper/css/pagination";
+import "swiper/css/grid";
 
 const defaultUseCases = [
     {
@@ -170,29 +171,32 @@ export default function UseCases() {
 
                 <div className="relative pb-12">
                     <Swiper
-                        modules={[Pagination, Autoplay]}
+                        modules={[Pagination, Grid]}
                         spaceBetween={16}
                         slidesPerView={2}
+                        grid={{
+                            rows: 2,
+                            fill: 'row'
+                        }}
                         breakpoints={{
-                            480: { slidesPerView: 3 },
-                            640: { slidesPerView: 4 },
-                            1024: { slidesPerView: 6 },
+                            1024: { 
+                                slidesPerView: 3,
+                                grid: { rows: 3 }
+                            },
                         }}
                         pagination={{ clickable: true }}
-                        autoplay={{ delay: 5000, disableOnInteraction: false }}
-                        loop={useCases.length > 6}
                         onSwiper={(swiper) => { swiperRef.current = swiper; }}
-                        className="pb-10"
+                        className="pb-10 h-auto"
                     >
                         {useCases.map((useCase, i) => {
                             const IconComponent = getIcon(useCase.icon_name || 'Briefcase');
                             return (
-                            <SwiperSlide key={useCase.id || useCase.name}>
+                            <SwiperSlide key={useCase.id || useCase.name} className="!h-auto mb-4">
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     whileInView={{ opacity: 1, scale: 1 }}
                                     viewport={{ once: true }}
-                                    transition={{ delay: i * 0.1 }}
+                                    transition={{ delay: (i % 6) * 0.1 }}
                                 >
                                     <Link href={`/use-cases/${useCase.industry_slug}`} className="block group">
                                         <div className="relative overflow-hidden rounded-2xl border border-black/10 dark:border-white/10 aspect-[4/3] flex flex-col justify-end p-6 shadow-md dark:shadow-none hover:shadow-xl dark:hover:shadow-none transition-all duration-500 group">
@@ -210,8 +214,8 @@ export default function UseCases() {
                                                 <div className={`w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 border border-white/20 transition-all duration-500 group-hover:bg-blue-600 group-hover:border-blue-500/50`}>
                                                     <IconComponent className="h-6 w-6 text-white transition-colors duration-500" />
                                                 </div>
-                                                <h3 className="text-2xl font-semibold text-white mb-2">{useCase.name}</h3>
-                                                <div className="flex items-center text-sm font-medium text-gray-300 opacity-0 transform translate-y-4 group-hover:text-blue-300 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 delay-100">
+                                                <h3 className="text-xl font-semibold text-white mb-2">{useCase.name}</h3>
+                                                <div className="flex items-center text-xs font-medium text-gray-300 opacity-0 transform translate-y-4 group-hover:text-blue-300 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 delay-100">
                                                     Explore Agents <ArrowRight className="ml-2 h-3 w-3" />
                                                 </div>
                                             </div>
@@ -221,8 +225,6 @@ export default function UseCases() {
                             </SwiperSlide>
                         )})}
                     </Swiper>
-
-                    {/* Dots handled by pagination */}
                 </div>
             </div>
         </section>

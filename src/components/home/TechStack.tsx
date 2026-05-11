@@ -4,10 +4,11 @@ import { motion } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 import { getTechStack } from "@/app/admin/(protected)/tech-stack/actions";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay } from "swiper/modules";
+import { Pagination, Grid } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 import "swiper/css/pagination";
+import "swiper/css/grid";
 
 const defaultCategories = [
     {
@@ -89,30 +90,33 @@ export default function TechStack() {
 
                 <div className="relative pb-12">
                     <Swiper
-                        modules={[Pagination, Autoplay]}
-                        spaceBetween={16}
+                        modules={[Pagination, Grid]}
+                        spaceBetween={24}
                         slidesPerView={2}
+                        grid={{
+                            rows: 2,
+                            fill: 'row'
+                        }}
                         breakpoints={{
-                            480: { slidesPerView: 3 },
-                            640: { slidesPerView: 4 },
-                            1024: { slidesPerView: 6 },
+                            1024: { 
+                                slidesPerView: 3,
+                                grid: { rows: 3 }
+                            },
                         }}
                         pagination={{ clickable: true }}
-                        autoplay={{ delay: 4000, disableOnInteraction: false }}
-                        loop={groupedTech.length > 6}
                         onSwiper={(swiper) => { swiperRef.current = swiper; }}
-                        className="pb-10"
+                        className="pb-10 h-auto"
                     >
                         {groupedTech.map((category, index) => (
-                            <SwiperSlide key={category.name}>
+                            <SwiperSlide key={category.name} className="!h-auto mb-6">
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
-                                    transition={{ delay: index * 0.1 }}
+                                    transition={{ delay: (index % 6) * 0.1 }}
                                     className="h-full"
                                 >
-                                    <div className="glass-panel p-8 group border border-black/5 dark:border-white/5 hover:border-black/20 dark:hover:border-white/20 transition-all bg-gray-50 dark:bg-black/40 shadow-sm dark:shadow-none duration-300 h-full min-h-[320px]">
+                                    <div className="glass-panel p-8 group border border-black/5 dark:border-white/5 hover:border-black/20 dark:hover:border-white/20 transition-all bg-gray-50 dark:bg-black/40 shadow-sm dark:shadow-none duration-300 h-full min-h-[300px]">
                                         <h3 className="text-lg font-semibold text-black dark:text-white mb-4 border-b border-black/10 dark:border-white/10 pb-4 transition-colors duration-300">{category.name}</h3>
                                         <ul className="space-y-3">
                                             {category.tools.map((tool: any, i: number) => {
@@ -135,8 +139,6 @@ export default function TechStack() {
                             </SwiperSlide>
                         ))}
                     </Swiper>
-
-                    {/* Dots handled by pagination */}
                 </div>
             </div>
         </section>

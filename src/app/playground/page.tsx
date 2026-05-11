@@ -168,13 +168,6 @@ export default function Playground() {
                 )}
             </AnimatePresence>
 
-            {/* Button to artificially trigger the popup for layout testing */}
-            <button
-                onClick={() => setShowConsultPopup(true)}
-                className="fixed bottom-4 left-4 text-xs text-gray-700 hover:text-gray-400 transition-colors opacity-50 z-50"
-            >
-                [Test Show Popup]
-            </button>
         </div>
     );
 }

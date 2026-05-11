@@ -13,7 +13,7 @@ import { Plus, Trash2, UploadCloud } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface PortfolioFormProps {
-  initialData?: PortfolioFormValues & { id: string }
+  initialData?: any
 }
 
 export function PortfolioForm({ initialData }: PortfolioFormProps) {
@@ -24,11 +24,13 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
 
   const form = useForm<PortfolioFormValues>({
     resolver: zodResolver(portfolioSchema),
-    defaultValues: initialData ? {
+    defaultValues: (initialData ? {
       ...initialData,
+      project_type: (initialData as any).project_type || 'webrtc',
+      media_url: (initialData as any).media_url || '',
       metrics: initialData.metrics || [],
       integrations: initialData.integrations || [],
-    } as any : {
+    } : {
       title: '',
       industry_tag: '',
       short_description: '',
@@ -36,11 +38,12 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
       metrics: [],
       integrations: [],
       media_files: [],
-      demo_link: '',
+      project_type: 'webrtc',
+      media_url: '',
       cover_image_url: '',
       status: 'published',
       display_order: 0,
-    },
+    }) as PortfolioFormValues,
   })
 
   const { fields: metricFields, append: appendMetric, remove: removeMetric } = useFieldArray({
@@ -186,6 +189,34 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
+              <label className="text-sm font-medium">Project Type</label>
+              <select
+                {...form.register('project_type')}
+                className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              >
+                <option value="webrtc">Interactive WebRTC (Vapi/Retell)</option>
+                <option value="audio">Audio Call Recording</option>
+                <option value="video">Video Demonstration</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                {form.watch('project_type') === 'webrtc' ? 'Vapi/Retell Agent ID' : 'Media URL (Audio/Video)'}
+              </label>
+              <input
+                {...form.register('media_url')}
+                className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+                placeholder={form.watch('project_type') === 'webrtc' ? "e.g. 087efbdc-..." : "https://..."}
+              />
+              <p className="text-[10px] text-gray-500 italic">
+                {form.watch('project_type') === 'webrtc' 
+                  ? "Enter the UUID of your agent from the platform." 
+                  : "Enter a direct link to the audio file or video (YouTube/Vimeo)."}
+              </p>
+            </div>
+
+            <div className="space-y-2">
               <label className="text-sm font-medium">Status</label>
               <select
                 {...form.register('status')}
@@ -195,15 +226,6 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
                 <option value="draft">Draft</option>
                 <option value="archived">Archived</option>
               </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Demo Link (Optional)</label>
-              <input
-                {...form.register('demo_link')}
-                className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
-                placeholder="https://..."
-              />
             </div>
           </div>
         </CardContent>

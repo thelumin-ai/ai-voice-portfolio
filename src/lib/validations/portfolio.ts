@@ -20,8 +20,9 @@ export const portfolioSchema = z.object({
   metrics: z.array(metricSchema),
   integrations: z.array(z.string()),
   media_files: z.array(mediaFileSchema),
-  demo_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  cover_image_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  project_type: z.enum(['webrtc', 'audio', 'video']).optional(),
+  media_url: z.string().optional().or(z.literal("")),
+  cover_image_url: z.string().optional().or(z.literal("")),
   status: z.enum(["published", "draft", "archived"]),
   display_order: z.number().int(),
 })
