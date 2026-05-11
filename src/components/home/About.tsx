@@ -22,18 +22,19 @@ export default function About({ profileImageUrl }: { profileImageUrl?: string })
                             <div className="absolute -top-4 -left-4 w-24 h-24 border-t-2 border-l-2 border-blue-500/30 rounded-tl-xl" />
                             <div className="absolute -bottom-4 -right-4 w-24 h-24 border-b-2 border-r-2 border-blue-500/30 rounded-br-xl" />
 
-                            <div className="aspect-[4/5] bg-gray-200 dark:bg-zinc-900 rounded-2xl border border-black/10 dark:border-white/10 overflow-hidden relative transition-colors duration-300">
-                                <div className="relative z-10 w-full h-[500px] rounded-2xl overflow-hidden border border-black/10 dark:border-white/10 shadow-sm dark:shadow-none bg-white dark:bg-black">
+                            <div className="aspect-[3/4] rounded-2xl overflow-hidden relative border border-black/10 dark:border-white/10 shadow-sm dark:shadow-none bg-gray-200 dark:bg-zinc-900 transition-colors duration-300">
                             <img
                                 src={profileImageUrl || "https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop"}
                                 alt="Abimbola Akinsanmi - AI Engineer"
-                                className="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-500"
+                                className="w-full h-full object-cover object-top filter grayscale hover:grayscale-0 transition-all duration-500"
                             />
-                            {/* Overlay info */} <div className="absolute bottom-6 left-6 z-20">
+                            {/* Gradient overlay for text readability */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                            {/* Overlay info */}
+                            <div className="absolute bottom-6 left-6 z-20">
                                     <h3 className="text-2xl font-bold text-white">Abimbola Akinsanmi</h3>
                                     <p className="text-blue-400 font-medium">Business Automation & AI Voice Expert</p>
                                 </div>
-                            </div>
                           </div>
                         </div>
                     </motion.div>
