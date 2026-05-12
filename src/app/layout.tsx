@@ -19,6 +19,9 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "AI Voice Automation Engineer | Abimbola Akinsanmi",
   description: "High-converting AI voice agents that automatically call leads, qualify prospects, and schedule appointments.",
+  verification: {
+    google: "ua1-FfmwrIXAlxh92HTeJ4tqadx-m-dGx5Nki3eqdVw",
+  }
 };
 
 export default async function RootLayout({
