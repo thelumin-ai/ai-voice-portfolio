@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { TipTapEditor } from './TipTapEditor'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, UploadCloud } from 'lucide-react'
+import { Plus, Trash2, UploadCloud, Bot, Loader2, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface PortfolioFormProps {
@@ -65,6 +65,40 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
   })
 
   const [uploadingMedia, setUploadingMedia] = useState(false)
+
+  const [showImageAi, setShowImageAi] = useState(false)
+  const [imageAiPrompt, setImageAiPrompt] = useState('')
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false)
+
+  const handleGenerateCoverImage = async () => {
+    if (!imageAiPrompt.trim()) return;
+    setIsGeneratingImage(true);
+    try {
+      const response = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: imageAiPrompt })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to generate');
+      
+      const res = await fetch(`data:${data.mimeType};base64,${data.base64}`);
+      const blob = await res.blob();
+      const file = new File([blob], `ai-cover-${Date.now()}.${data.mimeType.split('/')[1] || 'jpeg'}`, { type: data.mimeType });
+      
+      const filePath = `covers/${file.name}`;
+      const { error: uploadError } = await supabase.storage.from('portfolio_media').upload(filePath, file);
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage.from('portfolio_media').getPublicUrl(filePath);
+      form.setValue('cover_image_url', publicData.publicUrl);
+      setShowImageAi(false);
+    } catch (err: any) {
+      alert(`Error generating image: ${err.message}`);
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  }
 
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -281,7 +315,32 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
 
       <Card>
         <CardContent className="p-6 space-y-4">
-          <label className="text-sm font-medium">Cover Image</label>
+          <div className="flex justify-between items-center mb-4">
+            <label className="text-sm font-medium">Cover Image</label>
+            <Button type="button" variant="outline" size="sm" onClick={() => setShowImageAi(!showImageAi)} className="text-purple-500 border-purple-200 hover:bg-purple-50 dark:hover:bg-purple-900/20">
+              <Sparkles className="w-4 h-4 mr-2" /> AI Generate
+            </Button>
+          </div>
+          
+          {showImageAi && (
+            <div className="p-4 bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30 rounded-lg space-y-4 mb-4">
+              <h4 className="font-semibold text-purple-700 dark:text-purple-400 flex items-center"><Bot className="w-4 h-4 mr-2" /> Generate Cover Image</h4>
+              <textarea 
+                value={imageAiPrompt}
+                onChange={(e) => setImageAiPrompt(e.target.value)}
+                placeholder="e.g. A futuristic robot holding a glowing microphone, digital art, high quality"
+                className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700 text-sm"
+                rows={2}
+              />
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setShowImageAi(false)}>Cancel</Button>
+                <Button type="button" size="sm" className="bg-purple-600 hover:bg-purple-700 text-white" onClick={handleGenerateCoverImage} disabled={isGeneratingImage}>
+                  {isGeneratingImage ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</> : 'Generate Image'}
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center gap-4">
             {form.watch('cover_image_url') && (
               <img src={form.watch('cover_image_url')} alt="Cover" className="w-20 h-20 object-cover rounded-md" />
