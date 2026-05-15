@@ -14,6 +14,7 @@ interface TestimonialItem {
   company: string
   status: string
   display_order: number
+  image_url?: string
 }
 
 export function SortableItem({ id, item }: { id: string; item: TestimonialItem }) {
@@ -64,11 +65,20 @@ export function SortableItem({ id, item }: { id: string; item: TestimonialItem }
           </div>
           
           <div>
-            <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
-              {item.client_name}
-            </h3>
+            <div className="flex items-center gap-3">
+              {item.image_url ? (
+                <img src={item.image_url} alt={item.client_name} className="w-8 h-8 rounded-full object-cover border border-zinc-700" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
+                  <span className="text-xs font-bold text-zinc-400">{item.client_name.charAt(0)}</span>
+                </div>
+              )}
+              <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
+                {item.client_name}
+              </h3>
+            </div>
             {item.company && (
-              <p className="text-sm font-medium text-zinc-400 mt-0.5 tracking-wide uppercase">
+              <p className="text-sm font-medium text-zinc-400 mt-1 tracking-wide uppercase pl-11">
                 {item.company}
               </p>
             )}

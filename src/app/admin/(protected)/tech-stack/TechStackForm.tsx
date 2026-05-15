@@ -21,12 +21,11 @@ export function TechStackForm({ initialData }: TechStackFormProps) {
   const [error, setError] = useState<string | null>(null)
   
   const PRESET_CATEGORIES = [
-    "Frontend Framework",
-    "Backend & APIs",
-    "Database & Auth",
-    "AI & Machine Learning",
-    "Voice AI & Telephony",
-    "DevOps & Deployment"
+    "Voice & Chat Infrastructure",
+    "Automation engines",
+    "Voice & Text generation",
+    "Core intelligence",
+    "Integrations"
   ];
   
   const initialCategoryIsPreset = !initialData?.category || PRESET_CATEGORIES.includes(initialData.category);

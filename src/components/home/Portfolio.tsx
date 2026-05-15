@@ -228,7 +228,17 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                                     <div className="max-w-2xl mx-auto">
                                         <WebRTCVoiceDemo
                                             agentRole={selectedProject.title}
-                                            vapiAgentId={selectedProject.media_url || "087efbdc-3fcf-4329-a12e-819eb64d3882"}
+                                            vapiAgentId={(() => {
+                                                const urlOrId = selectedProject.media_url || "087efbdc-3fcf-4329-a12e-819eb64d3882";
+                                                if (urlOrId.includes('vapi.ai') && urlOrId.includes('assistantId=')) {
+                                                    try {
+                                                        const urlObj = new URL(urlOrId);
+                                                        const assistantId = urlObj.searchParams.get('assistantId');
+                                                        if (assistantId) return assistantId;
+                                                    } catch(e) {}
+                                                }
+                                                return urlOrId;
+                                            })()}
                                         />
                                         <p className="text-center text-xs text-gray-500 mt-8 font-medium">
                                             Live WebRTC demo. Ensure your microphone is enabled.

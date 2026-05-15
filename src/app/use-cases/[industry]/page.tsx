@@ -2,6 +2,7 @@ import { getUseCaseBySlug } from "@/app/admin/(protected)/use-cases/actions";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, CheckCircle2 } from "lucide-react";
+import WebRTCVoiceDemo from "@/components/WebRTCVoiceDemo";
 
 // Fallback data for when the database is empty
 const fallbackUseCases: Record<string, any> = {
@@ -19,6 +20,7 @@ const fallbackUseCases: Record<string, any> = {
             { step: "Hot Transfer or Booking", desc: "Qualified leads are instantly transferred to your best agent, or a showing is booked directly on your calendar." },
         ],
         results: [{ stat: "300%", label: "Increase in connect rate" }, { stat: "<5s", label: "Speed to lead" }, { stat: "21x", label: "Higher conversion odds" }],
+        vapiAgentId: "087efbdc-3fcf-4329-a12e-819eb64d3882",
     },
     "solar": {
         name: "Solar & Energy",
@@ -185,13 +187,31 @@ export default async function IndustryPage({ params }: { params: Promise<{ indus
                             <h3 className="text-xl font-bold text-white mb-2">Talk to the Agent</h3>
                             <p className="text-gray-400 text-sm mb-6">Test the live AI configuration for the {data.name} industry.</p>
 
-                            {/* Visual placeholder for the WebRTC component that will go here later */}
-                            <div className="bg-black rounded-lg border border-white/10 p-4 mb-6 text-center">
-                                <div className="w-16 h-16 bg-blue-500/10 rounded-full mx-auto flex items-center justify-center mb-3">
-                                    <div className="w-8 h-8 bg-blue-500 rounded-full animate-pulse" />
+                            {data.vapiAgentId ? (
+                                <div className="mb-6">
+                                    <WebRTCVoiceDemo
+                                        agentRole={data.name}
+                                        vapiAgentId={(() => {
+                                            const urlOrId = data.vapiAgentId;
+                                            if (urlOrId.includes('vapi.ai') && urlOrId.includes('assistantId=')) {
+                                                try {
+                                                    const urlObj = new URL(urlOrId);
+                                                    const assistantId = urlObj.searchParams.get('assistantId');
+                                                    if (assistantId) return assistantId;
+                                                } catch(e) {}
+                                            }
+                                            return urlOrId;
+                                        })()}
+                                    />
                                 </div>
-                                <p className="text-sm text-gray-500 italic">WebRTC Demo Component Loading...</p>
-                            </div>
+                            ) : (
+                                <div className="bg-black rounded-lg border border-white/10 p-4 mb-6 text-center">
+                                    <div className="w-16 h-16 bg-blue-500/10 rounded-full mx-auto flex items-center justify-center mb-3">
+                                        <div className="w-8 h-8 bg-blue-500 rounded-full animate-pulse" />
+                                    </div>
+                                    <p className="text-sm text-gray-500 italic">No agent configured for this use case.</p>
+                                </div>
+                            )}
 
                             <Link
                                 href="/playground"
