@@ -24,6 +24,7 @@ export function TestimonialForm({ initialData }: TestimonialFormProps) {
       client_name: '',
       company: '',
       content: '',
+      image_url: '',
       video_url: '',
       rating: 5,
       status: 'published',
@@ -131,6 +132,18 @@ export function TestimonialForm({ initialData }: TestimonialFormProps) {
               />
               {form.formState.errors.video_url && (
                 <p className="text-sm text-red-500">{form.formState.errors.video_url.message}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Client Picture URL (Optional)</label>
+              <input
+                {...form.register('image_url')}
+                className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+                placeholder="https://images.unsplash.com/..."
+              />
+              {form.formState.errors.image_url && (
+                <p className="text-sm text-red-500">{form.formState.errors.image_url.message}</p>
               )}
             </div>
           </div>

@@ -5,6 +5,7 @@ export const testimonialSchema = z.object({
   client_name: z.string().min(1, "Client name is required"),
   company: z.string().optional(),
   content: z.string().min(1, "Testimonial content is required"),
+  image_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   video_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   rating: z.number().min(1).max(5),
   status: z.enum(["published", "draft", "archived"]),

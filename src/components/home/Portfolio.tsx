@@ -6,6 +6,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getPortfolioProjects } from "@/app/admin/(protected)/portfolio/actions";
 import WebRTCVoiceDemo from "@/components/WebRTCVoiceDemo";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
 
 const defaultPortfolioItems = [
     {
@@ -49,9 +53,6 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
     const [allItems, setAllItems] = useState<any[]>(defaultPortfolioItems);
     const [selectedProject, setSelectedProject] = useState<any | null>(null);
 
-    // On the home page, show max 4. On the /portfolio page, show everything.
-    const portfolioItems = showAll ? allItems : allItems.slice(0, 4);
-
     useEffect(() => {
         const fetchPortfolios = async () => {
             try {
@@ -64,7 +65,6 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                     }));
                     
                     if (published.length > 0) {
-                        // Always show ALL real projects. Fill with demo items only if under 4.
                         const combined = [...published];
                         if (combined.length < 4) {
                             defaultPortfolioItems.forEach(defItem => {
@@ -83,8 +83,33 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
         fetchPortfolios();
     }, []);
 
+    // For the home page widget (showAll=false), we want the slider.
+    // If showAll=true, we could just render a normal grid, but let's keep the slider logic consistent or just render all items.
+    
+    const chunkArray = (arr: any[], size: number) => {
+        const result = [];
+        for (let i = 0; i < arr.length; i += size) {
+            result.push(arr.slice(i, i + size));
+        }
+        return result;
+    };
+
+    const [isMobile, setIsMobile] = useState(false);
+    
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Home widget uses chunking for the slider. Full page just shows everything.
+    const chunkSize = isMobile ? 4 : 9;
+    const itemsToDisplay = showAll ? allItems : allItems;
+    const slides = chunkArray(itemsToDisplay, chunkSize);
+
     return (
-        <section className="py-24 bg-gray-50 dark:bg-zinc-950 relative border-t border-black/5 dark:border-white/5 transition-colors duration-300" id="portfolio">
+        <section className={`py-24 bg-gray-50 dark:bg-zinc-950 relative border-t border-black/5 dark:border-white/5 transition-colors duration-300 ${showAll ? 'min-h-screen pt-32' : ''}`} id="portfolio">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1400px]">
                 <div className="text-center max-w-3xl mx-auto mb-16">
                     <motion.h2
@@ -114,52 +139,58 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                             transition={{ delay: 0.2 }}
                             className="mt-6"
                         >
-                            <a href="/portfolio" className="inline-flex items-center text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                            <Link href="/portfolio" className="inline-flex items-center text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
                                 View All Projects →
-                            </a>
+                            </Link>
                         </motion.div>
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {portfolioItems.map((item, index) => (
-                        <motion.div
-                            key={item.title + index}
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: index * 0.1 }}
-                            className="h-full"
+                {showAll ? (
+                    // On the dedicated /portfolio page, we don't necessarily need a slider, just a huge grid
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 auto-rows-fr">
+                        {itemsToDisplay.map((item, index) => (
+                            <PortfolioCard 
+                                key={item.title + index} 
+                                item={item} 
+                                index={index} 
+                                onClick={() => setSelectedProject(item)} 
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    // On the homepage, use the Swiper slider
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.2 }}
+                        className="relative pb-16"
+                    >
+                        <Swiper
+                            modules={[Pagination]}
+                            spaceBetween={30}
+                            slidesPerView={1}
+                            pagination={{ clickable: true }}
+                            className="w-full"
                         >
-                            <div className={`p-8 rounded-3xl bg-gradient-to-br ${item.color} border border-black/5 dark:${item.borderColor} backdrop-blur-md relative overflow-hidden group shadow-sm dark:shadow-none bg-white/50 dark:bg-black/20 transition-all duration-500 hover:scale-[1.02] aspect-[3/2] flex flex-col`}>
-                                <div className="absolute inset-0 bg-white/10 dark:bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                
-                                <div className="relative z-10 flex flex-col h-full">
-                                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-2 uppercase tracking-widest">{item.industry_tag || 'Enterprise'}</span>
-                                    <h3 className="text-2xl font-bold text-black dark:text-white mb-3 transition-colors duration-300">{item.title}</h3>
-                                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-8 flex-grow leading-relaxed transition-colors duration-300">{item.short_description}</p>
-
-                                    <div className="flex flex-wrap gap-4 mb-8">
-                                        {item.metrics?.map((metric: any, i: number) => (
-                                            <div key={i} className="flex flex-col">
-                                                <span className="text-lg font-bold text-black dark:text-white">{metric.value}</span>
-                                                <span className="text-[10px] text-gray-500 uppercase font-semibold">{metric.label}</span>
-                                            </div>
+                            {slides.map((slideItems, slideIndex) => (
+                                <SwiperSlide key={slideIndex}>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 auto-rows-fr">
+                                        {slideItems.map((item, index) => (
+                                            <PortfolioCard 
+                                                key={item.title + index} 
+                                                item={item} 
+                                                index={index} 
+                                                onClick={() => setSelectedProject(item)} 
+                                            />
                                         ))}
                                     </div>
-
-                                    <button
-                                        onClick={() => setSelectedProject(item)}
-                                        className="inline-flex items-center text-sm font-bold text-black dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 mt-auto"
-                                    >
-                                        <PlayCircle className="w-5 h-5 mr-2" /> 
-                                        {item.project_type === 'webrtc' ? 'TALK TO AGENT' : item.project_type === 'audio' ? 'LISTEN TO CALL' : 'WATCH DEMO'}
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
+                                </SwiperSlide>
+                            ))}
+                        </Swiper>
+                    </motion.div>
+                )}
             </div>
 
             {/* Portfolio Media Player Modal */}
@@ -315,5 +346,45 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                 )}
             </AnimatePresence>
         </section>
+    );
+}
+
+// Extracted card component for reuse
+function PortfolioCard({ item, index, onClick }: { item: any, index: number, onClick: () => void }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: (index % 3) * 0.1 }}
+            className="h-full"
+        >
+            <div className={`p-6 md:p-8 rounded-3xl bg-gradient-to-br ${item.color} border border-black/5 dark:${item.borderColor} backdrop-blur-md relative overflow-hidden group shadow-sm dark:shadow-none bg-white/50 dark:bg-black/20 transition-all duration-500 hover:scale-[1.02] h-full flex flex-col min-h-[350px]`}>
+                <div className="absolute inset-0 bg-white/10 dark:bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                <div className="relative z-10 flex flex-col h-full">
+                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-2 uppercase tracking-widest">{item.industry_tag || 'Enterprise'}</span>
+                    <h3 className="text-xl md:text-2xl font-bold text-black dark:text-white mb-3 transition-colors duration-300">{item.title}</h3>
+                    <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base mb-8 flex-grow leading-relaxed transition-colors duration-300">{item.short_description}</p>
+
+                    <div className="flex flex-wrap gap-4 mb-8">
+                        {item.metrics?.map((metric: any, i: number) => (
+                            <div key={i} className="flex flex-col">
+                                <span className="text-lg font-bold text-black dark:text-white">{metric.value}</span>
+                                <span className="text-[10px] text-gray-500 uppercase font-semibold">{metric.label}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    <button
+                        onClick={onClick}
+                        className="inline-flex items-center text-sm font-bold text-black dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 mt-auto"
+                    >
+                        <PlayCircle className="w-5 h-5 mr-2" /> 
+                        {item.project_type === 'webrtc' ? 'TALK TO AGENT' : item.project_type === 'audio' ? 'LISTEN TO CALL' : 'WATCH DEMO'}
+                    </button>
+                </div>
+            </div>
+        </motion.div>
     );
 }
