@@ -27,7 +27,7 @@ export async function POST(req: Request) {
                 body: JSON.stringify({
                     model: 'gpt-4o',
                     messages: [
-                        { role: 'system', content: 'You are an expert tech and AI voice automation copywriter. Output only markdown format. Do not use markdown wrappers like ```markdown.' },
+                        { role: 'system', content: 'You are an expert tech and AI voice automation copywriter. Output a raw JSON object with the following keys: "title", "slug", "excerpt", and "content" (content should be in Markdown and highly SEO optimized). Do not wrap the JSON in markdown blocks.' },
                         { role: 'user', content: prompt }
                     ]
                 })
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
                 body: JSON.stringify({
                     model: 'claude-3-opus-20240229',
                     max_tokens: 4000,
-                    system: 'You are an expert tech and AI voice automation copywriter. Output only markdown format. Do not use markdown wrappers.',
+                    system: 'You are an expert tech and AI voice automation copywriter. Output a raw JSON object with the following keys: "title", "slug", "excerpt", and "content" (content should be in Markdown and highly SEO optimized). Do not wrap the JSON in markdown blocks.',
                     messages: [
                         { role: 'user', content: prompt }
                     ]
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
                 },
                 body: JSON.stringify({
                     system_instruction: {
-                        parts: { text: "You are an expert tech and AI voice automation copywriter. Output only markdown format."}
+                        parts: { text: 'You are an expert tech and AI voice automation copywriter. Output a raw JSON object with the following keys: "title", "slug", "excerpt", and "content" (content should be in Markdown and highly SEO optimized). Do not wrap the JSON in markdown blocks.'}
                     },
                     contents: [{
                         parts: [{ text: prompt }]
@@ -89,7 +89,18 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid provider' }, { status: 400 })
         }
 
-        return NextResponse.json({ content })
+        try {
+            const parsedContent = JSON.parse(content.replace(/```json/gi, '').replace(/```/g, '').trim())
+            return NextResponse.json({ 
+                title: parsedContent.title,
+                slug: parsedContent.slug,
+                excerpt: parsedContent.excerpt,
+                content: parsedContent.content 
+            })
+        } catch (e) {
+            console.error("Failed to parse JSON from AI:", content);
+            return NextResponse.json({ error: 'AI did not return a valid JSON format. Try again.' }, { status: 500 })
+        }
 
     } catch (error: any) {
         console.error("AI Generation Error:", error)

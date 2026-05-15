@@ -24,6 +24,7 @@ export function BlogForm({ initialData }: BlogFormProps) {
   const [showAiWriter, setShowAiWriter] = useState(false)
   const [aiPrompt, setAiPrompt] = useState('')
   const [aiProvider, setAiProvider] = useState('openai')
+  const [aiContentType, setAiContentType] = useState('SEO Article')
   const [isGenerating, setIsGenerating] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
 
@@ -87,10 +88,12 @@ export function BlogForm({ initialData }: BlogFormProps) {
     setAiError(null)
 
     try {
+      const promptToSend = `Write a ${aiContentType} about: ${aiPrompt}. Ensure it is highly SEO optimized.`;
+      
       const response = await fetch('/api/generate-blog', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: aiPrompt, provider: aiProvider })
+        body: JSON.stringify({ prompt: promptToSend, provider: aiProvider })
       })
 
       const data = await response.json()
@@ -99,7 +102,11 @@ export function BlogForm({ initialData }: BlogFormProps) {
         throw new Error(data.error || 'Failed to generate')
       }
 
-      form.setValue('content', data.content)
+      if (data.title) form.setValue('title', data.title)
+      if (data.slug) form.setValue('slug', data.slug)
+      if (data.excerpt) form.setValue('excerpt', data.excerpt)
+      if (data.content) form.setValue('content', data.content)
+      
       setShowAiWriter(false)
     } catch (err: any) {
       setAiError(err.message)
@@ -218,15 +225,27 @@ export function BlogForm({ initialData }: BlogFormProps) {
               <div className="p-4 bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30 rounded-lg space-y-4 mb-4">
                 <div className="flex justify-between items-center">
                   <h4 className="font-semibold text-purple-700 dark:text-purple-400 flex items-center"><Bot className="w-4 h-4 mr-2" /> Generate with AI</h4>
-                  <select 
-                    value={aiProvider} 
-                    onChange={(e) => setAiProvider(e.target.value)}
-                    className="text-sm px-2 py-1 border rounded dark:bg-zinc-900 dark:border-zinc-700"
-                  >
-                    <option value="openai">OpenAI (GPT-4o)</option>
-                    <option value="anthropic">Anthropic (Claude 3 Opus)</option>
-                    <option value="gemini">Google (Gemini 2.5 Flash)</option>
-                  </select>
+                  <div className="flex gap-2">
+                    <select 
+                      value={aiContentType} 
+                      onChange={(e) => setAiContentType(e.target.value)}
+                      className="text-sm px-2 py-1 border rounded dark:bg-zinc-900 dark:border-zinc-700"
+                    >
+                      <option value="SEO Article">SEO Article</option>
+                      <option value="Case Study">Case Study</option>
+                      <option value="How-To Guide">How-To Guide</option>
+                      <option value="Thought Leadership">Thought Leadership</option>
+                    </select>
+                    <select 
+                      value={aiProvider} 
+                      onChange={(e) => setAiProvider(e.target.value)}
+                      className="text-sm px-2 py-1 border rounded dark:bg-zinc-900 dark:border-zinc-700"
+                    >
+                      <option value="openai">OpenAI (GPT-4o)</option>
+                      <option value="anthropic">Anthropic (Claude 3 Opus)</option>
+                      <option value="gemini">Google (Gemini 2.5 Flash)</option>
+                    </select>
+                  </div>
                 </div>
                 <textarea 
                   value={aiPrompt}
