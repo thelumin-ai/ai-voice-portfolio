@@ -337,7 +337,7 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
                 className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <label htmlFor="is_featured" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Show on Home Page (Featured)
+                Feature on Home Page
               </label>
             </div>
           </div>

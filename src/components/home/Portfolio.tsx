@@ -60,22 +60,33 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                 if (data && data.length > 0) {
                     const published = data.filter(p => p.status === 'published');
                     
-                    // Filter by featured for home page
-                    let filtered = showAll ? published : published.filter(p => p.is_featured);
-                    
-                    const mapped = filtered.map((p, index) => ({
-                        ...p,
-                        color: colors[index % colors.length].color,
-                        borderColor: colors[index % colors.length].borderColor,
-                    }));
-                    
-                    if (mapped.length > 0) {
-                        setAllItems(mapped);
-                    } else if (!showAll) {
-                        // Fallback to default items only if on home page and no featured items found
-                        setAllItems(defaultPortfolioItems);
+                    if (showAll) {
+                        setAllItems(published.map((p, index) => ({
+                            ...p,
+                            color: colors[index % colors.length].color,
+                            borderColor: colors[index % colors.length].borderColor,
+                        })));
                     } else {
-                        setAllItems([]);
+                        // Home page logic: Prioritize featured, then fill with other published items up to 4
+                        const featured = published.filter(p => p.is_featured);
+                        const others = published.filter(p => !p.is_featured);
+                        const combined = [...featured, ...others].slice(0, 4);
+                        
+                        // If still not enough, add default items as fallback
+                        let finalItems = [...combined];
+                        if (finalItems.length < 4) {
+                            defaultPortfolioItems.forEach(defItem => {
+                                if (finalItems.length < 4 && !finalItems.find(p => p.title === defItem.title)) {
+                                    finalItems.push(defItem);
+                                }
+                            });
+                        }
+
+                        setAllItems(finalItems.map((p, index) => ({
+                            ...p,
+                            color: colors[index % colors.length].color,
+                            borderColor: colors[index % colors.length].borderColor,
+                        })));
                     }
                 }
             } catch (error) {
