@@ -224,6 +224,16 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                             </div>
 
                             <div className="p-8 md:p-12 max-h-[70vh] overflow-y-auto">
+                                {selectedProject.project_type === 'iframe' && (
+                                    <div className="max-w-md mx-auto h-[600px] bg-zinc-100 dark:bg-black rounded-3xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 relative">
+                                        <iframe
+                                            src={selectedProject.media_url}
+                                            allow="microphone"
+                                            className="w-full h-full border-0"
+                                        />
+                                    </div>
+                                )}
+
                                 {selectedProject.project_type === 'webrtc' && (() => {
                                     const urlOrId = selectedProject.media_url || "087efbdc-3fcf-4329-a12e-819eb64d3882";
                                     const isVapiShareUrl = urlOrId.includes('vapi.ai') && urlOrId.includes('shareKey=');
@@ -245,6 +255,7 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                                             <WebRTCVoiceDemo
                                                 agentRole={selectedProject.title}
                                                 vapiAgentId={urlOrId}
+                                                apiKey={selectedProject.api_key || undefined}
                                             />
                                             <p className="text-center text-xs text-gray-500 mt-8 font-medium">
                                                 Live WebRTC demo. Ensure your microphone is enabled.
@@ -398,7 +409,7 @@ function PortfolioCard({ item, index, onClick }: { item: any, index: number, onC
                         className="inline-flex items-center text-sm font-bold text-black dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 mt-auto"
                     >
                         <PlayCircle className="w-5 h-5 mr-2" /> 
-                        {item.project_type === 'webrtc' ? 'TALK TO AGENT' : item.project_type === 'audio' ? 'LISTEN TO CALL' : 'WATCH DEMO'}
+                        {item.project_type === 'webrtc' ? 'TALK TO AGENT' : item.project_type === 'iframe' ? 'TRY LIVE DEMO' : item.project_type === 'audio' ? 'LISTEN TO CALL' : 'WATCH DEMO'}
                     </button>
                 </div>
             </div>

@@ -238,7 +238,8 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
                 {...form.register('project_type')}
                 className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
               >
-                <option value="webrtc">Interactive WebRTC (Vapi/Retell)</option>
+                <option value="webrtc">Interactive WebRTC (Native Vapi/Retell)</option>
+                <option value="iframe">Vapi / AI Demo Link (Embed Website)</option>
                 <option value="audio">Audio Call Recording</option>
                 <option value="video">Video Demonstration</option>
               </select>
@@ -246,7 +247,7 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">
-                {form.watch('project_type') === 'webrtc' ? 'Vapi/Retell Agent ID' : 'Media File / URL (Audio/Video)'}
+                {form.watch('project_type') === 'webrtc' ? 'Vapi/Retell Agent ID' : form.watch('project_type') === 'iframe' ? 'Shareable Demo URL (e.g. vapi.ai?demo=...)' : 'Media File / URL (Audio/Video)'}
               </label>
               <div className="flex gap-2">
                 <input
@@ -294,9 +295,26 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
               <p className="text-[10px] text-gray-500 italic">
                 {form.watch('project_type') === 'webrtc' 
                   ? "Enter the UUID of your agent from the platform." 
-                  : "Upload a file or enter a direct link to an audio file or video (YouTube/Vimeo)."}
+                  : form.watch('project_type') === 'iframe' 
+                    ? "Paste the full shareable URL provided by the AI platform."
+                    : "Upload a file or enter a direct link to an audio file or video (YouTube/Vimeo)."}
               </p>
             </div>
+
+            {form.watch('project_type') === 'webrtc' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Custom API Key
+                  <span className="text-[10px] bg-zinc-200 dark:bg-zinc-800 px-2 py-0.5 rounded text-zinc-500">Optional</span>
+                </label>
+                <input
+                  {...form.register('api_key')}
+                  className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+                  placeholder="Leave blank to use default key"
+                />
+                <p className="text-[10px] text-gray-500 italic">If this agent is on a client's account, provide their Public API Key here.</p>
+              </div>
+            )}
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Status</label>

@@ -17,12 +17,13 @@ interface Message {
 interface WebRTCVoiceDemoProps {
     agentRole?: string;
     vapiAgentId?: string;
+    apiKey?: string;
 }
 
 const vapiKey = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY || "f34943b9-1b82-42e4-9d69-42bf4834b1f7";
 const defaultAgentId = process.env.NEXT_PUBLIC_VAPI_AGENT_DEFAULT || "087efbdc-3fcf-4329-a12e-819eb64d3882";
 
-export default function WebRTCVoiceDemo({ agentRole = 'Real Estate Agent', vapiAgentId = defaultAgentId }: WebRTCVoiceDemoProps) {
+export default function WebRTCVoiceDemo({ agentRole = 'Real Estate Agent', vapiAgentId = defaultAgentId, apiKey }: WebRTCVoiceDemoProps) {
     const [state, setState] = useState<AgentState>('idle');
     const [messages, setMessages] = useState<Message[]>([]);
     const [activeMessage, setActiveMessage] = useState<{ role: 'user' | 'agent', content: string } | null>(null);
@@ -40,7 +41,7 @@ export default function WebRTCVoiceDemo({ agentRole = 'Real Estate Agent', vapiA
     // Setup Vapi event listeners
     useEffect(() => {
         if (!vapiRef.current) {
-            vapiRef.current = new Vapi(vapiKey);
+            vapiRef.current = new Vapi(apiKey || vapiKey);
 
             vapiRef.current.on('call-start', () => {
                 setState('listening'); 
