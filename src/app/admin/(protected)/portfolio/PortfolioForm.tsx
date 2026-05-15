@@ -45,6 +45,7 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
       media_url: '',
       cover_image_url: '',
       status: 'published',
+      is_featured: false,
       display_order: 0,
     }) as PortfolioFormValues,
   })
@@ -326,6 +327,18 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
                 <option value="draft">Draft</option>
                 <option value="archived">Archived</option>
               </select>
+            </div>
+
+            <div className="flex items-center space-x-2 pt-8">
+              <input
+                type="checkbox"
+                id="is_featured"
+                {...form.register('is_featured')}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <label htmlFor="is_featured" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Show on Home Page (Featured)
+              </label>
             </div>
           </div>
         </CardContent>

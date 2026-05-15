@@ -25,6 +25,7 @@ export const portfolioSchema = z.object({
   api_key: z.string().optional().or(z.literal("")),
   cover_image_url: z.string().optional().or(z.literal("")),
   status: z.enum(["published", "draft", "archived"]),
+  is_featured: z.boolean().default(false),
   display_order: z.number().int(),
 })
 

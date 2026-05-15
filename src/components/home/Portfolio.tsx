@@ -58,22 +58,24 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
             try {
                 const data = await getPortfolioProjects();
                 if (data && data.length > 0) {
-                    const published = data.filter(p => p.status === 'published').map((p, index) => ({
+                    const published = data.filter(p => p.status === 'published');
+                    
+                    // Filter by featured for home page
+                    let filtered = showAll ? published : published.filter(p => p.is_featured);
+                    
+                    const mapped = filtered.map((p, index) => ({
                         ...p,
                         color: colors[index % colors.length].color,
                         borderColor: colors[index % colors.length].borderColor,
                     }));
                     
-                    if (published.length > 0) {
-                        const combined = [...published];
-                        if (combined.length < 4) {
-                            defaultPortfolioItems.forEach(defItem => {
-                                if (!combined.find(p => p.title === defItem.title)) {
-                                    combined.push(defItem);
-                                }
-                            });
-                        }
-                        setAllItems(combined);
+                    if (mapped.length > 0) {
+                        setAllItems(mapped);
+                    } else if (!showAll) {
+                        // Fallback to default items only if on home page and no featured items found
+                        setAllItems(defaultPortfolioItems);
+                    } else {
+                        setAllItems([]);
                     }
                 }
             } catch (error) {
@@ -147,8 +149,8 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                 </div>
 
                 {showAll ? (
-                    // On the dedicated /portfolio page, we don't necessarily need a slider, just a huge grid
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 auto-rows-fr">
+                    // On the dedicated /portfolio page, we show a responsive grid
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8 auto-rows-fr">
                         {itemsToDisplay.map((item, index) => (
                             <PortfolioCard 
                                 key={item.title + index} 
@@ -159,36 +161,22 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                         ))}
                     </div>
                 ) : (
-                    // On the homepage, use the Swiper slider
+                    // On the homepage, use a static grid: 4 on one row desktop, 2x2 mobile
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.2 }}
-                        className="relative pb-16"
+                        className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 auto-rows-fr"
                     >
-                        <Swiper
-                            modules={[Pagination]}
-                            spaceBetween={30}
-                            slidesPerView={1}
-                            pagination={{ clickable: true }}
-                            className="w-full"
-                        >
-                            {slides.map((slideItems, slideIndex) => (
-                                <SwiperSlide key={slideIndex}>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 auto-rows-fr">
-                                        {slideItems.map((item, index) => (
-                                            <PortfolioCard 
-                                                key={item.title + index} 
-                                                item={item} 
-                                                index={index} 
-                                                onClick={() => setSelectedProject(item)} 
-                                            />
-                                        ))}
-                                    </div>
-                                </SwiperSlide>
-                            ))}
-                        </Swiper>
+                        {itemsToDisplay.slice(0, 4).map((item, index) => (
+                            <PortfolioCard 
+                                key={item.title + index} 
+                                item={item} 
+                                index={index} 
+                                onClick={() => setSelectedProject(item)} 
+                            />
+                        ))}
                     </motion.div>
                 )}
             </div>
