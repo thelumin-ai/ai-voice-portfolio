@@ -66,7 +66,7 @@ export async function POST(req: Request) {
             const apiKey = settings?.gemini_api_key
             if (!apiKey) return NextResponse.json({ error: 'Gemini API key not configured in settings' }, { status: 400 })
             
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -224,27 +224,34 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                             </div>
 
                             <div className="p-8 md:p-12 max-h-[70vh] overflow-y-auto">
-                                {selectedProject.project_type === 'webrtc' && (
-                                    <div className="max-w-2xl mx-auto">
-                                        <WebRTCVoiceDemo
-                                            agentRole={selectedProject.title}
-                                            vapiAgentId={(() => {
-                                                const urlOrId = selectedProject.media_url || "087efbdc-3fcf-4329-a12e-819eb64d3882";
-                                                if (urlOrId.includes('vapi.ai') && urlOrId.includes('assistantId=')) {
-                                                    try {
-                                                        const urlObj = new URL(urlOrId);
-                                                        const assistantId = urlObj.searchParams.get('assistantId');
-                                                        if (assistantId) return assistantId;
-                                                    } catch(e) {}
-                                                }
-                                                return urlOrId;
-                                            })()}
-                                        />
-                                        <p className="text-center text-xs text-gray-500 mt-8 font-medium">
-                                            Live WebRTC demo. Ensure your microphone is enabled.
-                                        </p>
-                                    </div>
-                                )}
+                                {selectedProject.project_type === 'webrtc' && (() => {
+                                    const urlOrId = selectedProject.media_url || "087efbdc-3fcf-4329-a12e-819eb64d3882";
+                                    const isVapiShareUrl = urlOrId.includes('vapi.ai') && urlOrId.includes('shareKey=');
+
+                                    if (isVapiShareUrl) {
+                                        return (
+                                            <div className="max-w-md mx-auto h-[600px] bg-zinc-100 dark:bg-black rounded-3xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 relative">
+                                                <iframe
+                                                    src={urlOrId}
+                                                    allow="microphone"
+                                                    className="w-full h-full border-0"
+                                                />
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <div className="max-w-2xl mx-auto">
+                                            <WebRTCVoiceDemo
+                                                agentRole={selectedProject.title}
+                                                vapiAgentId={urlOrId}
+                                            />
+                                            <p className="text-center text-xs text-gray-500 mt-8 font-medium">
+                                                Live WebRTC demo. Ensure your microphone is enabled.
+                                            </p>
+                                        </div>
+                                    );
+                                })()}
 
                                 {selectedProject.project_type === 'audio' && (() => {
                                     // Resolve the audio source: media_url first, then first audio in media_files

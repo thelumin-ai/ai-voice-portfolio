@@ -191,7 +191,7 @@ export function BlogForm({ initialData }: BlogFormProps) {
                   >
                     <option value="openai">OpenAI (GPT-4o)</option>
                     <option value="anthropic">Anthropic (Claude 3 Opus)</option>
-                    <option value="gemini">Google (Gemini 1.5 Pro)</option>
+                    <option value="gemini">Google (Gemini 2.5 Flash)</option>
                   </select>
                 </div>
                 <textarea 
