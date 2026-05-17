@@ -1,21 +1,27 @@
 import Hero from "@/components/home/Hero";
 import { getSeoSettings } from "@/app/admin/(protected)/seo/actions";
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata() {
-  const { data: settings } = await getSeoSettings();
-  const homeSeo = settings?.find((s: any) => s.page_path === '/');
-  
-  if (homeSeo) {
-    return {
-      title: homeSeo.title,
-      description: homeSeo.description,
-      keywords: homeSeo.keywords,
-      openGraph: {
+  try {
+    const { data: settings } = await getSeoSettings();
+    const homeSeo = settings?.find((s: any) => s.page_path === '/');
+    
+    if (homeSeo) {
+      return {
         title: homeSeo.title,
         description: homeSeo.description,
-        images: homeSeo.og_image_url ? [homeSeo.og_image_url] : [],
-      }
-    };
+        keywords: homeSeo.keywords,
+        openGraph: {
+          title: homeSeo.title,
+          description: homeSeo.description,
+          images: homeSeo.og_image_url ? [homeSeo.og_image_url] : [],
+        }
+      };
+    }
+  } catch (error) {
+    console.error("Error generating metadata for home page:", error);
   }
   
   return {

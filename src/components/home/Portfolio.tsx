@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getPortfolioProjects } from "@/app/admin/(protected)/portfolio/actions";
 import WebRTCVoiceDemo from "@/components/WebRTCVoiceDemo";
+import RetellVoiceDemo from "@/components/RetellVoiceDemo";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import "swiper/css";
@@ -227,7 +228,7 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                                     <div className="max-w-md mx-auto h-[600px] bg-zinc-100 dark:bg-black rounded-3xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 relative">
                                         <iframe
                                             src={selectedProject.media_url}
-                                            allow="microphone"
+                                            allow="microphone; camera; display-capture; autoplay; clipboard-read; clipboard-write"
                                             className="w-full h-full border-0"
                                         />
                                     </div>
@@ -236,15 +237,31 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                                 {selectedProject.project_type === 'webrtc' && (() => {
                                     const urlOrId = selectedProject.media_url || "087efbdc-3fcf-4329-a12e-819eb64d3882";
                                     const isVapiShareUrl = urlOrId.includes('vapi.ai') && urlOrId.includes('shareKey=');
+                                    const isRetellPlatform = selectedProject.voice_platform === 'retell';
 
                                     if (isVapiShareUrl) {
                                         return (
                                             <div className="max-w-md mx-auto h-[600px] bg-zinc-100 dark:bg-black rounded-3xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 relative">
                                                 <iframe
                                                     src={urlOrId}
-                                                    allow="microphone"
+                                                    allow="microphone; camera; display-capture; autoplay; clipboard-read; clipboard-write"
                                                     className="w-full h-full border-0"
                                                 />
+                                            </div>
+                                        );
+                                    }
+
+                                    if (isRetellPlatform) {
+                                        return (
+                                            <div className="max-w-2xl mx-auto">
+                                                <RetellVoiceDemo
+                                                    agentRole={selectedProject.title}
+                                                    agentId={urlOrId}
+                                                    apiKey={selectedProject.api_key || undefined}
+                                                />
+                                                <p className="text-center text-xs text-gray-500 mt-8 font-medium">
+                                                    Live Retell WebRTC demo. Ensure your microphone is enabled.
+                                                </p>
                                             </div>
                                         );
                                     }

@@ -2,8 +2,9 @@ import { getProcessStep } from '../actions'
 import { ProcessStepForm } from '../ProcessStepForm'
 import { notFound } from 'next/navigation'
 
-export default async function EditProcessStepPage({ params }: { params: { id: string } }) {
-  const { data: step, error } = await getProcessStep(params.id)
+export default async function EditProcessStepPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  const { data: step, error } = await getProcessStep(resolvedParams.id)
 
   if (error || !step) {
     notFound()

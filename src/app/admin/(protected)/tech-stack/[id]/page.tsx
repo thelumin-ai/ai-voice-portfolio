@@ -2,8 +2,9 @@ import { getTechItem } from '../actions'
 import { TechStackForm } from '../TechStackForm'
 import { notFound } from 'next/navigation'
 
-export default async function EditTechStackPage({ params }: { params: { id: string } }) {
-  const { data: item, error } = await getTechItem(params.id)
+export default async function EditTechStackPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  const { data: item, error } = await getTechItem(resolvedParams.id)
 
   if (error || !item) {
     notFound()

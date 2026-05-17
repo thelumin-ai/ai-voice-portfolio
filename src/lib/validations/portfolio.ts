@@ -24,8 +24,9 @@ export const portfolioSchema = z.object({
   media_url: z.string().optional().or(z.literal("")),
   api_key: z.string().optional().or(z.literal("")),
   cover_image_url: z.string().optional().or(z.literal("")),
+  voice_platform: z.enum(['vapi', 'retell']).optional().default('vapi'),
   status: z.enum(["published", "draft", "archived"]),
-  is_featured: z.boolean().default(false),
+  is_featured: z.any().optional(),
   display_order: z.number().int(),
 })
 

@@ -2,8 +2,9 @@ import { getPlaygroundApp } from '../actions'
 import { PlaygroundForm } from '../PlaygroundForm'
 import { notFound } from 'next/navigation'
 
-export default async function EditPlaygroundPage({ params }: { params: { id: string } }) {
-  const { data: app, error } = await getPlaygroundApp(params.id)
+export default async function EditPlaygroundPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  const { data: app, error } = await getPlaygroundApp(resolvedParams.id)
 
   if (error || !app) {
     notFound()

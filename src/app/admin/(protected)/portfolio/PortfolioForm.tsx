@@ -22,32 +22,26 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
   const [error, setError] = useState<string | null>(null)
   const supabase = createClient()
 
-  const form = useForm<PortfolioFormValues>({
+  const form = useForm<any>({
     resolver: zodResolver(portfolioSchema),
-    defaultValues: (initialData ? {
-      ...initialData,
-      project_type: (initialData as any).project_type || 'webrtc',
-      media_url: (initialData as any).media_url || '',
-      cover_image_url: (initialData as any).cover_image_url || '',
-      metrics: initialData.metrics || [],
-      integrations: initialData.integrations || [],
-      media_files: initialData.media_files || [],
-      status: initialData.status || 'published',
-    } : {
-      title: '',
-      industry_tag: '',
-      short_description: '',
-      case_study_body: '',
-      metrics: [],
-      integrations: [],
-      media_files: [],
-      project_type: 'webrtc',
-      media_url: '',
-      cover_image_url: '',
-      status: 'published',
-      is_featured: false,
-      display_order: 0,
-    }) as PortfolioFormValues,
+    defaultValues: {
+      id: initialData?.id,
+      title: initialData?.title || '',
+      industry_tag: initialData?.industry_tag || '',
+      short_description: initialData?.short_description || '',
+      case_study_body: initialData?.case_study_body || '',
+      metrics: initialData?.metrics || [],
+      integrations: initialData?.integrations || [],
+      media_files: initialData?.media_files || [],
+      project_type: initialData?.project_type || 'webrtc',
+      media_url: initialData?.media_url || '',
+      api_key: initialData?.api_key || '',
+      cover_image_url: initialData?.cover_image_url || '',
+      status: initialData?.status || 'published',
+      is_featured: !!initialData?.is_featured,
+      display_order: initialData?.display_order || 0,
+      voice_platform: initialData?.voice_platform || 'vapi',
+    },
   })
 
   const { fields: metricFields, append: appendMetric, remove: removeMetric } = useFieldArray({
@@ -209,7 +203,7 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
                 placeholder="e.g. Real Estate AI Agent"
               />
               {form.formState.errors.title && (
-                <p className="text-sm text-red-500">{form.formState.errors.title.message}</p>
+                <p className="text-sm text-red-500">{String(form.formState.errors.title?.message || '')}</p>
               )}
             </div>
 
@@ -239,16 +233,29 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
                 {...form.register('project_type')}
                 className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
               >
-                <option value="webrtc">Interactive WebRTC (Native Vapi/Retell)</option>
+                <option value="webrtc">Interactive WebRTC (Native Vapi)</option>
                 <option value="iframe">Vapi / AI Demo Link (Embed Website)</option>
                 <option value="audio">Audio Call Recording</option>
                 <option value="video">Video Demonstration</option>
               </select>
             </div>
 
+            {(form.watch('project_type') === 'webrtc' || form.watch('project_type') === 'iframe') && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Platform Type</label>
+                <select
+                  {...form.register('voice_platform')}
+                  className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+                >
+                  <option value="vapi">Vapi.ai</option>
+                  <option value="retell">Retell AI</option>
+                </select>
+              </div>
+            )}
+
             <div className="space-y-2">
               <label className="text-sm font-medium">
-                {form.watch('project_type') === 'webrtc' ? 'Vapi/Retell Agent ID' : form.watch('project_type') === 'iframe' ? 'Shareable Demo URL (e.g. vapi.ai?demo=...)' : 'Media File / URL (Audio/Video)'}
+                {form.watch('project_type') === 'webrtc' ? `${form.watch('voice_platform') === 'retell' ? 'Retell' : 'Vapi'} Agent ID` : form.watch('project_type') === 'iframe' ? 'Shareable Demo URL (e.g. vapi.ai?demo=... or call.retellai.com/...)' : 'Media File / URL (Audio/Video)'}
               </label>
               <div className="flex gap-2">
                 <input
@@ -491,7 +498,7 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
                 <Plus className="w-4 h-4 mr-2" /> Add Integration
               </Button>
             </div>
-            {(form.watch('integrations') || []).map((integration, index) => (
+            {(form.watch('integrations') || []).map((integration: string, index: number) => (
               <div key={index} className="flex gap-2 items-start">
                 <input
                   value={integration}

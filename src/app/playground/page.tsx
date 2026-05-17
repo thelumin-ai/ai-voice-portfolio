@@ -126,7 +126,7 @@ export default function Playground() {
                     <div className="lg:col-span-3">
                         {selectedAgent.vapiAgentId.startsWith('http') && !selectedAgent.vapiAgentId.includes('vapi.ai') ? (
                             <div className="w-full h-[600px] rounded-2xl overflow-hidden border border-black/10 dark:border-white/10 shadow-sm bg-white dark:bg-black">
-                                <iframe src={selectedAgent.vapiAgentId} className="w-full h-full border-0" allow="microphone" />
+                                <iframe src={selectedAgent.vapiAgentId} className="w-full h-full border-0" allow="microphone; camera; display-capture; autoplay; clipboard-read; clipboard-write" />
                             </div>
                         ) : (
                             <WebRTCVoiceDemo

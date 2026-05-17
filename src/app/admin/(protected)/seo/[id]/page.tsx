@@ -2,8 +2,9 @@ import { getSeoSetting } from '../actions'
 import { SeoForm } from '../SeoForm'
 import { notFound } from 'next/navigation'
 
-export default async function EditSeoPage({ params }: { params: { id: string } }) {
-  const { data: setting, error } = await getSeoSetting(params.id)
+export default async function EditSeoPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  const { data: setting, error } = await getSeoSetting(resolvedParams.id)
 
   if (error || !setting) {
     notFound()

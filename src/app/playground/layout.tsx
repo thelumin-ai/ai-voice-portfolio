@@ -1,20 +1,26 @@
 import { getSeoSettings } from "@/app/admin/(protected)/seo/actions";
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata() {
-  const { data: settings } = await getSeoSettings();
-  const seo = settings?.find((s: any) => s.page_path === '/playground');
-  
-  if (seo) {
-    return {
-      title: seo.title,
-      description: seo.description,
-      keywords: seo.keywords,
-      openGraph: {
+  try {
+    const { data: settings } = await getSeoSettings();
+    const seo = settings?.find((s: any) => s.page_path === '/playground');
+    
+    if (seo) {
+      return {
         title: seo.title,
         description: seo.description,
-        images: seo.og_image_url ? [seo.og_image_url] : [],
-      }
-    };
+        keywords: seo.keywords,
+        openGraph: {
+          title: seo.title,
+          description: seo.description,
+          images: seo.og_image_url ? [seo.og_image_url] : [],
+        }
+      };
+    }
+  } catch (error) {
+    console.error("Error generating metadata for playground page:", error);
   }
   
   return {

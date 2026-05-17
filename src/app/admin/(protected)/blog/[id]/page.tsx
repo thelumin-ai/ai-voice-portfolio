@@ -2,8 +2,9 @@ import { getBlogPost } from '../actions'
 import { BlogForm } from '../BlogForm'
 import { notFound } from 'next/navigation'
 
-export default async function EditBlogPostPage({ params }: { params: { id: string } }) {
-  const { data: post, error } = await getBlogPost(params.id)
+export default async function EditBlogPostPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  const { data: post, error } = await getBlogPost(resolvedParams.id)
 
   if (error || !post) {
     notFound()

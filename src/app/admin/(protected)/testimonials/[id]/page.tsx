@@ -2,8 +2,9 @@ import { getTestimonial } from '../actions'
 import { TestimonialForm } from '../TestimonialForm'
 import { notFound } from 'next/navigation'
 
-export default async function EditTestimonialPage({ params }: { params: { id: string } }) {
-  const { data: testimonial, error } = await getTestimonial(params.id)
+export default async function EditTestimonialPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  const { data: testimonial, error } = await getTestimonial(resolvedParams.id)
 
   if (error || !testimonial) {
     notFound()

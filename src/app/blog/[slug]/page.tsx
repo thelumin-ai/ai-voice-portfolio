@@ -9,9 +9,10 @@ import remarkGfm from 'remark-gfm'
 // Revalidate every hour
 export const revalidate = 3600
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+    const resolvedParams = await params
     const { data: posts } = await getBlogPosts()
-    const post = posts?.find(p => p.slug === params.slug)
+    const post = posts?.find(p => p.slug === resolvedParams.slug)
     
     if (!post) return { title: 'Post Not Found' }
 
@@ -26,9 +27,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     }
 }
 
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+    const resolvedParams = await params
     const { data: posts } = await getBlogPosts()
-    const post = posts?.find(p => p.slug === params.slug && p.status === 'published')
+    const post = posts?.find(p => p.slug === resolvedParams.slug && p.status === 'published')
 
     if (!post) {
         notFound()
