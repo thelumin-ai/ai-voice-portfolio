@@ -147,6 +147,7 @@ export default function UseCases() {
                                                         <img
                                                             src={useCase.cover_image_url || 'https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop'}
                                                             alt={useCase.name}
+                                                            loading="lazy"
                                                             className="w-full h-full object-cover transform scale-100 group-hover:scale-110 transition-transform duration-700"
                                                         />
                                                     </div>

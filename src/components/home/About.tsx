@@ -26,6 +26,7 @@ export default function About({ profileImageUrl }: { profileImageUrl?: string })
                             <img
                                 src={profileImageUrl || "https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop"}
                                 alt="Abimbola Akinsanmi - AI Engineer"
+                                loading="lazy"
                                 className="w-full h-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-700"
                             />
                             {/* Gradient overlay for text readability */}

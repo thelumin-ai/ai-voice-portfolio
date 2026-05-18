@@ -153,6 +153,7 @@ export default function Testimonials() {
                                                     <img 
                                                         src={testimonial.image_url} 
                                                         alt={testimonial.client_name}
+                                                        loading="lazy"
                                                         className="w-14 h-14 rounded-full object-cover border-2 border-blue-100 dark:border-blue-900/30"
                                                     />
                                                 ) : (
