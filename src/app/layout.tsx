@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
+import dynamic from 'next/dynamic';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import FloatingChatbot from "@/components/FloatingChatbot";
 import { ThemeProvider } from "@/components/ThemeProvider";
+
+const FloatingChatbot = dynamic(() => import("@/components/FloatingChatbot"));
 import { getSiteSettings } from "./admin/(protected)/settings/actions";
 
 const inter = Inter({

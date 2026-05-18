@@ -29,17 +29,19 @@ export async function generateMetadata() {
     description: "High-converting AI voice agents that automatically call leads, qualify prospects, and schedule appointments.",
   };
 }
-import Problem from "@/components/home/Problem";
-import Solutions from "@/components/home/Solutions";
-import UseCases from "@/components/home/UseCases";
-import Portfolio from "@/components/home/Portfolio";
-import HowItWorks from "@/components/home/HowItWorks";
-import TechStack from "@/components/home/TechStack";
-import Testimonials from "@/components/home/Testimonials";
-import About from "@/components/home/About";
-import Consultation from "@/components/home/Consultation";
-import Estimator from "@/components/home/Estimator";
-import RoiCalculator from "@/components/home/RoiCalculator";
+import nextDynamic from 'next/dynamic';
+
+const Problem = nextDynamic(() => import("@/components/home/Problem"));
+const Solutions = nextDynamic(() => import("@/components/home/Solutions"));
+const UseCases = nextDynamic(() => import("@/components/home/UseCases"));
+const Portfolio = nextDynamic(() => import("@/components/home/Portfolio"));
+const HowItWorks = nextDynamic(() => import("@/components/home/HowItWorks"));
+const TechStack = nextDynamic(() => import("@/components/home/TechStack"));
+const Testimonials = nextDynamic(() => import("@/components/home/Testimonials"));
+const About = nextDynamic(() => import("@/components/home/About"));
+const Consultation = nextDynamic(() => import("@/components/home/Consultation"));
+const Estimator = nextDynamic(() => import("@/components/home/Estimator"));
+const RoiCalculator = nextDynamic(() => import("@/components/home/RoiCalculator"));
 
 import { getSiteSettings } from "./admin/(protected)/settings/actions";
 
