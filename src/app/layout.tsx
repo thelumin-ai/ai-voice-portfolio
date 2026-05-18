@@ -3,6 +3,7 @@ import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import FloatingChatbot from "@/components/FloatingChatbot";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { getSiteSettings } from "./admin/(protected)/settings/actions";
 
@@ -132,6 +133,7 @@ export default async function RootLayout({
             {children}
           </main>
           <Footer />
+          <FloatingChatbot />
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

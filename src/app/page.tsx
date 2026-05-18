@@ -39,6 +39,7 @@ import Testimonials from "@/components/home/Testimonials";
 import About from "@/components/home/About";
 import Consultation from "@/components/home/Consultation";
 import Estimator from "@/components/home/Estimator";
+import RoiCalculator from "@/components/home/RoiCalculator";
 
 import { getSiteSettings } from "./admin/(protected)/settings/actions";
 
@@ -62,6 +63,7 @@ export default async function Home() {
       <UseCases />
       <Portfolio />
       <Estimator />
+      <RoiCalculator />
       <Testimonials />
       <HowItWorks />
       <TechStack />
