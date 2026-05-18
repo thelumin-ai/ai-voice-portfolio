@@ -80,27 +80,27 @@ export default function Consultation({ consultationLink = "https://www.upwork.co
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-1">
-                                            <label className="text-sm font-medium text-gray-300">Name *</label>
-                                            <input required type="text" name="name" className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500" placeholder="John Doe" />
+                                            <label htmlFor="consultation-name" className="text-sm font-medium text-gray-300">Name *</label>
+                                            <input id="consultation-name" required type="text" name="name" className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500" placeholder="John Doe" />
                                         </div>
                                         <div className="space-y-1">
-                                            <label className="text-sm font-medium text-gray-300">Email *</label>
-                                            <input required type="email" name="email" className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500" placeholder="john@company.com" />
+                                            <label htmlFor="consultation-email" className="text-sm font-medium text-gray-300">Email *</label>
+                                            <input id="consultation-email" required type="email" name="email" className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500" placeholder="john@company.com" />
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-1">
-                                            <label className="text-sm font-medium text-gray-300">Company</label>
-                                            <input type="text" name="company" className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500" placeholder="Acme Corp" />
+                                            <label htmlFor="consultation-company" className="text-sm font-medium text-gray-300">Company</label>
+                                            <input id="consultation-company" type="text" name="company" className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500" placeholder="Acme Corp" />
                                         </div>
                                         <div className="space-y-1">
-                                            <label className="text-sm font-medium text-gray-300">Phone</label>
-                                            <input type="tel" name="phone" className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500" placeholder="+1 (555) 000-0000" />
+                                            <label htmlFor="consultation-phone" className="text-sm font-medium text-gray-300">Phone</label>
+                                            <input id="consultation-phone" type="tel" name="phone" className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500" placeholder="+1 (555) 000-0000" />
                                         </div>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-sm font-medium text-gray-300">Message</label>
-                                        <textarea name="message" rows={3} className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500" placeholder="Tell me about your current bottlenecks..."></textarea>
+                                        <label htmlFor="consultation-message" className="text-sm font-medium text-gray-300">Message</label>
+                                        <textarea id="consultation-message" name="message" rows={3} className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500" placeholder="Tell me about your current bottlenecks..."></textarea>
                                     </div>
                                     
                                     <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">

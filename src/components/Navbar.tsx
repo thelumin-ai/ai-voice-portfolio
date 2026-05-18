@@ -65,6 +65,8 @@ export default function Navbar({ consultationLink = "https://www.upwork.com/serv
                         <button
                             onClick={toggleMenu}
                             className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                            aria-label="Toggle navigation menu"
+                            aria-expanded={isOpen}
                         >
                             <span className="sr-only">Open main menu</span>
                             {isOpen ? (

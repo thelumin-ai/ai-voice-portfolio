@@ -139,7 +139,7 @@ export default function Solutions() {
                     >
                         {slides.map((slideItems, slideIndex) => (
                             <SwiperSlide key={slideIndex}>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 auto-rows-fr">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 auto-rows-fr">
                                     {slideItems.map((solution, index) => {
                                         const Icon = getIcon(solution.icon_name);
                                         return (
