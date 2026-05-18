@@ -22,19 +22,19 @@ export default async function Footer() {
                         </p>
                         <div className="flex space-x-4 pt-2">
                             {twitterUrl && (
-                                <a href={twitterUrl} target="_blank" rel="noopener noreferrer" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+                                <a href={twitterUrl} target="_blank" rel="noopener noreferrer" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors" aria-label="Twitter">
                                     <span className="sr-only">Twitter</span>
                                     <Twitter className="h-5 w-5" />
                                 </a>
                             )}
                             {linkedinUrl && (
-                                <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+                                <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors" aria-label="LinkedIn">
                                     <span className="sr-only">LinkedIn</span>
                                     <Linkedin className="h-5 w-5" />
                                 </a>
                             )}
                             {githubUrl && (
-                                <a href={githubUrl} target="_blank" rel="noopener noreferrer" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+                                <a href={githubUrl} target="_blank" rel="noopener noreferrer" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors" aria-label="GitHub">
                                     <span className="sr-only">GitHub</span>
                                     <Github className="h-5 w-5" />
                                 </a>

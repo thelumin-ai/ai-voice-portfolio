@@ -200,6 +200,7 @@ export default function FloatingChatbot() {
               <button
                 onClick={() => setIsOpen(false)}
                 className="w-8 h-8 rounded-lg bg-zinc-900/50 hover:bg-zinc-900 text-gray-400 hover:text-white transition-all flex items-center justify-center border border-zinc-800"
+                aria-label="Close chat assistant"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -281,6 +282,7 @@ export default function FloatingChatbot() {
                 <button
                   type="submit"
                   className="w-10 h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center transition-all focus:outline-none"
+                  aria-label="Send message"
                 >
                   <Send className="w-4 h-4" />
                 </button>
@@ -294,6 +296,7 @@ export default function FloatingChatbot() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center transition-all shadow-[0_0_40px_-5px_rgba(59,130,246,0.6)] hover:scale-105 active:scale-95 z-[9999]"
+        aria-label="Open chat assistant"
       >
         {isOpen ? <X className="w-6 h-6" /> : <MessageSquare className="w-6 h-6 animate-pulse" />}
       </button>

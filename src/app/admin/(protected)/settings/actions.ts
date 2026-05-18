@@ -3,8 +3,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { settingsSchema, SettingsFormValues } from '@/lib/validations/settings'
 import { revalidatePath } from 'next/cache'
+import { cache } from 'react'
 
-export async function getSiteSettings(): Promise<{ data?: SettingsFormValues; error?: string }> {
+export const getSiteSettings = cache(async (): Promise<{ data?: SettingsFormValues; error?: string }> => {
   const supabase = await createClient()
   
   const { data, error } = await supabase
@@ -44,7 +45,7 @@ export async function getSiteSettings(): Promise<{ data?: SettingsFormValues; er
   })
 
   return { data: settingsObj }
-}
+})
 
 export async function updateSiteSettings(data: SettingsFormValues) {
   const supabase = await createClient()

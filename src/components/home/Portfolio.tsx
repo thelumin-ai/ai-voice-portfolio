@@ -218,6 +218,7 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                                 <button
                                     onClick={() => setSelectedProject(null)}
                                     className="p-2 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors"
+                                    aria-label="Close modal"
                                 >
                                     <X className="w-6 h-6 text-gray-500" />
                                 </button>

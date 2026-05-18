@@ -66,7 +66,7 @@ export default function Consultation({ consultationLink = "https://www.upwork.co
                             Stop Missing Revenue Opportunities
                         </h2>
 
-                        <p className="text-xl text-blue-100/70 mb-10 max-w-2xl mx-auto">
+                        <p className="text-xl text-blue-200 mb-10 max-w-2xl mx-auto">
                             Book a discovery call to map out exactly how AI voice agents and smart chatbots can instantly follow up, qualify leads, and pack your calendar.
                         </p>
 
@@ -111,14 +111,14 @@ export default function Consultation({ consultationLink = "https://www.upwork.co
                                         >
                                             {isSubmitting ? 'Sending...' : 'Request Consultation'}
                                         </button>
-                                        <a href={consultationLink} target="_blank" rel="noopener noreferrer" className="block w-full">
-                                            <button
-                                                type="button"
-                                                className="w-full flex items-center justify-center px-8 py-3 border border-white/10 rounded-lg text-white hover:bg-white/5 font-bold transition-all"
-                                            >
+                                        <a href={consultationLink} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center px-8 py-3 border border-white/10 rounded-lg text-white hover:bg-white/5 font-bold transition-all text-center">
+
+
+
+                                            
                                                 Book via Provider Platform
                                                 <ArrowRight className="ml-2 h-5 w-5" />
-                                            </button>
+                                            
                                         </a>
                                     </div>
                                     {submitStatus === 'error' && <p className="text-red-400 text-sm mt-2">There was an error sending your message. Please try again.</p>}

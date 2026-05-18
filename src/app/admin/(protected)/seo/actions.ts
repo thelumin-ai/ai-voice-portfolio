@@ -3,8 +3,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { seoSchema, SeoFormValues } from '@/lib/validations/seo'
 import { revalidatePath } from 'next/cache'
+import { cache } from 'react'
 
-export async function getSeoSettings() {
+export const getSeoSettings = cache(async () => {
   const supabase = await createClient()
   
   const { data, error } = await supabase
@@ -18,7 +19,7 @@ export async function getSeoSettings() {
   }
 
   return { data }
-}
+})
 
 export async function getSeoSetting(id: string) {
   const supabase = await createClient()
