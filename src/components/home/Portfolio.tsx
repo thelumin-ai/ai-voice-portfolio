@@ -397,7 +397,8 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
 // Premium fallback cleaners for database content
 function getPremiumDescription(title: string, desc: string): string {
     const d = (desc || '').trim();
-    if (!d || d.includes(';') || d.includes('\'') || d.length < 15 || (/^[a-zA-Z\s;'\d]{3,20}$/.test(d) && !d.includes(' '))) {
+    const isGibberish = !d || d.length < 18 || (d.length < 35 && !d.includes(' ')) || d.toLowerCase().includes('testing') || d.includes(';');
+    if (isGibberish) {
         const lowerTitle = title.toLowerCase();
         if (lowerTitle.includes('nursing') || lowerTitle.includes('nurse') || lowerTitle.includes('health')) {
             return "An intelligent healthcare coordinator agent that pre-qualifies patients, processes initial symptoms, and automates appointment bookings seamlessly.";
@@ -417,8 +418,9 @@ function getPremiumDescription(title: string, desc: string): string {
 }
 
 function getPremiumTag(title: string, tag: string): string {
-    const t = (tag || '').trim();
-    if (!t || t.length < 2 || t.toLowerCase() === 'testing' || t.toLowerCase() === 'test') {
+    const t = (tag || '').trim().toLowerCase();
+    const isGeneric = !t || t.length < 3 || t === 'testing' || t === 'test' || t === 'health' || t === 'real estate';
+    if (isGeneric) {
         const lowerTitle = title.toLowerCase();
         if (lowerTitle.includes('nursing') || lowerTitle.includes('nurse') || lowerTitle.includes('health')) {
             return "Healthcare AI";
