@@ -437,8 +437,24 @@ function getPremiumTag(title: string, tag: string): string {
     return tag;
 }
 
-function getPremiumMetrics(title: string, metrics: any[]): { value: string, label: string }[] {
-    if (!metrics || metrics.length === 0) {
+function getPremiumMetrics(title: string, metrics: any): { value: string, label: string }[] {
+    let parsedMetrics: any[] = [];
+    if (metrics) {
+        if (Array.isArray(metrics)) {
+            parsedMetrics = metrics;
+        } else if (typeof metrics === 'string') {
+            try {
+                const parsed = JSON.parse(metrics);
+                if (Array.isArray(parsed)) {
+                    parsedMetrics = parsed;
+                }
+            } catch (e) {
+                // Ignore parsing errors
+            }
+        }
+    }
+
+    if (parsedMetrics.length === 0) {
         const lowerTitle = title.toLowerCase();
         if (lowerTitle.includes('nursing') || lowerTitle.includes('nurse') || lowerTitle.includes('health')) {
             return [{ value: "98%", label: "Patient Match" }, { value: "24/7", label: "Availability" }];
@@ -451,7 +467,7 @@ function getPremiumMetrics(title: string, metrics: any[]): { value: string, labe
         }
         return [{ value: "99.9%", label: "Uptime" }, { value: "3x", label: "Efficiency Boost" }];
     }
-    return metrics;
+    return parsedMetrics;
 }
 
 // Extracted card component for reuse
