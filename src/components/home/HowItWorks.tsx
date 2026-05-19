@@ -91,17 +91,60 @@ export default function HowItWorks() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
                             transition={{ delay: index * 0.1, duration: 0.5 }}
-                            className={`relative flex items-center mb-24 last:mb-0 ${index % 2 === 0 ? "md:flex-row-reverse" : "md:flex-row"} flex-col`}
+                            className={`relative flex items-center mb-24 last:mb-0 ${index % 2 === 0 ? "md:flex-row-reverse" : "md:flex-row"} flex-col w-full group`}
                         >
-                            {/* Timeline dot (The Tree Node) */}
-                            <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-white dark:bg-black border-4 border-blue-500/20 items-center justify-center z-10 transition-colors duration-300 shadow-lg shadow-blue-500/10">
-                                <div className="w-4 h-4 rounded-full bg-blue-500 animate-pulse" />
-                            </div>
+                            {/* Timeline dot (Step Number Node) */}
+                            <motion.div
+                                initial={{ scale: 0, opacity: 0 }}
+                                whileInView={{ scale: 1, opacity: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
+                                className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-white dark:bg-zinc-950 border-2 border-blue-500/30 items-center justify-center z-20 transition-all duration-300 shadow-md shadow-blue-500/5 group-hover:border-blue-500 group-hover:shadow-lg group-hover:shadow-blue-500/20"
+                            >
+                                <div className="w-10 h-10 rounded-full bg-blue-50/50 dark:bg-blue-950/20 flex items-center justify-center font-black text-sm text-blue-600 dark:text-blue-400 group-hover:text-blue-500 transition-colors">
+                                    0{index + 1}
+                                </div>
+                            </motion.div>
 
-                            {/* Content box (The Tree Branch) */}
-                            <div className={`w-full md:w-[45%] ${index % 2 === 0 ? "md:pl-12" : "md:pr-12"} mb-8 md:mb-0`}>
-                                <div className="glass-panel bg-white/60 dark:bg-zinc-900/60 p-10 rounded-3xl relative overflow-hidden group hover:border-blue-500/40 transition-all duration-500 border border-black/5 dark:border-white/5 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
-                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500/0 via-blue-500/60 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            {/* Animated Connector Line */}
+                            {index % 2 === 0 ? (
+                                <div className="hidden md:block absolute left-1/2 right-[45%] h-[2px] top-1/2 -translate-y-1/2 z-0 overflow-hidden">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        whileInView={{ width: "100%" }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: index * 0.1 + 0.2, duration: 0.5, ease: "easeOut" }}
+                                        className="h-full bg-gradient-to-r from-blue-500 to-blue-500/20 relative"
+                                    >
+                                        <motion.div
+                                            animate={{ left: ["0%", "100%"] }}
+                                            transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+                                            className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.8)]"
+                                        />
+                                    </motion.div>
+                                </div>
+                            ) : (
+                                <div className="hidden md:block absolute right-1/2 left-[45%] h-[2px] top-1/2 -translate-y-1/2 z-0 overflow-hidden">
+                                    <motion.div
+                                        initial={{ width: 0, right: 0 }}
+                                        whileInView={{ width: "100%" }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: index * 0.1 + 0.2, duration: 0.5, ease: "easeOut" }}
+                                        className="h-full bg-gradient-to-l from-blue-500 to-blue-500/20 absolute right-0"
+                                    >
+                                        <motion.div
+                                            animate={{ right: ["0%", "100%"] }}
+                                            transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+                                            className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.8)]"
+                                        />
+                                    </motion.div>
+                                </div>
+                            )}
+
+                            {/* Content box (Card) */}
+                            <div className={`w-full md:w-[45%] ${index % 2 === 0 ? "md:pl-12" : "md:pr-12"} mb-8 md:mb-0 z-10`}>
+                                <div className="glass-panel bg-white/60 dark:bg-zinc-900/60 p-10 rounded-3xl relative overflow-hidden transition-all duration-500 border border-black/5 dark:border-white/5 hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500/0 via-blue-500/60 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                     <div className="flex items-center mb-6">
                                         <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 mr-4">
                                             <step.icon className="h-6 w-6" />
