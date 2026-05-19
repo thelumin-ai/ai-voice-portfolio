@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Mic } from "lucide-react";
-import { HeroContent } from "@/app/admin/(protected)/content/actions";
+import { HeroContent } from "@/app/admin/(protected)/content/defaults";
 
 interface HeroProps {
     consultationLink?: string;

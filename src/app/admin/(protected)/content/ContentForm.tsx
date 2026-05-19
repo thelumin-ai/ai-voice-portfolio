@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Save, Type, User, AlertTriangle, Plus, X, Loader2, CheckCircle2 } from 'lucide-react'
 import {
   HeroContent, AboutContent, ProblemContent,
-  defaultHeroContent, defaultAboutContent, defaultProblemContent,
+  defaultHeroContent, defaultAboutContent, defaultProblemContent
+} from './defaults'
+import {
   updateHeroContent, updateAboutContent, updateProblemContent
 } from './actions'
 

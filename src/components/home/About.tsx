@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
-import { AboutContent } from "@/app/admin/(protected)/content/actions";
+import { AboutContent } from "@/app/admin/(protected)/content/defaults";
 
 interface AboutProps {
     profileImageUrl?: string;

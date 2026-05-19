@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ProblemContent } from "@/app/admin/(protected)/content/actions";
+import { ProblemContent } from "@/app/admin/(protected)/content/defaults";
 
 interface ProblemProps {
     content?: ProblemContent;
