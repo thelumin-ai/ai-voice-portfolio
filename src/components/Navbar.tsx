@@ -34,12 +34,12 @@ export default function Navbar({ consultationLink = "https://www.upwork.com/serv
 
                     {/* Desktop Navigation */}
                     <div className="hidden md:block">
-                        <div className="ml-10 flex items-baseline space-x-8">
+                        <div className="ml-6 flex items-baseline space-x-5">
                             {navLinks.map((link) => (
                                 <Link
                                     key={link.href}
                                     href={link.href}
-                                    className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors duration-200 text-lg font-medium"
+                                    className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors duration-200 text-sm font-medium"
                                 >
                                     {link.label}
                                 </Link>
