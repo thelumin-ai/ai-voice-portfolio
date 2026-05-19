@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { ChevronRight, ShieldCheck, Zap, Activity, Home, Sun, Headphones, PhoneOutgoing, Mic, Radio } from "lucide-react";
 import WebRTCVoiceDemo from "@/components/WebRTCVoiceDemo";
-import { getPlaygroundApps } from "@/app/admin/(protected)/playground/actions";
 
 // Add the `vapiAgentId` property to each config. Reads from Vercel environment variables.
 const defaultAgentConfigs = [
@@ -27,32 +26,11 @@ export default function Playground() {
     // assume the user interacts and we show it eventually, or via a button.
 
     useEffect(() => {
-        const fetchApps = async () => {
-            try {
-                const { data } = await getPlaygroundApps();
-                if (data && data.length > 0) {
-                    const published = data.filter((a: any) => a.status === 'published');
-                    if (published.length > 0) {
-                        const dbAgents = published.map((a: any, i: number) => ({
-                            id: a.id,
-                            vapiAgentId: a.embed_url || "087efbdc-3fcf-4329-a12e-819eb64d3882",
-                            name: a.title,
-                            icon: defaultAgentConfigs[i % defaultAgentConfigs.length].icon,
-                            desc: a.description
-                        }));
-                        // Append DB agents after the defaults instead of replacing them
-                        const merged = [...defaultAgentConfigs, ...dbAgents];
-                        setAgentConfigs(merged);
-                        // Keep the first default agent selected
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to fetch playground apps:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchApps();
+        // Brief initialization for branded loading screen
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 1500);
+        return () => clearTimeout(timer);
     }, []);
 
     return (
