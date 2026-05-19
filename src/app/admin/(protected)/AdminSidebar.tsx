@@ -15,11 +15,13 @@ import {
   Search,
   FileText,
   Settings,
+  FileEdit,
 } from 'lucide-react'
 import { LogoutButton } from './LogoutButton'
 
 const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+  { name: 'Content Editor', href: '/admin/content', icon: FileEdit },
   { name: 'Portfolio', href: '/admin/portfolio', icon: FolderOpen },
   { name: 'Services/Solutions', href: '/admin/services', icon: Briefcase },
   { name: 'Use Cases', href: '/admin/use-cases', icon: Layers },

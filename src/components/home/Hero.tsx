@@ -3,8 +3,23 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Mic } from "lucide-react";
+import { HeroContent } from "@/app/admin/(protected)/content/actions";
 
-export default function Hero({ consultationLink = "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021" }: { consultationLink?: string }) {
+interface HeroProps {
+    consultationLink?: string;
+    content?: HeroContent;
+}
+
+export default function Hero({ consultationLink = "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021", content }: HeroProps) {
+    const badge = content?.badge || "Next-Gen AI & Voice Automation";
+    const headline = content?.headline || "AI Voice Agents & Chatbots That Call, Qualify, and Convert Leads Automatically";
+    const subtext = content?.subtext || "I design intelligent voice systems and omni-channel automations that instantly engage leads, qualify prospects, and scale your business automatically.";
+    const ctaPrimary = content?.cta_primary || "Try a Live AI Agent";
+    const ctaSecondary = content?.cta_secondary || "Book a Consultation";
+
+    // Split headline for styling - find the last line break point
+    const words = headline.split(' ');
+
     return (
         <div className="relative overflow-hidden bg-black pt-24 pb-32 lg:pt-36 lg:pb-40">
             {/* Background glow effects */}
@@ -24,7 +39,7 @@ export default function Hero({ consultationLink = "https://www.upwork.com/servic
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                             </span>
-                            Next-Gen AI & Voice Automation
+                            {badge}
                         </span>
                     </motion.div>
 
@@ -34,9 +49,7 @@ export default function Hero({ consultationLink = "https://www.upwork.com/servic
                         transition={{ duration: 0.5, delay: 0.1 }}
                         className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6"
                     >
-                        AI Voice Agents & Chatbots That <br className="hidden md:block" />
-                        <span className="text-gradient">Call, Qualify, and Convert</span> <br className="hidden md:block" />
-                        Leads Automatically
+                        {headline}
                     </motion.h1>
 
                     <motion.p
@@ -45,7 +58,7 @@ export default function Hero({ consultationLink = "https://www.upwork.com/servic
                         transition={{ duration: 0.5, delay: 0.2 }}
                         className="mt-6 text-xl text-gray-400 max-w-2xl mx-auto mb-10"
                     >
-                        I design intelligent voice systems and omni-channel automations that instantly engage leads, qualify prospects, and scale your business automatically.
+                        {subtext}
                     </motion.p>
 
                     <motion.div
@@ -59,7 +72,7 @@ export default function Hero({ consultationLink = "https://www.upwork.com/servic
                             className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-white px-8 py-3.5 text-sm font-semibold text-black shadow-sm hover:bg-gray-100 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white group"
                         >
                             <Mic className="mr-2 h-4 w-4 text-black group-hover:scale-110 transition-transform" />
-                            Try a Live AI Agent
+                            {ctaPrimary}
                         </Link>
                         <Link
                             href={consultationLink}
@@ -67,7 +80,7 @@ export default function Hero({ consultationLink = "https://www.upwork.com/servic
                             rel="noopener noreferrer"
                             className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-blue-600/10 px-8 py-3.5 text-sm font-semibold text-blue-400 ring-1 ring-inset ring-blue-500/20 hover:bg-blue-600/20 transition-all"
                         >
-                            Book a Consultation setup
+                            {ctaSecondary}
                         </Link>
                     </motion.div>
                 </div>

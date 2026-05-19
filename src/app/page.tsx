@@ -44,6 +44,7 @@ const Estimator = nextDynamic(() => import("@/components/home/Estimator"));
 const RoiCalculator = nextDynamic(() => import("@/components/home/RoiCalculator"));
 
 import { getSiteSettings } from "./admin/(protected)/settings/actions";
+import { getContentSettings } from "./admin/(protected)/content/actions";
 
 export default async function Home() {
   const { data: settings } = await getSiteSettings();
@@ -57,10 +58,13 @@ export default async function Home() {
       consultationLink = settings.consultation_link_upwork;
   }
 
+  // Fetch content settings for Hero, About, Problem
+  const contentSettings = await getContentSettings();
+
   return (
     <div className="flex flex-col min-h-screen bg-black w-full overflow-hidden">
-      <Hero consultationLink={consultationLink} />
-      <Problem />
+      <Hero consultationLink={consultationLink} content={contentSettings.hero} />
+      <Problem content={contentSettings.problem} />
       <Solutions />
       <UseCases />
       <Portfolio />
@@ -69,7 +73,7 @@ export default async function Home() {
       <Testimonials />
       <HowItWorks />
       <TechStack />
-      <About profileImageUrl={settings?.profile_image_url} consultationLink={consultationLink} socialLinks={settings?.social_links} />
+      <About profileImageUrl={settings?.profile_image_url} consultationLink={consultationLink} socialLinks={settings?.social_links} content={contentSettings.about} />
       <Consultation consultationLink={consultationLink} />
     </div>
   );
