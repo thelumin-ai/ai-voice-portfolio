@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { leadSchema } from '@/lib/validations/lead'
+import { fireWebhooks } from '@/app/admin/(protected)/webhooks/actions'
 
 export async function POST(request: Request) {
   try {
@@ -35,6 +36,20 @@ export async function POST(request: Request) {
     if (error) {
       console.error('Supabase error inserting lead:', error)
       return NextResponse.json({ error: 'Failed to save lead' }, { status: 500 })
+    }
+
+    // Trigger webhook execution
+    try {
+      await fireWebhooks('lead_created', {
+        name: validatedData.name,
+        email: validatedData.email,
+        phone: validatedData.phone,
+        company: validatedData.company,
+        message: validatedData.message,
+        source: 'Consultation Form / Chatbot'
+      })
+    } catch (webhookErr) {
+      console.error('Error firing webhooks:', webhookErr)
     }
 
     return NextResponse.json({ success: true, message: 'Lead submitted successfully' })

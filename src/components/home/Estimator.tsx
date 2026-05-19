@@ -54,10 +54,36 @@ export default function Estimator() {
 
     const handleSubmit = async () => {
         setSubmitting(true);
-        // Simulate a short delay then show success
-        await new Promise(res => setTimeout(res, 1500));
-        setSubmitting(false);
-        setSubmitted(true);
+        try {
+            const useCaseLabel = useCases.find(u => u.id === selectedUseCase)?.label || selectedUseCase || '';
+            const featureLabels = selectedFeatures.map(fId => features.find(f => f.id === fId)?.label || fId);
+            const timelineLabel = timelines.find(t => t.id === selectedTimeline)?.label || selectedTimeline || '';
+
+            const res = await fetch('/api/estimate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: formData.name,
+                    email: formData.email,
+                    business: formData.business,
+                    useCase: useCaseLabel,
+                    features: featureLabels,
+                    timeline: timelineLabel,
+                    totalEstimate
+                })
+            });
+
+            if (res.ok) {
+                setSubmitted(true);
+            } else {
+                alert('There was an issue submitting your request. Please try again.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Failed to send request. Please check your internet connection.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const canProceed = () => {

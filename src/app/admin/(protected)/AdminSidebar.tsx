@@ -16,6 +16,7 @@ import {
   FileText,
   Settings,
   FileEdit,
+  Webhook,
 } from 'lucide-react'
 import { LogoutButton } from './LogoutButton'
 
@@ -29,6 +30,7 @@ const navigation = [
   { name: 'Tech Stack', href: '/admin/tech-stack', icon: Wrench },
   { name: 'Process Steps', href: '/admin/process-steps', icon: ListOrdered },
   { name: 'Lead Tracker', href: '/admin/lead-tracker', icon: Users },
+  { name: 'Webhook Manager', href: '/admin/webhooks', icon: Webhook },
   { name: 'Playground Manager', href: '/admin/playground', icon: PlayCircle },
   { name: 'SEO & Meta', href: '/admin/seo', icon: Search },
   { name: 'Blog/Insights', href: '/admin/blog', icon: FileText },
