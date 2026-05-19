@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { ChevronRight, ShieldCheck, Zap, Activity, Home, Sun, Headphones, PhoneOutgoing } from "lucide-react";
+import { ChevronRight, ShieldCheck, Zap, Activity, Home, Sun, Headphones, PhoneOutgoing, Mic, Radio } from "lucide-react";
 import WebRTCVoiceDemo from "@/components/WebRTCVoiceDemo";
 import { getPlaygroundApps } from "@/app/admin/(protected)/playground/actions";
 
@@ -19,6 +19,7 @@ export default function Playground() {
     const [agentConfigs, setAgentConfigs] = useState<any[]>(defaultAgentConfigs);
     const [selectedAgent, setSelectedAgent] = useState(defaultAgentConfigs[0]);
     const [showConsultPopup, setShowConsultPopup] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     // In a real application, you'd trigger this popup after a call ends
     // For the demo, we'll simulate it by observing the 'ended' state of the WebRTCDemo
@@ -27,20 +28,28 @@ export default function Playground() {
 
     useEffect(() => {
         const fetchApps = async () => {
-            const { data } = await getPlaygroundApps();
-            if (data && data.length > 0) {
-                const published = data.filter((a: any) => a.status === 'published');
-                if (published.length > 0) {
-                    const mapped = published.map((a: any, i: number) => ({
-                        id: a.id,
-                        vapiAgentId: a.embed_url || "087efbdc-3fcf-4329-a12e-819eb64d3882",
-                        name: a.title,
-                        icon: defaultAgentConfigs[i % defaultAgentConfigs.length].icon,
-                        desc: a.description
-                    }));
-                    setAgentConfigs(mapped);
-                    setSelectedAgent(mapped[0]);
+            try {
+                const { data } = await getPlaygroundApps();
+                if (data && data.length > 0) {
+                    const published = data.filter((a: any) => a.status === 'published');
+                    if (published.length > 0) {
+                        const dbAgents = published.map((a: any, i: number) => ({
+                            id: a.id,
+                            vapiAgentId: a.embed_url || "087efbdc-3fcf-4329-a12e-819eb64d3882",
+                            name: a.title,
+                            icon: defaultAgentConfigs[i % defaultAgentConfigs.length].icon,
+                            desc: a.description
+                        }));
+                        // Append DB agents after the defaults instead of replacing them
+                        const merged = [...defaultAgentConfigs, ...dbAgents];
+                        setAgentConfigs(merged);
+                        // Keep the first default agent selected
+                    }
                 }
+            } catch (error) {
+                console.error('Failed to fetch playground apps:', error);
+            } finally {
+                setIsLoading(false);
             }
         };
         fetchApps();
@@ -48,6 +57,88 @@ export default function Playground() {
 
     return (
         <div className="bg-gray-50 dark:bg-zinc-950 min-h-screen pt-24 pb-16 font-sans transition-colors duration-300">
+            <AnimatePresence mode="wait">
+            {isLoading ? (
+                <motion.div
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.4 }}
+                    className="container mx-auto px-4 sm:px-6 lg:px-8"
+                >
+                    {/* Branded Loading Screen */}
+                    <div className="flex flex-col items-center justify-center min-h-[70vh]">
+                        {/* Animated Logo Mark */}
+                        <div className="relative mb-8">
+                            <div className="absolute inset-0 bg-blue-500/20 blur-[40px] rounded-full animate-pulse" />
+                            <motion.div
+                                animate={{ scale: [1, 1.05, 1], rotate: [0, 5, -5, 0] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                className="relative w-24 h-24 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-600/30"
+                            >
+                                <Mic className="w-10 h-10 text-white" />
+                            </motion.div>
+                            <motion.div
+                                animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
+                                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                                className="absolute inset-0 border-2 border-blue-400/40 rounded-2xl"
+                            />
+                        </div>
+
+                        {/* Branding */}
+                        <h2 className="text-2xl font-bold text-black dark:text-white mb-2 transition-colors duration-300">
+                            Abimbola<span className="text-blue-500">.AI</span>
+                        </h2>
+                        <p className="text-gray-500 dark:text-gray-400 mb-8 text-sm transition-colors duration-300">
+                            Initializing AI Playground...
+                        </p>
+
+                        {/* Loading Indicators */}
+                        <div className="flex items-center gap-6 mb-12">
+                            {["Connecting Agents", "Loading Models", "Preparing WebRTC"].map((label, i) => (
+                                <motion.div
+                                    key={label}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: i * 0.3 }}
+                                    className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500"
+                                >
+                                    <motion.div
+                                        animate={{ scale: [1, 1.3, 1] }}
+                                        transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.4 }}
+                                        className="w-2 h-2 rounded-full bg-blue-500"
+                                    />
+                                    {label}
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Skeleton Preview */}
+                        <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-4 gap-6 opacity-30">
+                            <div className="lg:col-span-1 space-y-4">
+                                <div className="bg-white dark:bg-black border border-black/5 dark:border-white/5 rounded-2xl p-6 h-48">
+                                    <div className="h-3 w-24 bg-gray-200 dark:bg-zinc-800 rounded mb-4" />
+                                    {[1,2,3].map(n => (
+                                        <div key={n} className="h-10 bg-gray-100 dark:bg-zinc-900 rounded-xl mb-2" />
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="lg:col-span-3">
+                                <div className="bg-white dark:bg-black border border-black/5 dark:border-white/5 rounded-2xl h-64 flex items-center justify-center">
+                                    <Radio className="w-8 h-8 text-gray-300 dark:text-zinc-700 animate-pulse" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            ) : (
+                <motion.div
+                    key="loaded"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* Breadcrumbs */}
@@ -182,6 +273,9 @@ export default function Playground() {
                 )}
             </AnimatePresence>
 
+                </motion.div>
+            )}
+            </AnimatePresence>
         </div>
     );
 }

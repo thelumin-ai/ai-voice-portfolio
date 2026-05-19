@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { portfolioSchema, PortfolioFormValues } from '@/lib/validations/portfolio'
@@ -209,10 +209,9 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Industry Tag</label>
-              <input
-                {...form.register('industry_tag')}
-                className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
-                placeholder="e.g. Real Estate"
+              <CategorySelect
+                value={form.watch('industry_tag')}
+                onChange={(val) => form.setValue('industry_tag', val)}
               />
             </div>
           </div>
@@ -531,4 +530,121 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
       </div>
     </form>
   )
+}
+
+// Predefined portfolio category list
+const DEFAULT_CATEGORIES = [
+  "Sales Automation",
+  "IVR Systems",
+  "Scheduling Engines",
+  "CRM Integrations",
+  "Healthcare AI",
+  "Real Estate",
+  "Solar & Energy",
+  "Customer Support",
+  "Home Services",
+  "Consulting & Agencies",
+  "Finance & Insurance",
+  "Multi-Language",
+  "AI Dashboards",
+];
+
+function CategorySelect({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customValue, setCustomValue] = useState('');
+
+  const allCategories = [...DEFAULT_CATEGORIES, ...customCategories];
+  const isCustomValue = value && !allCategories.includes(value) && value !== '__other__';
+
+  // If the initial value from DB is a custom category not in our list, add it
+  useEffect(() => {
+    if (value && !DEFAULT_CATEGORIES.includes(value) && value !== '__other__' && !customCategories.includes(value)) {
+      setCustomCategories(prev => [...prev, value]);
+    }
+  }, []);
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = e.target.value;
+    if (selected === '__other__') {
+      setShowCustomInput(true);
+      setCustomValue('');
+    } else {
+      setShowCustomInput(false);
+      onChange(selected);
+    }
+  };
+
+  const handleCustomSubmit = () => {
+    const trimmed = customValue.trim();
+    if (!trimmed) return;
+    
+    // Add to session list for reuse
+    if (!allCategories.includes(trimmed)) {
+      setCustomCategories(prev => [...prev, trimmed]);
+    }
+    onChange(trimmed);
+    setShowCustomInput(false);
+    setCustomValue('');
+  };
+
+  const handleCustomKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleCustomSubmit();
+    }
+  };
+
+  const selectValue = showCustomInput ? '__other__' : (allCategories.includes(value) ? value : (value ? value : ''));
+
+  return (
+    <div className="space-y-2">
+      <select
+        value={selectValue}
+        onChange={handleSelectChange}
+        className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+      >
+        <option value="" disabled>Select a category...</option>
+        {allCategories.map((cat) => (
+          <option key={cat} value={cat}>{cat}</option>
+        ))}
+        <option value="__other__">✦ Other (Custom Category)</option>
+      </select>
+
+      {showCustomInput && (
+        <div className="flex gap-2 items-center animate-in slide-in-from-top-2">
+          <input
+            type="text"
+            value={customValue}
+            onChange={(e) => setCustomValue(e.target.value)}
+            onKeyDown={handleCustomKeyDown}
+            placeholder="Enter custom category name..."
+            className="flex-1 px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700 ring-2 ring-blue-500/30 focus:ring-blue-500"
+            autoFocus
+          />
+          <button
+            type="button"
+            onClick={handleCustomSubmit}
+            disabled={!customValue.trim()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+          >
+            Add
+          </button>
+          <button
+            type="button"
+            onClick={() => { setShowCustomInput(false); }}
+            className="px-3 py-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {value && (
+        <p className="text-xs text-gray-500">
+          Current: <span className="font-medium text-blue-600 dark:text-blue-400">{value}</span>
+        </p>
+      )}
+    </div>
+  );
 }

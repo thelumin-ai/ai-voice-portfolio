@@ -40,19 +40,19 @@ const defaultSolutions = [
         title: "CRM & ERP Integrations",
         description: "Seamlessly connect AI voice agents to your existing CRM, ERP, or helpdesk systems for real-time data sync and workflow automation.",
         icon_name: "Database",
-        href: "/portfolio"
+        href: "/use-cases/crm-integration"
     },
     {
         title: "Multi-Language Support",
         description: "Communicate with your global audience effortlessly. Our agents can fluidly switch between over 30 languages in real-time.",
         icon_name: "Globe",
-        href: "/portfolio"
+        href: "/use-cases/multi-language"
     },
     {
         title: "Custom AI Dashboards",
         description: "Get real-time visibility into your agent's performance, view call transcripts, and analyze sentiment with custom analytics dashboards.",
         icon_name: "BarChart",
-        href: "/portfolio"
+        href: "/use-cases/custom-dashboards"
     }
 ];
 
