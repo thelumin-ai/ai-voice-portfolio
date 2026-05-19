@@ -19,6 +19,7 @@ export default function Playground() {
     const [selectedAgent, setSelectedAgent] = useState(defaultAgentConfigs[0]);
     const [showConsultPopup, setShowConsultPopup] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [consultationLink, setConsultationLink] = useState("https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021");
 
     // In a real application, you'd trigger this popup after a call ends
     // For the demo, we'll simulate it by observing the 'ended' state of the WebRTCDemo
@@ -26,6 +27,12 @@ export default function Playground() {
     // assume the user interacts and we show it eventually, or via a button.
 
     useEffect(() => {
+        // Read consultation link from layout data attribute
+        const parent = document.querySelector('[data-consultation-link]');
+        if (parent) {
+            const link = parent.getAttribute('data-consultation-link');
+            if (link) setConsultationLink(link);
+        }
         // Brief initialization for branded loading screen
         const timer = setTimeout(() => {
             setIsLoading(false);
@@ -220,7 +227,7 @@ export default function Playground() {
 
                         <div className="mt-8 bg-blue-100 dark:bg-blue-900/10 border border-blue-500/20 rounded-xl p-6 text-center lg:hidden block transition-colors duration-300">
                             <p className="text-gray-700 dark:text-gray-300 mb-4 transition-colors duration-300">Want this exact system deployed into your business?</p>
-                            <Link href="https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021?ref=project_share" className="inline-block bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 font-semibold px-6 py-2 rounded-lg text-sm transition-colors duration-300">
+                            <Link href={consultationLink} target="_blank" rel="noopener noreferrer" className="inline-block bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 font-semibold px-6 py-2 rounded-lg text-sm transition-colors duration-300">
                                 Book a Consultation
                             </Link>
                         </div>
@@ -241,7 +248,7 @@ export default function Playground() {
                         <h4 className="text-xl font-bold text-black dark:text-white mb-2 transition-colors duration-300">Impressed by the Demo?</h4>
                         <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 transition-colors duration-300">Let's integrate an AI voice agent like this directly to your phone lines and CRM.</p>
                         <Link
-                            href="https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021?ref=project_share"
+                            href={consultationLink}
                             target="_blank"
                             className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors"
                         >

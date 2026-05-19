@@ -1,4 +1,5 @@
 import { getSeoSettings } from "@/app/admin/(protected)/seo/actions";
+import { getSiteSettings } from "@/app/admin/(protected)/settings/actions";
 
 export const dynamic = 'force-dynamic';
 
@@ -29,10 +30,21 @@ export async function generateMetadata() {
   };
 }
 
-export default function PlaygroundLayout({
+export default async function PlaygroundLayout({
     children,
   }: {
     children: React.ReactNode
   }) {
-    return <>{children}</>;
+    // Fetch consultation link and pass it via data attribute so client components can read it
+    const { data: settings } = await getSiteSettings();
+    let consultationLink = "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021";
+    if (settings?.consultation_provider === 'fiverr' && settings?.consultation_link_fiverr) {
+        consultationLink = settings.consultation_link_fiverr;
+    } else if (settings?.consultation_provider === 'calendly' && settings?.consultation_link_calendly) {
+        consultationLink = settings.consultation_link_calendly;
+    } else if (settings?.consultation_link_upwork) {
+        consultationLink = settings.consultation_link_upwork;
+    }
+
+    return <div data-consultation-link={consultationLink}>{children}</div>;
   }

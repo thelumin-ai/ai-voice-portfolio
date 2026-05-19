@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Mic } from "lucide-react";
 
-export default function Hero() {
+export default function Hero({ consultationLink = "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021" }: { consultationLink?: string }) {
     return (
         <div className="relative overflow-hidden bg-black pt-24 pb-32 lg:pt-36 lg:pb-40">
             {/* Background glow effects */}
@@ -62,7 +62,7 @@ export default function Hero() {
                             Try a Live AI Agent
                         </Link>
                         <Link
-                            href="https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021?ref=project_share"
+                            href={consultationLink}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-blue-600/10 px-8 py-3.5 text-sm font-semibold text-blue-400 ring-1 ring-inset ring-blue-500/20 hover:bg-blue-600/20 transition-all"

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 
-export default function About({ profileImageUrl }: { profileImageUrl?: string }) {
+export default function About({ profileImageUrl, consultationLink = "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021", socialLinks }: { profileImageUrl?: string; consultationLink?: string; socialLinks?: { twitter?: string; linkedin?: string; github?: string } }) {
     return (
         <section className="py-24 bg-gray-50 dark:bg-black relative border-t border-black/5 dark:border-white/5 overflow-hidden transition-colors duration-300" id="about">
             <div className="absolute top-1/2 right-0 w-96 h-96 bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
@@ -74,7 +74,7 @@ export default function About({ profileImageUrl }: { profileImageUrl?: string })
 
                         <div className="flex flex-wrap gap-4 mt-8">
                             <Link
-                                href="https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021?ref=project_share"
+                                href={consultationLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center justify-center rounded-lg bg-black dark:bg-white px-8 py-4 text-sm font-semibold text-white dark:text-black shadow-sm hover:bg-gray-800 dark:hover:bg-gray-200 transition-all"
@@ -83,7 +83,7 @@ export default function About({ profileImageUrl }: { profileImageUrl?: string })
                             </Link>
 
                             <Link
-                                href="https://www.linkedin.com/in/luminous1automation/?skipRedirect=true"
+                                href={socialLinks?.linkedin || "https://www.linkedin.com/in/luminous1automation/?skipRedirect=true"}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center justify-center rounded-lg border border-black/10 dark:border-white/20 bg-transparent px-8 py-4 text-sm font-semibold text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-all"

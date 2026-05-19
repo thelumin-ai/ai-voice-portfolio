@@ -1,4 +1,5 @@
 import { getUseCaseBySlug } from "@/app/admin/(protected)/use-cases/actions";
+import { getSiteSettings } from "@/app/admin/(protected)/settings/actions";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, CheckCircle2 } from "lucide-react";
@@ -204,6 +205,17 @@ export default async function IndustryPage({ params }: { params: Promise<{ indus
 
     const data = useCase || fallback;
 
+    // Fetch consultation link from settings
+    const { data: settings } = await getSiteSettings();
+    let consultationLink = "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021";
+    if (settings?.consultation_provider === 'fiverr' && settings?.consultation_link_fiverr) {
+        consultationLink = settings.consultation_link_fiverr;
+    } else if (settings?.consultation_provider === 'calendly' && settings?.consultation_link_calendly) {
+        consultationLink = settings.consultation_link_calendly;
+    } else if (settings?.consultation_link_upwork) {
+        consultationLink = settings.consultation_link_upwork;
+    }
+
     return (
         <div className="bg-black min-h-screen pt-24 pb-16">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -329,7 +341,7 @@ export default async function IndustryPage({ params }: { params: Promise<{ indus
                     <h2 className="text-3xl font-bold text-white mb-4">Ready to automate your {data.name} operations?</h2>
                     <p className="text-gray-400 mb-8 max-w-2xl mx-auto">Stop leaving money on the table. Let's build a custom voice AI system designed perfectly for your specific business logic.</p>
                     <Link
-                        href="https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021?ref=project_share"
+                        href={consultationLink}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center rounded-lg bg-white px-8 py-4 text-sm font-bold text-black shadow-sm hover:bg-gray-200 transition-all"

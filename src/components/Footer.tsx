@@ -8,6 +8,16 @@ export default async function Footer() {
     const linkedinUrl = settings?.social_links?.linkedin;
     const githubUrl = settings?.social_links?.github;
     const footerText = settings?.footer_text || `© ${new Date().getFullYear()} Abimbola Akinsanmi. All rights reserved.`;
+    
+    // Resolve consultation link from settings
+    let consultationLink = "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021";
+    if (settings?.consultation_provider === 'fiverr' && settings?.consultation_link_fiverr) {
+        consultationLink = settings.consultation_link_fiverr;
+    } else if (settings?.consultation_provider === 'calendly' && settings?.consultation_link_calendly) {
+        consultationLink = settings.consultation_link_calendly;
+    } else if (settings?.consultation_link_upwork) {
+        consultationLink = settings.consultation_link_upwork;
+    }
 
     return (
         <footer className="border-t border-black/10 dark:border-white/10 bg-gray-50 dark:bg-black py-12 transition-colors duration-300">
@@ -66,7 +76,7 @@ export default async function Footer() {
                         <h3 className="text-sm font-semibold tracking-wider text-black dark:text-white uppercase mb-4 transition-colors duration-300">Start Here</h3>
                         <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 transition-colors duration-300">Ready to automate your calls?</p>
                         <Link
-                            href="https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021?ref=project_share"
+                            href={consultationLink}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center justify-center rounded-md bg-black border border-black dark:bg-white/10 dark:border-white/20 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 dark:hover:bg-white/20 transition-all"

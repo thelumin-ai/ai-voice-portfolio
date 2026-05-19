@@ -59,7 +59,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-black w-full overflow-hidden">
-      <Hero />
+      <Hero consultationLink={consultationLink} />
       <Problem />
       <Solutions />
       <UseCases />
@@ -69,7 +69,7 @@ export default async function Home() {
       <Testimonials />
       <HowItWorks />
       <TechStack />
-      <About profileImageUrl={settings?.profile_image_url} />
+      <About profileImageUrl={settings?.profile_image_url} consultationLink={consultationLink} socialLinks={settings?.social_links} />
       <Consultation consultationLink={consultationLink} />
     </div>
   );
