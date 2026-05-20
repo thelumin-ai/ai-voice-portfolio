@@ -115,34 +115,34 @@ export default function HowItWorks() {
 
                             {/* Desktop Animated Connector Line */}
                             {index % 2 === 0 ? (
-                                <div className="hidden md:block absolute left-1/2 right-[45%] h-[2px] top-1/2 -translate-y-1/2 z-0 overflow-hidden">
+                                <div className="hidden md:block absolute left-1/2 right-[calc(45%-3rem)] h-[2px] top-1/2 -translate-y-1/2 z-0 overflow-hidden">
                                     <motion.div
                                         initial={{ scaleX: 0 }}
                                         whileInView={{ scaleX: 1 }}
                                         viewport={{ once: true }}
                                         transition={{ delay: index * 0.1 + 0.2, duration: 0.5, ease: "easeOut" }}
-                                        className="h-full bg-gradient-to-r from-blue-500 to-blue-500/20 origin-left relative w-full overflow-hidden"
+                                        className="h-full bg-blue-500/30 origin-left relative w-full overflow-hidden"
                                     >
                                         <motion.div
                                             animate={{ x: ["-100%", "300%"] }}
                                             transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-                                            className="absolute top-0 bottom-0 w-16 bg-gradient-to-r from-transparent via-blue-400 to-transparent"
+                                            className="absolute top-0 bottom-0 w-16 bg-gradient-to-r from-transparent via-blue-500 to-transparent"
                                         />
                                     </motion.div>
                                 </div>
                             ) : (
-                                <div className="hidden md:block absolute right-1/2 left-[45%] h-[2px] top-1/2 -translate-y-1/2 z-0 overflow-hidden">
+                                <div className="hidden md:block absolute right-1/2 left-[calc(45%-3rem)] h-[2px] top-1/2 -translate-y-1/2 z-0 overflow-hidden">
                                     <motion.div
                                         initial={{ scaleX: 0 }}
                                         whileInView={{ scaleX: 1 }}
                                         viewport={{ once: true }}
                                         transition={{ delay: index * 0.1 + 0.2, duration: 0.5, ease: "easeOut" }}
-                                        className="h-full bg-gradient-to-l from-blue-500 to-blue-500/20 origin-right absolute right-0 w-full overflow-hidden"
+                                        className="h-full bg-blue-500/30 origin-right absolute right-0 w-full overflow-hidden"
                                     >
                                         <motion.div
                                             animate={{ x: ["300%", "-100%"] }}
                                             transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-                                            className="absolute top-0 bottom-0 w-16 bg-gradient-to-r from-transparent via-blue-400 to-transparent"
+                                            className="absolute top-0 bottom-0 w-16 bg-gradient-to-r from-transparent via-blue-500 to-transparent"
                                         />
                                     </motion.div>
                                 </div>
