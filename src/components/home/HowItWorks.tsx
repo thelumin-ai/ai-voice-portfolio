@@ -59,9 +59,6 @@ export default function HowItWorks() {
 
     return (
         <section className="py-24 bg-white dark:bg-black relative border-t border-black/5 dark:border-white/5 overflow-hidden transition-colors duration-300" id="how-it-works">
-            {/* Background stylistic line (The Tree Trunk) */}
-            <div className="absolute top-0 bottom-0 left-1/2 w-[2px] bg-gradient-to-b from-blue-500/0 via-blue-500/30 to-blue-500/0 hidden md:block" />
-
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 max-w-[1400px]">
                 <div className="text-center max-w-3xl mx-auto mb-20">
                     <motion.h2
@@ -83,7 +80,7 @@ export default function HowItWorks() {
                     </motion.p>
                 </div>
 
-                <div className="max-w-6xl mx-auto">
+                <div className="max-w-6xl mx-auto relative">
                     {processSteps.map((step, index) => (
                         <motion.div
                             key={step.title + index}
@@ -93,57 +90,67 @@ export default function HowItWorks() {
                             transition={{ delay: index * 0.1, duration: 0.5 }}
                             className={`relative flex items-center mb-24 last:mb-0 ${index % 2 === 0 ? "md:flex-row-reverse" : "md:flex-row"} flex-col w-full group`}
                         >
-                            {/* Timeline dot (Step Number Node) */}
-                            <motion.div
-                                initial={{ scale: 0, opacity: 0 }}
-                                whileInView={{ scale: 1, opacity: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
-                                className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-white dark:bg-zinc-950 border-2 border-blue-500/30 items-center justify-center z-20 transition-all duration-300 shadow-md shadow-blue-500/5 group-hover:border-blue-500 group-hover:shadow-lg group-hover:shadow-blue-500/20"
-                            >
-                                <div className="w-10 h-10 rounded-full bg-blue-50/50 dark:bg-blue-950/20 flex items-center justify-center font-black text-sm text-blue-600 dark:text-blue-400 group-hover:text-blue-500 transition-colors">
-                                    0{index + 1}
-                                </div>
-                            </motion.div>
+                            {/* Vertical Trunk Line Segment */}
+                            {index < processSteps.length - 1 && (
+                                <div className="absolute left-[19px] md:left-1/2 md:-translate-x-1/2 top-1/2 w-[2px] h-[calc(100%+6rem)] bg-gradient-to-b from-blue-500 via-blue-400 to-blue-500/20 z-0" />
+                            )}
 
-                            {/* Animated Connector Line */}
+                            {/* Timeline dot (Step Number Node) */}
+                            <div className="absolute left-0 md:left-1/2 -translate-x-0 md:-translate-x-1/2 top-1/2 -translate-y-1/2 w-10 h-10 md:w-14 md:h-14 z-20 flex items-center justify-center">
+                                <motion.div
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    whileInView={{ scale: 1, opacity: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
+                                    className="w-full h-full rounded-full bg-white dark:bg-zinc-950 border-2 border-blue-500/30 flex items-center justify-center transition-all duration-300 shadow-md shadow-blue-500/5 group-hover:border-blue-500 group-hover:shadow-lg group-hover:shadow-blue-500/20"
+                                >
+                                    <div className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-blue-50/50 dark:bg-blue-950/20 flex items-center justify-center font-black text-xs md:text-sm text-blue-600 dark:text-blue-400 group-hover:text-blue-500 transition-colors">
+                                        0{index + 1}
+                                    </div>
+                                </motion.div>
+                            </div>
+
+                            {/* Mobile horizontal connector */}
+                            <div className="absolute left-10 w-2 h-[2px] top-1/2 -translate-y-1/2 bg-blue-500/20 md:hidden z-0" />
+
+                            {/* Desktop Animated Connector Line */}
                             {index % 2 === 0 ? (
                                 <div className="hidden md:block absolute left-1/2 right-[45%] h-[2px] top-1/2 -translate-y-1/2 z-0 overflow-hidden">
                                     <motion.div
-                                        initial={{ width: 0 }}
-                                        whileInView={{ width: "100%" }}
+                                        initial={{ scaleX: 0 }}
+                                        whileInView={{ scaleX: 1 }}
                                         viewport={{ once: true }}
                                         transition={{ delay: index * 0.1 + 0.2, duration: 0.5, ease: "easeOut" }}
-                                        className="h-full bg-gradient-to-r from-blue-500 to-blue-500/20 relative"
+                                        className="h-full bg-gradient-to-r from-blue-500 to-blue-500/20 origin-left relative w-full overflow-hidden"
                                     >
                                         <motion.div
-                                            animate={{ left: ["0%", "100%"] }}
+                                            animate={{ x: ["-100%", "300%"] }}
                                             transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-                                            className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.8)]"
+                                            className="absolute top-0 bottom-0 w-16 bg-gradient-to-r from-transparent via-blue-400 to-transparent"
                                         />
                                     </motion.div>
                                 </div>
                             ) : (
                                 <div className="hidden md:block absolute right-1/2 left-[45%] h-[2px] top-1/2 -translate-y-1/2 z-0 overflow-hidden">
                                     <motion.div
-                                        initial={{ width: 0, right: 0 }}
-                                        whileInView={{ width: "100%" }}
+                                        initial={{ scaleX: 0 }}
+                                        whileInView={{ scaleX: 1 }}
                                         viewport={{ once: true }}
                                         transition={{ delay: index * 0.1 + 0.2, duration: 0.5, ease: "easeOut" }}
-                                        className="h-full bg-gradient-to-l from-blue-500 to-blue-500/20 absolute right-0"
+                                        className="h-full bg-gradient-to-l from-blue-500 to-blue-500/20 origin-right absolute right-0 w-full overflow-hidden"
                                     >
                                         <motion.div
-                                            animate={{ right: ["0%", "100%"] }}
+                                            animate={{ x: ["300%", "-100%"] }}
                                             transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-                                            className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.8)]"
+                                            className="absolute top-0 bottom-0 w-16 bg-gradient-to-r from-transparent via-blue-400 to-transparent"
                                         />
                                     </motion.div>
                                 </div>
                             )}
 
                             {/* Content box (Card) */}
-                            <div className={`w-full md:w-[45%] ${index % 2 === 0 ? "md:pl-12" : "md:pr-12"} mb-8 md:mb-0 z-10`}>
-                                <div className="glass-panel bg-white/60 dark:bg-zinc-900/60 p-10 rounded-3xl relative overflow-hidden transition-all duration-500 border border-black/5 dark:border-white/5 hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
+                            <div className={`w-full md:w-[45%] pl-12 md:pl-0 ${index % 2 === 0 ? "md:pl-12" : "md:pr-12"} mb-8 md:mb-0 z-10`}>
+                                <div className="bg-white/80 dark:bg-zinc-900/80 p-6 md:p-10 rounded-3xl relative overflow-hidden transition-all duration-300 border border-black/10 dark:border-white/10 hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500/0 via-blue-500/60 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                     <div className="flex items-center mb-6">
                                         <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 mr-4">
@@ -154,7 +161,7 @@ export default function HowItWorks() {
                                             <h3 className="text-2xl font-bold text-black dark:text-white transition-colors duration-300">{step.title}</h3>
                                         </div>
                                     </div>
-                                    <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed transition-colors duration-300">{step.description}</p>
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base leading-relaxed transition-colors duration-300">{step.description}</p>
                                 </div>
                             </div>
                             
