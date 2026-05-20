@@ -81,6 +81,9 @@ export default function HowItWorks() {
                 </div>
 
                 <div className="max-w-6xl mx-auto relative">
+                    {/* Continuous Vertical Trunk Line */}
+                    <div className="absolute top-0 bottom-0 left-[19px] md:left-1/2 md:-translate-x-1/2 w-[2px] bg-gradient-to-b from-blue-500/10 via-blue-500/35 to-blue-500/10 z-0" />
+
                     {processSteps.map((step, index) => (
                         <motion.div
                             key={step.title + index}
@@ -90,10 +93,6 @@ export default function HowItWorks() {
                             transition={{ delay: index * 0.1, duration: 0.5 }}
                             className={`relative flex items-center mb-24 last:mb-0 ${index % 2 === 0 ? "md:flex-row-reverse" : "md:flex-row"} flex-col w-full group`}
                         >
-                            {/* Vertical Trunk Line Segment */}
-                            {index < processSteps.length - 1 && (
-                                <div className="absolute left-[19px] md:left-1/2 md:-translate-x-1/2 top-1/2 w-[2px] h-[calc(100%+6rem)] bg-gradient-to-b from-blue-500 via-blue-400 to-blue-500/20 z-0" />
-                            )}
 
                             {/* Timeline dot (Step Number Node) */}
                             <div className="absolute left-0 md:left-1/2 -translate-x-0 md:-translate-x-1/2 top-1/2 -translate-y-1/2 w-10 h-10 md:w-14 md:h-14 z-20 flex items-center justify-center">
@@ -111,7 +110,7 @@ export default function HowItWorks() {
                             </div>
 
                             {/* Mobile horizontal connector */}
-                            <div className="absolute left-10 w-2 h-[2px] top-1/2 -translate-y-1/2 bg-blue-500/20 md:hidden z-0" />
+                            <div className="absolute left-10 w-2 h-[2px] top-1/2 -translate-y-1/2 bg-blue-500/30 md:hidden z-0" />
 
                             {/* Desktop Animated Connector Line */}
                             {index % 2 === 0 ? (
