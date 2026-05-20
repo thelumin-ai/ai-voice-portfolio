@@ -1,12 +1,13 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { seoSchema, SeoFormValues } from '@/lib/validations/seo'
 import { revalidatePath } from 'next/cache'
 import { cache } from 'react'
 
 export const getSeoSettings = cache(async () => {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   
   const { data, error } = await supabase
     .from('seo_settings')

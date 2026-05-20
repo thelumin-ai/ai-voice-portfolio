@@ -1,12 +1,13 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { settingsSchema, SettingsFormValues } from '@/lib/validations/settings'
 import { revalidatePath } from 'next/cache'
 import { cache } from 'react'
 
 export const getSiteSettings = cache(async (): Promise<{ data?: SettingsFormValues; error?: string }> => {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   
   const { data, error } = await supabase
     .from('site_settings')

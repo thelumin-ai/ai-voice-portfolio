@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { revalidatePath } from 'next/cache'
 import { 
   HeroContent, AboutContent, ProblemContent,
@@ -10,7 +11,7 @@ import {
 // ---------- Getters ----------
 export async function getContentSettings() {
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     
     const { data, error } = await supabase
       .from('site_settings')

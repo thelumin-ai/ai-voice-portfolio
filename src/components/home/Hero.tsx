@@ -43,23 +43,13 @@ export default function Hero({ consultationLink = "https://www.upwork.com/servic
                         </span>
                     </motion.div>
 
-                    <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.1 }}
-                        className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6"
-                    >
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6">
                         {headline}
-                    </motion.h1>
+                    </h1>
 
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                        className="mt-6 text-xl text-gray-400 max-w-2xl mx-auto mb-10"
-                    >
+                    <p className="mt-6 text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto mb-10">
                         {subtext}
-                    </motion.p>
+                    </p>
 
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}

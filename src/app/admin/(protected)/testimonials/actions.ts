@@ -1,11 +1,12 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { testimonialSchema, TestimonialFormValues } from '@/lib/validations/testimonial'
 import { revalidatePath } from 'next/cache'
 
 export async function getTestimonials() {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   
   const { data, error } = await supabase
     .from('testimonials')

@@ -1,7 +1,7 @@
 import Hero from "@/components/home/Hero";
 import { getSeoSettings } from "@/app/admin/(protected)/seo/actions";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export async function generateMetadata() {
   try {
