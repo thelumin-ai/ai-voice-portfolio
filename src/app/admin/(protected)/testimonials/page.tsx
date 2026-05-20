@@ -1,9 +1,9 @@
 import { getTestimonials } from './actions'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import { PlusCircle } from 'lucide-react'
 import { SortableList } from './SortableList'
+import { SeedButton } from './SeedButton'
 
 export default async function TestimonialsAdminPage() {
   const { data: testimonials } = await getTestimonials()
@@ -15,9 +15,12 @@ export default async function TestimonialsAdminPage() {
           <h1 className="text-2xl font-black text-white tracking-tight mb-1">Testimonials</h1>
           <p className="text-sm text-zinc-400">Manage client reviews and social proof.</p>
         </div>
-        <Link href="/admin/testimonials/new">
-          <Button className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20"><PlusCircle className="w-4 h-4 mr-2" /> Add Testimonial</Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <SeedButton />
+          <Link href="/admin/testimonials/new">
+            <Button className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20"><PlusCircle className="w-4 h-4 mr-2" /> Add Testimonial</Button>
+          </Link>
+        </div>
       </div>
 
       <div className="bg-zinc-900/40 rounded-2xl border border-zinc-800/50 overflow-hidden backdrop-blur-sm p-6">

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { getTestimonials } from "@/app/admin/(protected)/testimonials/actions";
 import { Star, PlayCircle, Quote } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -51,32 +50,52 @@ const defaultTestimonials = [
         company: "Global Logistics Inc",
         content: "We needed a scalable way to confirm delivery schedules. The AI agent makes hundreds of outbound confirmation calls daily and updates our ERP in real-time. A masterpiece of automation.",
         rating: 5,
-        image_url: "https://images.unsplash.com/photo-1598550874175-4d0ef4374a22?q=80&w=200&auto=format&fit=crop"
+        image_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop"
     }
 ];
 
-export default function Testimonials() {
-    const [testimonials, setTestimonials] = useState<any[]>(defaultTestimonials);
+function TestimonialAvatar({ imageUrl, name }: { imageUrl?: string; name: string }) {
+    const [hasError, setHasError] = useState(false);
+
+    if (imageUrl && !hasError) {
+        return (
+            <img 
+                src={imageUrl} 
+                alt={name}
+                loading="lazy"
+                onError={() => setHasError(true)}
+                className="w-14 h-14 rounded-full object-cover border-2 border-blue-100 dark:border-blue-900/30 flex-shrink-0"
+            />
+        );
+    }
+
+    const initials = name
+        .split(" ")
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase() || name.charAt(0).toUpperCase();
+
+    return (
+        <div className="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-lg flex-shrink-0">
+            {initials}
+        </div>
+    );
+}
+
+export default function Testimonials({ initialTestimonials }: { initialTestimonials?: any[] }) {
+    const getPublishedTestimonials = (items?: any[]) => {
+        if (!items || items.length === 0) return defaultTestimonials;
+        const published = items.filter((t: any) => t.status === 'published');
+        return published.length > 0 ? published : defaultTestimonials;
+    };
+
+    const [testimonials, setTestimonials] = useState<any[]>(() => getPublishedTestimonials(initialTestimonials));
 
     useEffect(() => {
-        const fetchTestimonials = async () => {
-            try {
-                const { data } = await getTestimonials();
-                if (data && data.length > 0) {
-                    const published = data.filter((t: any) => t.status === 'published');
-                    if (published.length > 0) {
-                        setTestimonials(published);
-                    }
-                }
-            } catch (error) {
-                console.error("Failed to fetch testimonials:", error);
-            }
-        };
-        fetchTestimonials();
-    }, []);
+        setTestimonials(getPublishedTestimonials(initialTestimonials));
+    }, [initialTestimonials]);
 
-    // Create chunks for the grid layout: 9 items per slide for desktop (3x3), 4 items per slide for mobile (2x2)
-    // To keep it simple and responsive across breakpoints, we will just use CSS Grid inside each SwiperSlide
     const chunkArray = (arr: any[], size: number) => {
         const result = [];
         for (let i = 0; i < arr.length; i += size) {
@@ -85,11 +104,7 @@ export default function Testimonials() {
         return result;
     };
 
-    // We'll use 9 items per slide. On mobile, the grid will be 2 cols, showing up to 9 items (which might scroll vertically or we rely on CSS to hide overflow). 
-    // Wait, the user specifically wants 3x3 on desktop and 2x2 on mobile.
-    // To achieve this cleanly with Swiper, we chunk by 9. On mobile, we can use CSS to limit to 4 items and hide the rest, or we dynamically change the chunk size.
-    // A dynamic chunk size approach:
-    const [isMobile, setIsMobile] = useState(false);
+    const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
     
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -98,8 +113,61 @@ export default function Testimonials() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     const chunkSize = isMobile ? 4 : 9;
     const slides = chunkArray(testimonials, chunkSize);
+
+    if (!mounted) {
+        return (
+            <section className="py-24 bg-gray-50 dark:bg-zinc-950 relative border-t border-black/5 dark:border-white/5 transition-colors duration-300" id="testimonials">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1400px]">
+                    <div className="text-center max-w-3xl mx-auto mb-16">
+                        <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-black dark:text-white mb-6">
+                            Client <span className="text-blue-600 dark:text-blue-500">Success Stories</span>
+                        </h2>
+                        <p className="text-lg text-gray-600 dark:text-gray-400">
+                            Don't just take my word for it. Hear from the businesses that have transformed their operations with my AI voice systems.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 auto-rows-fr">
+                        {testimonials.slice(0, 6).map((testimonial, index) => (
+                            <div
+                                key={testimonial.id || index}
+                                className="bg-white dark:bg-black border border-black/10 dark:border-white/10 rounded-3xl p-6 md:p-8 flex flex-col shadow-sm hover:shadow-lg transition-all duration-300"
+                            >
+                                <div className="flex items-center gap-4 mb-6">
+                                    <TestimonialAvatar imageUrl={testimonial.image_url} name={testimonial.client_name} />
+                                    <div>
+                                        <h3 className="font-bold text-black dark:text-white text-lg">{testimonial.client_name}</h3>
+                                        {testimonial.company && (
+                                            <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{testimonial.company}</p>
+                                        )}
+                                    </div>
+                                </div>
+                                
+                                <div className="flex text-yellow-400 mb-4">
+                                    {[...Array(testimonial.rating || 5)].map((_, i) => (
+                                        <Star key={i} className="w-4 h-4 fill-current" />
+                                    ))}
+                                </div>
+                                
+                                <div className="relative flex-grow">
+                                    <Quote className="absolute -top-2 -left-2 w-8 h-8 text-black/5 dark:text-white/5 rotate-180" />
+                                    <p className="text-gray-600 dark:text-gray-300 relative z-10 leading-relaxed text-sm md:text-base">
+                                        "{testimonial.content}"
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className="py-24 bg-gray-50 dark:bg-zinc-950 relative border-t border-black/5 dark:border-white/5 transition-colors duration-300" id="testimonials">
@@ -135,6 +203,7 @@ export default function Testimonials() {
                         modules={[Pagination, Autoplay]}
                         spaceBetween={30}
                         slidesPerView={1}
+                        autoHeight={true}
                         pagination={{ clickable: true }}
                         autoplay={{ delay: 6000, disableOnInteraction: true }}
                         loop={slides.length > 1}
@@ -149,18 +218,7 @@ export default function Testimonials() {
                                             className="bg-white dark:bg-black border border-black/10 dark:border-white/10 rounded-3xl p-6 md:p-8 flex flex-col shadow-sm hover:shadow-lg transition-all duration-300"
                                         >
                                             <div className="flex items-center gap-4 mb-6">
-                                                {testimonial.image_url ? (
-                                                    <img 
-                                                        src={testimonial.image_url} 
-                                                        alt={testimonial.client_name}
-                                                        loading="lazy"
-                                                        className="w-14 h-14 rounded-full object-cover border-2 border-blue-100 dark:border-blue-900/30"
-                                                    />
-                                                ) : (
-                                                    <div className="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 font-bold text-xl">
-                                                        {testimonial.client_name.charAt(0)}
-                                                    </div>
-                                                )}
+                                                <TestimonialAvatar imageUrl={testimonial.image_url} name={testimonial.client_name} />
                                                 <div>
                                                     <h3 className="font-bold text-black dark:text-white text-lg">{testimonial.client_name}</h3>
                                                     {testimonial.company && (

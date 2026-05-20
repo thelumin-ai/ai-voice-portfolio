@@ -45,6 +45,7 @@ const RoiCalculator = nextDynamic(() => import("@/components/home/RoiCalculator"
 
 import { getSiteSettings } from "./admin/(protected)/settings/actions";
 import { getContentSettings } from "./admin/(protected)/content/actions";
+import { getTestimonials } from "./admin/(protected)/testimonials/actions";
 
 export default async function Home() {
   const { data: settings } = await getSiteSettings();
@@ -60,6 +61,7 @@ export default async function Home() {
 
   // Fetch content settings for Hero, About, Problem
   const contentSettings = await getContentSettings();
+  const { data: testimonials } = await getTestimonials();
 
   return (
     <div className="flex flex-col min-h-screen bg-black w-full overflow-hidden">
@@ -70,7 +72,7 @@ export default async function Home() {
       <Portfolio />
       <Estimator />
       <RoiCalculator />
-      <Testimonials />
+      <Testimonials initialTestimonials={testimonials || []} />
       <HowItWorks />
       <TechStack />
       <About profileImageUrl={settings?.profile_image_url} consultationLink={consultationLink} socialLinks={settings?.social_links} content={contentSettings.about} />
