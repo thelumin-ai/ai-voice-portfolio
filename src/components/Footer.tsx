@@ -85,10 +85,15 @@ export default async function Footer() {
                         </Link>
                     </div>
                 </div>
-                <div className="mt-12 border-t border-black/10 dark:border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between transition-colors duration-300">
+                <div className="mt-12 border-t border-black/10 dark:border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between transition-colors duration-300 gap-4">
                     <p className="text-sm text-gray-500">
                         {footerText}
                     </p>
+                    <div className="flex gap-6 text-sm text-gray-500">
+                        <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                            Privacy Policy
+                        </Link>
+                    </div>
                 </div>
             </div>
         </footer>
