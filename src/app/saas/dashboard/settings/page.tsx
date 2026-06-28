@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { SettingsForm } from './SettingsForm'
+import ProfileSetupForm from './ProfileSetupForm'
 
 export default async function SaasSettingsPage() {
   const supabase = await createClient()
@@ -14,19 +15,14 @@ export default async function SaasSettingsPage() {
   }
 
   // Fetch tenant profile from database
-  const { data: tenant, error } = await supabase
+  const { data: tenant } = await supabase
     .from('saas_tenants')
     .select('*')
     .eq('id', user.id)
     .maybeSingle()
 
-  if (error || !tenant) {
-    return (
-      <div className="p-6 rounded-lg border border-red-500/20 bg-red-500/10 text-red-500">
-        <h3 className="font-bold">Profile Load Error</h3>
-        <p className="text-sm mt-1">Could not retrieve your tenant profile. Please check if your setup script has run successfully.</p>
-      </div>
-    )
+  if (!tenant) {
+    return <ProfileSetupForm />
   }
 
   // Format initial values securely
