@@ -145,14 +145,13 @@ export default function BuilderWorkspace({ initialTenant }: BuilderWorkspaceProp
   // Theme states
   const initialTemplate = getTemplateById(initialTenant.template_id)
   
-  // Extract initial industry from template_id (e.g. `agency_automation_cyber` -> `agency_automation`)
+  // Extract initial industry from template_id (e.g. `legal_practice_advmarc` -> `legal_practice`)
   const getInitialIndustry = () => {
     if (!initialTenant.template_id) return INDUSTRIES[0].id
     const parts = initialTenant.template_id.split('_')
     if (parts.length < 2) return INDUSTRIES[0].id
-    // Suffix checks: could be royal_gold, eco_teal, etc.
     const lastTwo = parts.slice(-2).join('_')
-    const suffixes = ['cyber', 'corp_dark', 'corp_light', 'royal_gold', 'eco_teal', 'sunset', 'performance', 'minimalist', 'violet_aurora', 'steel_industrial']
+    const suffixes = ['advmarc', 'consult', 'dycrw', 'renthu', 'estate_teal', 'gainlove']
     if (suffixes.includes(lastTwo)) {
       return parts.slice(0, -2).join('_')
     }
@@ -161,8 +160,9 @@ export default function BuilderWorkspace({ initialTenant }: BuilderWorkspaceProp
 
   const [selectedIndustry, setSelectedIndustry] = useState<string>(getInitialIndustry())
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(
-    initialTenant.template_id || 'agency_automation_cyber'
+    initialTenant.template_id || 'legal_practice_advmarc'
   )
+  const [selectedCategory, setSelectedCategory] = useState<'All' | 'Legal' | 'Consulting' | 'Real Estate' | 'Charity'>('All')
 
   // Sensors for @dnd-kit
   const sensors = useSensors(
@@ -293,71 +293,109 @@ export default function BuilderWorkspace({ initialTenant }: BuilderWorkspaceProp
           <div className="bg-white dark:bg-zinc-900 border rounded-2xl border-zinc-200 dark:border-zinc-800 p-6 space-y-5 transition-colors duration-300">
             <div>
               <h2 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-wider mb-3">
-                1. Select Industry Theme
+                1. Browse by Category
               </h2>
               
-              <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                Industry Target
-              </label>
-              <select
-                value={selectedIndustry}
-                onChange={(e) => handleIndustryChange(e.target.value)}
-                className="w-full p-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-850 text-zinc-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-              >
-                {INDUSTRIES.map((ind) => (
-                  <option key={ind.id} value={ind.id}>
-                    {ind.name}
-                  </option>
-                ))}
-              </select>
+              {/* Category tabs */}
+              <div className="flex border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-4 gap-3 text-xs font-semibold overflow-x-auto">
+                {(['All', 'Legal', 'Consulting', 'Real Estate', 'Charity'] as const).map((cat) => {
+                  const isActive = selectedCategory === cat
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`pb-1 px-1.5 relative whitespace-nowrap cursor-pointer ${
+                        isActive ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-650'
+                      }`}
+                    >
+                      {cat}
+                      {isActive && (
+                        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-500" />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             <div>
               <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2.5">
-                Style Palette (15 designs)
+                Available Templates
               </label>
               <div className="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1">
-                {activeTemplates.map((tpl) => {
-                  const isSelected = selectedTemplateId === tpl.id
-                  const details = getTemplateById(tpl.id)
-                  
-                  // Extract bg class name safely
-                  const bgClass = details.bg.split(' ')[0] || 'bg-white'
-                  const cardClass = details.cardBg.split(' ')[0] || 'bg-white'
-                  
-                  return (
-                    <button
-                      key={tpl.id}
-                      type="button"
-                      onClick={() => setSelectedTemplateId(tpl.id)}
-                      className={`flex flex-col justify-between text-left p-3 rounded-xl border transition-all cursor-pointer h-[90px] ${
-                        isSelected 
-                          ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 ring-1 ring-blue-600' 
-                          : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900'
-                      }`}
-                    >
-                      <div className="w-full overflow-hidden">
-                        <span className="font-bold text-xs text-zinc-800 dark:text-zinc-200 truncate w-full block">
-                          {tpl.name}
-                        </span>
-                        <span className="text-[9px] text-zinc-500 dark:text-zinc-400 uppercase font-semibold mt-0.5 block truncate">
-                          {details.layoutType.replace('_', ' ')}
-                        </span>
-                      </div>
-                      
-                      {/* Color swatches preview bar */}
-                      <div className="flex items-center gap-1.5 w-full pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
-                        <div className="flex gap-1">
-                          <span className={`w-3.5 h-3.5 rounded-full border border-zinc-300 dark:border-zinc-700 ${bgClass}`} title="Background Color" />
-                          <span className={`w-3.5 h-3.5 rounded-full border border-zinc-300 dark:border-zinc-700 ${cardClass}`} title="Card Background" />
-                        </div>
-                        <span className="text-[9px] text-zinc-400 ml-auto font-medium">
-                          {details.isDark ? 'Dark' : 'Light'}
-                        </span>
-                      </div>
-                    </button>
+                {(() => {
+                  // Compile all template configurations across all industries
+                  const allTemplates = INDUSTRIES.flatMap((ind) => 
+                    getTemplatesForIndustry(ind.id).map((tpl) => {
+                      const details = getTemplateById(tpl.id)
+                      return {
+                        ...tpl,
+                        industryId: ind.id,
+                        category: details.category,
+                        details
+                      }
+                    })
                   )
-                })}
+                  
+                  // Filter by category
+                  const filteredTemplates = allTemplates.filter((tpl) => {
+                    if (selectedCategory === 'All') return true
+                    return tpl.category === selectedCategory
+                  })
+
+                  // Deduplicate by template layoutType so we only display unique layouts
+                  const uniqueLayouts: typeof filteredTemplates = []
+                  const seen = new Set<string>()
+                  for (const t of filteredTemplates) {
+                    if (!seen.has(t.details.layoutType)) {
+                      seen.add(t.details.layoutType)
+                      uniqueLayouts.push(t)
+                    }
+                  }
+
+                  return uniqueLayouts.map((tpl) => {
+                    const isSelected = selectedTemplateId === tpl.id || activeTemplateDetails.layoutType === tpl.details.layoutType
+                    const bgClass = tpl.details.bg.split(' ')[0] || 'bg-white'
+                    const cardClass = tpl.details.cardBg.split(' ')[0] || 'bg-white'
+
+                    return (
+                      <button
+                        key={tpl.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedTemplateId(tpl.id)
+                          setSelectedIndustry(tpl.industryId)
+                        }}
+                        className={`flex flex-col justify-between text-left p-3 rounded-xl border transition-all cursor-pointer h-[95px] ${
+                          isSelected 
+                            ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 ring-1 ring-blue-600' 
+                            : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900'
+                        }`}
+                      >
+                        <div className="w-full overflow-hidden">
+                          <span className="font-bold text-[11px] text-zinc-800 dark:text-zinc-200 truncate w-full block">
+                            {tpl.details.name.split(' - ')[1] || tpl.details.name}
+                          </span>
+                          <span className="text-[8px] text-zinc-400 dark:text-zinc-500 uppercase font-bold tracking-wider mt-0.5 block truncate">
+                            {tpl.category}
+                          </span>
+                        </div>
+                        
+                        {/* Swatches preview */}
+                        <div className="flex items-center gap-1.5 w-full pt-1.5 border-t border-zinc-100 dark:border-zinc-800/80">
+                          <div className="flex gap-1">
+                            <span className={`w-3.5 h-3.5 rounded-full border border-zinc-300 dark:border-zinc-700 ${bgClass}`} title="Background Color" />
+                            <span className={`w-3.5 h-3.5 rounded-full border border-zinc-300 dark:border-zinc-700 ${cardClass}`} title="Card Background" />
+                          </div>
+                          <span className="text-[8px] text-zinc-400 ml-auto font-medium">
+                            {tpl.details.isDark ? 'Dark' : 'Light'}
+                          </span>
+                        </div>
+                      </button>
+                    )
+                  })
+                })()}
               </div>
             </div>
 

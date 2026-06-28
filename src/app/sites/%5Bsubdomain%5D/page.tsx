@@ -482,6 +482,85 @@ export default async function SaasTenantPage({ params }: PageProps) {
   }
 
   // ==========================================
+  // LAYOUT 6: GAINLOVE (CHARITY & NON-PROFIT)
+  // ==========================================
+  const renderGainloveSection = (sectionId: string) => {
+    if (!visible.includes(sectionId)) return null
+
+    switch (sectionId) {
+      case 'hero':
+        return (
+          <header key="hero" className="max-w-5xl mx-auto px-6 py-20 grid grid-cols-1 md:grid-cols-12 gap-12 items-center relative z-10">
+            <div className="md:col-span-7 space-y-6">
+              <span className="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-widest bg-[#d97706]/10 text-[#d97706]">
+                Gainlove Global Action Group
+              </span>
+              <h1 className="text-4xl sm:text-5xl font-serif font-extrabold text-stone-900 leading-tight">
+                {title}
+              </h1>
+              <p className="text-stone-600 text-sm leading-relaxed max-w-lg">
+                {bio[0] || "We're building a world where everyone has the power to shape their lives."}
+              </p>
+              <div>
+                <a href={consultationLink} className="inline-block px-6 py-3.5 bg-stone-900 text-white hover:bg-stone-850 text-xs font-sans font-extrabold tracking-widest rounded transition-colors uppercase">
+                  DONATE NOW
+                </a>
+              </div>
+            </div>
+            {/* Visual Cylinders */}
+            <div className="md:col-span-5 flex justify-center items-center gap-4 relative select-none pointer-events-none">
+              <div className="w-16 h-40 bg-stone-200 border-4 border-white shadow rounded-full rotate-12 transform translate-y-4 overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1542810634-71277d95dcbb?auto=format&fit=crop&q=80&w=300" className="w-full h-full object-cover grayscale" />
+              </div>
+              <div className="w-16 h-48 bg-stone-300 border-4 border-white shadow rounded-full rotate-12 overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=300" className="w-full h-full object-cover" />
+              </div>
+              <div className="w-16 h-40 bg-stone-200 border-4 border-white shadow rounded-full rotate-12 transform -translate-y-4 overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&q=80&w=300" className="w-full h-full object-cover grayscale" />
+              </div>
+            </div>
+          </header>
+        )
+      case 'services':
+        return (
+          <section key="services" className="max-w-5xl mx-auto px-6 py-16 border-t border-stone-200 relative z-10">
+            <div className="text-center max-w-xl mx-auto mb-12 space-y-2">
+              <h2 className="text-3xl font-serif font-extrabold text-stone-900">Our Programs</h2>
+              <p className="text-sm text-stone-500">{bio[1] || 'It is through your support that we can address inequality.'}</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {services?.map((s, idx) => {
+                const defaultImgs = [
+                  'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&q=80&w=600',
+                  'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=600',
+                  'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&q=80&w=600'
+                ]
+                return (
+                  <div key={s.id} className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between h-full">
+                    <div className="h-40 bg-stone-100 overflow-hidden">
+                      <img src={defaultImgs[idx % 3]} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="p-6 space-y-2 flex-grow text-center">
+                      <h3 className="font-serif font-bold text-base text-stone-900">{s.title}</h3>
+                      <p className="text-xs text-stone-600 leading-relaxed">{s.description}</p>
+                    </div>
+                    <div className="p-6 pt-0">
+                      <span className="block text-center py-2.5 bg-stone-900 text-white font-sans font-extrabold text-[9px] rounded uppercase tracking-widest cursor-pointer">
+                        LEARN MORE
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )
+      default:
+        return null
+    }
+  }
+
+  // ==========================================
   // RENDER DYNAMIC PUBLIC LAYOUT ROUTER
   // ==========================================
   return (
@@ -532,6 +611,10 @@ export default async function SaasTenantPage({ params }: PageProps) {
         ) : theme.layoutType === 'estate_teal' ? (
           <div className="w-full">
             {layout.map((sectionId) => renderEstateTealSection(sectionId))}
+          </div>
+        ) : theme.layoutType === 'gainlove' ? (
+          <div className="w-full">
+            {layout.map((sectionId) => renderGainloveSection(sectionId))}
           </div>
         ) : (
           <div className="w-full">
