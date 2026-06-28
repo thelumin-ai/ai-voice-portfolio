@@ -314,28 +314,47 @@ export default function BuilderWorkspace({ initialTenant }: BuilderWorkspaceProp
 
             <div>
               <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2.5">
-                Style Palette (10 designs)
+                Style Palette (15 designs)
               </label>
-              <div className="grid grid-cols-2 gap-2 max-h-[160px] overflow-y-auto pr-1">
+              <div className="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1">
                 {activeTemplates.map((tpl) => {
                   const isSelected = selectedTemplateId === tpl.id
+                  const details = getTemplateById(tpl.id)
+                  
+                  // Extract bg class name safely
+                  const bgClass = details.bg.split(' ')[0] || 'bg-white'
+                  const cardClass = details.cardBg.split(' ')[0] || 'bg-white'
+                  
                   return (
                     <button
                       key={tpl.id}
                       type="button"
                       onClick={() => setSelectedTemplateId(tpl.id)}
-                      className={`flex flex-col text-left p-2.5 rounded-lg border transition-all cursor-pointer ${
+                      className={`flex flex-col justify-between text-left p-3 rounded-xl border transition-all cursor-pointer h-[90px] ${
                         isSelected 
                           ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 ring-1 ring-blue-600' 
                           : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900'
                       }`}
                     >
-                      <span className="font-bold text-xs text-zinc-800 dark:text-zinc-200 truncate w-full">
-                        {tpl.name.split(' - ')[1] || tpl.name}
-                      </span>
-                      <span className="text-[9px] text-zinc-400 mt-0.5 uppercase font-medium">
-                        {tpl.isDark ? 'Dark' : 'Light'}
-                      </span>
+                      <div className="w-full overflow-hidden">
+                        <span className="font-bold text-xs text-zinc-800 dark:text-zinc-200 truncate w-full block">
+                          {tpl.name}
+                        </span>
+                        <span className="text-[9px] text-zinc-500 dark:text-zinc-400 uppercase font-semibold mt-0.5 block truncate">
+                          {details.layoutType.replace('_', ' ')}
+                        </span>
+                      </div>
+                      
+                      {/* Color swatches preview bar */}
+                      <div className="flex items-center gap-1.5 w-full pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
+                        <div className="flex gap-1">
+                          <span className={`w-3.5 h-3.5 rounded-full border border-zinc-300 dark:border-zinc-700 ${bgClass}`} title="Background Color" />
+                          <span className={`w-3.5 h-3.5 rounded-full border border-zinc-300 dark:border-zinc-700 ${cardClass}`} title="Card Background" />
+                        </div>
+                        <span className="text-[9px] text-zinc-400 ml-auto font-medium">
+                          {details.isDark ? 'Dark' : 'Light'}
+                        </span>
+                      </div>
                     </button>
                   )
                 })}
