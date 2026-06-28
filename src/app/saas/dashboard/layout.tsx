@@ -1,12 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, Settings, Briefcase, LogOut, Globe, User } from 'lucide-react'
+import { LayoutDashboard, Settings, Briefcase, LogOut, Globe, User, Sparkles } from 'lucide-react'
 import { SaaSLogoutButton } from './SaaSLogoutButton'
 
 // Custom side navigation for SaaS users
 const saasNavigation = [
   { name: 'Console Overview', href: '/saas/dashboard', icon: LayoutDashboard },
+  { name: 'Visual Builder', href: '/saas/dashboard/builder', icon: Sparkles },
   { name: 'Profile & Settings', href: '/saas/dashboard/settings', icon: Settings },
   { name: 'Services / Solutions', href: '/saas/dashboard/services', icon: Briefcase },
 ]
