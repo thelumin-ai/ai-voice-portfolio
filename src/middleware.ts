@@ -52,6 +52,52 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // --- SaaS auth rules ---
+  if (!user && request.nextUrl.pathname.startsWith('/saas/dashboard')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/saas/login'
+    return NextResponse.redirect(url)
+  }
+
+  if (user && (request.nextUrl.pathname === '/saas/login' || request.nextUrl.pathname === '/saas/register')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/saas/dashboard'
+    return NextResponse.redirect(url)
+  }
+
+  // --- Subdomain rewrites to /sites/[subdomain] ---
+  const hostname = request.headers.get('host') || ''
+  const currentPath = request.nextUrl.pathname
+
+  const excludePaths = [
+    '/_next',
+    '/api',
+    '/admin',
+    '/saas',
+    '/sites',
+    '/privacy',
+    '/favicon.ico',
+    '/robots.txt',
+    '/sitemap.xml',
+    '/blog'
+  ]
+
+  const isExcluded = excludePaths.some(path => currentPath.startsWith(path)) || currentPath.includes('.')
+
+  if (!isExcluded) {
+    const parsedHost = hostname
+      .replace('.localhost:3000', '')
+      .replace('.vercel.app', '')
+      .replace('.abimbola-ai-portfolio.vercel.app', '')
+      .replace('.abimbola.ai', '')
+
+    if (parsedHost && parsedHost !== 'www' && parsedHost !== 'localhost' && parsedHost !== hostname) {
+      const url = request.nextUrl.clone()
+      url.pathname = `/sites/${parsedHost}${currentPath === '/' ? '' : currentPath}`
+      return NextResponse.rewrite(url)
+    }
+  }
+
   return supabaseResponse
 }
 
