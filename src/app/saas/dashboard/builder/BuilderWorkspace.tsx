@@ -31,7 +31,8 @@ import {
   Sparkles, 
   Save, 
   Check, 
-  AlertCircle 
+  AlertCircle,
+  Globe 
 } from 'lucide-react'
 
 // Section names for user display
@@ -284,134 +285,173 @@ export default function BuilderWorkspace({ initialTenant }: BuilderWorkspaceProp
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Side: Template Selector */}
-        <div className="lg:col-span-7 bg-white dark:bg-zinc-900 border rounded-2xl border-zinc-200 dark:border-zinc-800 p-6 space-y-6 transition-colors duration-300">
-          <div>
-            <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">
-              1. Choose Industry & Theme
-            </h2>
-            
-            {/* Industry selector */}
-            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
-              Select Your Industry
-            </label>
-            <select
-              value={selectedIndustry}
-              onChange={(e) => handleIndustryChange(e.target.value)}
-              className="w-full p-3 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-            >
-              {INDUSTRIES.map((ind) => (
-                <option key={ind.id} value={ind.id}>
-                  {ind.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">
-              Pick Layout Style (10 themes per industry)
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[320px] overflow-y-auto pr-1">
-              {activeTemplates.map((tpl) => {
-                const isSelected = selectedTemplateId === tpl.id
-                return (
-                  <button
-                    key={tpl.id}
-                    type="button"
-                    onClick={() => setSelectedTemplateId(tpl.id)}
-                    className={`flex flex-col text-left p-4 rounded-xl border transition-all cursor-pointer ${
-                      isSelected 
-                        ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 ring-1 ring-blue-600' 
-                        : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900'
-                    }`}
-                  >
-                    <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">
-                      {tpl.name}
-                    </span>
-                    <span className="text-xs text-zinc-400 mt-1 uppercase font-semibold">
-                      {tpl.isDark ? 'Dark Mode' : 'Light Mode'}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Style Preview details */}
-          <div className="p-4 border rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-800 space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Stacked Sidebar Editor Controls */}
+        <div className="lg:col-span-5 space-y-6">
+          
+          {/* Card 1: Template & Theme Selector */}
+          <div className="bg-white dark:bg-zinc-900 border rounded-2xl border-zinc-200 dark:border-zinc-800 p-6 space-y-5 transition-colors duration-300">
             <div>
-              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                Selected Theme Specs
-              </h3>
-              <div className="flex flex-wrap gap-2 text-xs">
-                <span className="px-2.5 py-1 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono">
-                  Font: {activeTemplateDetails.font === 'font-mono' ? 'Monospace' : activeTemplateDetails.font === 'font-serif' ? 'Serif' : 'Sans-serif'}
-                </span>
-                <span className="px-2.5 py-1 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                  Mode: {activeTemplateDetails.isDark ? 'Dark Mode' : 'Light Mode'}
-                </span>
-                <span className="px-2.5 py-1 rounded flex items-center gap-1.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                  Accent: <span className="w-3.5 h-3.5 rounded-full bg-current" style={{ color: activeTemplateDetails.isDark ? '#34d399' : '#2563eb' }} />
-                </span>
+              <h2 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-wider mb-3">
+                1. Select Industry Theme
+              </h2>
+              
+              <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                Industry Target
+              </label>
+              <select
+                value={selectedIndustry}
+                onChange={(e) => handleIndustryChange(e.target.value)}
+                className="w-full p-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-850 text-zinc-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              >
+                {INDUSTRIES.map((ind) => (
+                  <option key={ind.id} value={ind.id}>
+                    {ind.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2.5">
+                Style Palette (10 designs)
+              </label>
+              <div className="grid grid-cols-2 gap-2 max-h-[160px] overflow-y-auto pr-1">
+                {activeTemplates.map((tpl) => {
+                  const isSelected = selectedTemplateId === tpl.id
+                  return (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      onClick={() => setSelectedTemplateId(tpl.id)}
+                      className={`flex flex-col text-left p-2.5 rounded-lg border transition-all cursor-pointer ${
+                        isSelected 
+                          ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 ring-1 ring-blue-600' 
+                          : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900'
+                      }`}
+                    >
+                      <span className="font-bold text-xs text-zinc-800 dark:text-zinc-200 truncate w-full">
+                        {tpl.name.split(' - ')[1] || tpl.name}
+                      </span>
+                      <span className="text-[9px] text-zinc-400 mt-0.5 uppercase font-medium">
+                        {tpl.isDark ? 'Dark' : 'Light'}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
-            <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800">
-              <button
-                type="button"
-                onClick={handleApplyPrebuilt}
-                disabled={isApplying}
-                className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-zinc-850 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer border border-zinc-800"
-              >
-                {applySuccess ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-green-500" />
-                    <span>Template Content Applied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3.5 h-3.5 text-yellow-500" />
-                    <span>{isApplying ? 'Applying Template Content...' : 'Apply Pre-built Industry Copy & Services'}</span>
-                  </>
-                )}
-              </button>
+            {/* Theme specs & Content Seeder */}
+            <div className="p-3 border rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-800 space-y-3">
+              <div>
+                <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
+                  Selected Theme Specs
+                </h3>
+                <div className="flex flex-wrap gap-1.5 text-[10px]">
+                  <span className="px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono">
+                    Font: {activeTemplateDetails.font === 'font-mono' ? 'Mono' : activeTemplateDetails.font === 'font-serif' ? 'Serif' : 'Sans'}
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono">
+                    Layout: {activeTemplateDetails.layoutType.replace('_', ' ')}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                <button
+                  type="button"
+                  onClick={handleApplyPrebuilt}
+                  disabled={isApplying}
+                  className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 bg-zinc-850 hover:bg-zinc-800 text-zinc-200 text-[10px] font-semibold rounded-lg transition-colors cursor-pointer border border-zinc-850 shadow-sm"
+                >
+                  {applySuccess ? (
+                    <>
+                      <Check className="w-3 h-3 text-green-500" />
+                      <span>Content Seeded!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3 text-yellow-500" />
+                      <span>{isApplying ? 'Seeding Copy...' : 'Load Pre-built Copy & Services'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* Card 2: Sortable Layout Drag-and-Drop */}
+          <div className="bg-white dark:bg-zinc-900 border rounded-2xl border-zinc-200 dark:border-zinc-800 p-6 transition-colors duration-300">
+            <h2 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-wider mb-3">
+              2. Custom Section Ordering
+            </h2>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-4 leading-relaxed">
+              Drag sections using grab handles. Hide or show sections in real-time.
+            </p>
+
+            <DndContext 
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext 
+                items={layout}
+                strategy={verticalListSortingStrategy}
+              >
+                <div>
+                  {layout.map((item) => (
+                    <SortableItem 
+                      key={item} 
+                      id={item} 
+                      label={SECTION_LABELS[item] || item}
+                      isVisible={visibleSections.includes(item)}
+                      onToggleVisibility={() => toggleVisibility(item)}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </div>
+
         </div>
 
-        {/* Right Side: Drag and Drop sorting list */}
-        <div className="lg:col-span-5 bg-white dark:bg-zinc-900 border rounded-2xl border-zinc-200 dark:border-zinc-800 p-6 transition-colors duration-300">
-          <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">
-            2. Section Order & Visibility
-          </h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-6">
-            Drag items using the grab handles to re-order. Click "Visible" to toggle visibility.
-          </p>
+        {/* Right Column: Live Browser Preview Iframe Canvas */}
+        <div className="lg:col-span-7 bg-white dark:bg-zinc-900 border rounded-2xl border-zinc-200 dark:border-zinc-800 overflow-hidden transition-colors duration-300 shadow-sm">
+          
+          {/* Mock Web Browser Top Header */}
+          <div className="bg-zinc-100 dark:bg-zinc-950 px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-3">
+            {/* Window dots */}
+            <div className="flex gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-red-500/80 block" />
+              <span className="w-3 h-3 rounded-full bg-yellow-500/80 block" />
+              <span className="w-3 h-3 rounded-full bg-green-500/80 block" />
+            </div>
 
-          <DndContext 
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext 
-              items={layout}
-              strategy={verticalListSortingStrategy}
-            >
-              <div>
-                {layout.map((item) => (
-                  <SortableItem 
-                    key={item} 
-                    id={item} 
-                    label={SECTION_LABELS[item] || item}
-                    isVisible={visibleSections.includes(item)}
-                    onToggleVisibility={() => toggleVisibility(item)}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+            {/* Address Bar */}
+            <div className="flex-grow flex items-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-1 text-xs text-zinc-400 font-mono select-none">
+              <Globe className="w-3.5 h-3.5 mr-2 text-zinc-500" />
+              <span>https://{initialTenant.template_id ? 'your-portfolio' : 'subdomain'}.yourplatform.com/preview</span>
+              <span className="ml-auto text-[10px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
+                Live canvas
+              </span>
+            </div>
+          </div>
+
+          {/* Iframe Canvas Area */}
+          <div className="relative w-full h-[620px] bg-zinc-950">
+            <iframe
+              key={`${selectedTemplateId}-${layout.join(',')}-${visibleSections.join(',')}`}
+              src={`/saas/preview?template_id=${selectedTemplateId}&layout=${layout.join(',')}&visible=${visibleSections.join(',')}`}
+              className="w-full h-full border-0 select-none pointer-events-none"
+            />
+            
+            {/* Visual overlay tag */}
+            <div className="absolute bottom-4 right-4 bg-blue-600 text-white font-bold text-[10px] tracking-wider uppercase px-2.5 py-1 rounded-full shadow-lg pointer-events-none select-none z-20">
+              Live Preview Mode
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
