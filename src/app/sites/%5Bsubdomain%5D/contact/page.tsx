@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { getTemplateById } from '@/lib/templates'
 import NonprofitContactPage from '@/app/templates/nonprofit-001/contact/page'
+import AgencyContactPage from '@/app/templates/agency-002/contact/page'
 
 interface PageProps {
   params: Promise<{ subdomain: string }>
@@ -23,9 +24,12 @@ export default async function DynamicContactPage({ params }: PageProps) {
 
   const theme = getTemplateById(tenant.template_id || 'legal_practice_advmarc')
 
-  // Resolve template rendering by layoutType
+  // Resolve template rendering by layoutType / template id
   if (theme.layoutType === 'gainlove') {
     return <NonprofitContactPage />
+  }
+  if (theme.id.includes('agency-002')) {
+    return <AgencyContactPage />
   }
 
   // Fallback if other templates don't have contact page yet

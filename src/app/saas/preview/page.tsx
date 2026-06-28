@@ -7,6 +7,9 @@ import { getTemplateById, PREBUILT_CONTENT } from '@/lib/templates'
 import NonprofitAboutPage from '@/app/templates/nonprofit-001/about/page'
 import NonprofitServicesPage from '@/app/templates/nonprofit-001/services/page'
 import NonprofitContactPage from '@/app/templates/nonprofit-001/contact/page'
+import AgencyAboutPage from '@/app/templates/agency-002/about/page'
+import AgencyServicesPage from '@/app/templates/agency-002/services/page'
+import AgencyContactPage from '@/app/templates/agency-002/contact/page'
 import { 
   Phone, 
   Search, 
@@ -27,7 +30,7 @@ function SaaSPreviewContent() {
   
   // Extract industry ID from template ID (e.g. `legal_practice_advmarc` -> `legal_practice`)
   const parts = templateId.split('_')
-  const suffixes = ['advmarc', 'consult', 'dycrw', 'renthu', 'estate_teal', 'gainlove']
+  const suffixes = ['advmarc', 'consult', 'dycrw', 'renthu', 'estate_teal', 'gainlove', 'agency-002']
   let industryId = parts.slice(0, -1).join('_')
   const lastTwo = parts.slice(-2).join('_')
   if (suffixes.includes(lastTwo)) {
@@ -71,6 +74,18 @@ function SaaSPreviewContent() {
     }
     if (activePage === 'contact') {
       return <NonprofitContactPage />
+    }
+  }
+
+  if (theme.id.includes('agency-002')) {
+    if (activePage === 'about') {
+      return <AgencyAboutPage />
+    }
+    if (activePage === 'services') {
+      return <AgencyServicesPage />
+    }
+    if (activePage === 'contact') {
+      return <AgencyContactPage />
     }
   }
 
@@ -378,7 +393,7 @@ function SaaSPreviewContent() {
                   </div>
                   <div className="p-4 space-y-1">
                     <h3 className="font-bold text-xs text-[#0f2c59]">{s.title}</h3>
-                    <p className="text-[11px] text-slate-505 leading-relaxed">{s.description}</p>
+                    <p className="text-[11px] text-slate-555 leading-relaxed">{s.description}</p>
                   </div>
                 </div>
               ))}
@@ -404,7 +419,7 @@ function SaaSPreviewContent() {
               <h1 className="text-3xl font-extrabold text-[#004d40] leading-tight">
                 {title}
               </h1>
-              <p className="text-teal-850 text-xs leading-relaxed">
+              <p className="text-teal-855 text-xs leading-relaxed">
                 {bio[0]}
               </p>
               <div>
@@ -413,7 +428,7 @@ function SaaSPreviewContent() {
                 </span>
               </div>
             </div>
-            <div className="bg-teal-100 border border-teal-200 rounded-xl h-40 flex items-center justify-center text-teal-650 text-xs font-bold uppercase relative overflow-hidden select-none pointer-events-none">
+            <div className="bg-teal-100 border border-teal-200 rounded-xl h-40 flex items-center justify-center text-teal-655 text-xs font-bold uppercase relative overflow-hidden select-none pointer-events-none">
               <span>Modern Complex Mock</span>
             </div>
           </header>

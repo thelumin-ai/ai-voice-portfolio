@@ -16,7 +16,7 @@ export interface PrebuiltContent {
 export interface ThemeConfig {
   id: string
   name: string
-  category: 'Legal' | 'Consulting' | 'Real Estate' | 'Charity'
+  category: 'Legal' | 'Consulting' | 'Real Estate' | 'Charity' | 'Agency'
   isDark: boolean
   layoutType: 'advmarc' | 'consult' | 'dycrw' | 'renthu' | 'estate_teal' | 'gainlove'
   bg: string
@@ -33,7 +33,7 @@ export interface ThemeConfig {
 export interface Industry {
   id: string
   name: string
-  category: 'Legal' | 'Consulting' | 'Real Estate' | 'Charity'
+  category: 'Legal' | 'Consulting' | 'Real Estate' | 'Charity' | 'Agency'
 }
 
 export const INDUSTRIES: Industry[] = [
@@ -42,7 +42,8 @@ export const INDUSTRIES: Industry[] = [
   { id: 'real_estate_luxury', name: 'Luxury Real Estate', category: 'Real Estate' },
   { id: 'real_estate_rent', name: 'Rental Real Estate', category: 'Real Estate' },
   { id: 'real_estate_modern', name: 'Modern Real Estate', category: 'Real Estate' },
-  { id: 'charity', name: 'Charity Aid Network', category: 'Charity' }
+  { id: 'charity', name: 'Charity Aid Network', category: 'Charity' },
+  { id: 'agency', name: 'Digital Agency Hub', category: 'Agency' }
 ]
 
 export const THEME_STYLES: Omit<ThemeConfig, 'id' | 'name' | 'category'>[] = [
@@ -129,6 +130,20 @@ export const THEME_STYLES: Omit<ThemeConfig, 'id' | 'name' | 'category'>[] = [
     cardBg: 'bg-white border-stone-200 shadow-sm',
     font: 'font-serif',
     glow: 'from-[#d97706]/5 to-transparent'
+  },
+  // 7. ewebot (Digital Agency)
+  {
+    isDark: false,
+    layoutType: 'consult',
+    bg: 'bg-white text-slate-800',
+    text: 'text-slate-550',
+    accent: 'text-[#4e31aa]',
+    accentBorder: 'border-slate-100',
+    accentBg: 'bg-[#4e31aa]/5',
+    btn: 'bg-[#4e31aa] text-white hover:bg-[#3b238c] font-semibold',
+    cardBg: 'bg-white border-slate-100 shadow-xl shadow-slate-200/50',
+    font: 'font-sans',
+    glow: 'from-[#4e31aa]/5 to-transparent'
   }
 ]
 
@@ -138,7 +153,8 @@ const styleSuffixes = [
   'dycrw',
   'renthu',
   'estate_teal',
-  'nonprofit-001'
+  'nonprofit-001',
+  'agency-002'
 ]
 
 const styleDisplayNames = [
@@ -147,16 +163,18 @@ const styleDisplayNames = [
   'DYCRW (Luxury Villa)',
   'Rent H&U (Blue Glassmorphism)',
   'Teal & Salmon (Modern Real Estate)',
-  'Gainlove (Charity Aid Network)'
+  'Gainlove (Charity Aid Network)',
+  'ewebot (Digital Agency)'
 ]
 
-const styleCategories: ('Legal' | 'Consulting' | 'Real Estate' | 'Charity')[] = [
+const styleCategories: ('Legal' | 'Consulting' | 'Real Estate' | 'Charity' | 'Agency')[] = [
   'Legal',
   'Consulting',
   'Real Estate',
   'Real Estate',
   'Real Estate',
-  'Charity'
+  'Charity',
+  'Agency'
 ]
 
 export const PREBUILT_CONTENT: Record<string, PrebuiltContent> = {
@@ -237,6 +255,19 @@ export const PREBUILT_CONTENT: Record<string, PrebuiltContent> = {
       { title: 'Family & Community Programs', description: 'Programs designed to educate and engage all ages of the community.', icon: 'Cpu' },
       { title: 'Teen Outreach & Oasis', description: 'Youth center offering counseling, training, and free local community engagement.', icon: 'Bot' }
     ]
+  },
+  agency: {
+    title: 'Digital Products for Your Ideas',
+    bio: [
+      'We help brands navigate the complex digital environment. From custom SEO integrations to high-fidelity product designs, we focus on driving user engagement and growth.',
+      'We are passionate about our work. Our designers stay ahead of the curve to provide engaging and user-friendly website designs to make your business stand out.'
+    ],
+    skills: ['SEO Auditing', 'Product UI/UX Design', 'Full Stack Development', 'Growth Hacking'],
+    services: [
+      { title: 'Discover, Explore Product', description: 'Analyzing user flows, exploring product requirements, and mapping architectural layouts.', icon: 'Globe' },
+      { title: 'Product UX & Design', description: 'Building responsive interfaces, interactive prototypes, and production-grade design systems.', icon: 'Layers' },
+      { title: 'SEO Campaigns', description: 'Auditing search engine visibility, optimizing keywords, and driving high-converting growth campaigns.', icon: 'TrendingUp' }
+    ]
   }
 }
 
@@ -296,7 +327,8 @@ export function getTemplatesForIndustry(industryId: string): { id: string; name:
     real_estate_luxury: 'dycrw',
     real_estate_rent: 'renthu',
     real_estate_modern: 'estate_teal',
-    charity: 'nonprofit-001'
+    charity: 'nonprofit-001',
+    agency: 'agency-002'
   }
 
   const prioritizedSuffix = customMapping[industryId]

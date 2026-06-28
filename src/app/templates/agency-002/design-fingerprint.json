@@ -1,0 +1,25 @@
+{
+  "templateId": "agency-002",
+  "niche": "agency",
+  "headerArchetype": "clean-white-navigation-with-phone-badge-and-hamburger-menu",
+  "heroArchetype": "left-aligned-sans-headings-with-curved-masked-team-image",
+  "sectionSequence": [
+    "header",
+    "hero",
+    "services-tools-grid",
+    "traffic-boost-stats-split",
+    "footer"
+  ],
+  "gridArchetype": "4-column-tools-cards-and-2-column-stats-split",
+  "imageTreatment": "curved-mask-overlay-and-colored-circle-icon-backgrounds",
+  "typography": "modern-sans-serif-headings-with-bold-sans-body",
+  "spacingDensity": "corporate-modern",
+  "radiusSystem": "curved-mask-edges-and-rounded-cards",
+  "footerArchetype": "minimal-dark-social-links-footer",
+  "mobileTransformation": "navigation-collapse-and-vertical-stacking-with-mask-scaling",
+  "distinctiveDecorativeFeatures": [
+    "curved-mask-team-hero-container",
+    "colored-circular-icon-backgrounds",
+    "floating-interactive-sandbox-editor-panel"
+  ]
+}
