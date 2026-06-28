@@ -84,16 +84,33 @@ export async function middleware(request: NextRequest) {
 
   const isExcluded = excludePaths.some(path => currentPath.startsWith(path)) || currentPath.includes('.')
 
-  if (!isExcluded) {
-    const parsedHost = hostname
-      .replace('.localhost:3000', '')
-      .replace('.vercel.app', '')
-      .replace('.abimbola-ai-portfolio.vercel.app', '')
-      .replace('.abimbola.ai', '')
+  const mainDomains = [
+    'abimbola-ai-portfolio.vercel.app',
+    'abimbola.ai',
+    'localhost:3000',
+  ]
 
-    if (parsedHost && parsedHost !== 'www' && parsedHost !== 'localhost' && parsedHost !== hostname) {
+  const isMainDomain = mainDomains.some(domain => 
+    hostname === domain || hostname === `www.${domain}`
+  )
+
+  if (!isExcluded && !isMainDomain) {
+    let subdomain = ''
+    
+    for (const domain of mainDomains) {
+      if (hostname.endsWith(`.${domain}`)) {
+        subdomain = hostname.replace(`.${domain}`, '')
+        break
+      }
+    }
+
+    if (!subdomain && !mainDomains.includes(hostname)) {
+      subdomain = hostname
+    }
+
+    if (subdomain && subdomain !== 'www') {
       const url = request.nextUrl.clone()
-      url.pathname = `/sites/${parsedHost}${currentPath === '/' ? '' : currentPath}`
+      url.pathname = `/sites/${subdomain}${currentPath === '/' ? '' : currentPath}`
       return NextResponse.rewrite(url)
     }
   }
