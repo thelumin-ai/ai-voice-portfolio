@@ -6,7 +6,7 @@ import {
   getTemplatesForIndustry, 
   getTemplateById 
 } from '@/lib/templates'
-import { updateBuilderConfig } from './actions'
+import { updateBuilderConfig, applyPrebuiltContent } from './actions'
 import { 
   DndContext, 
   closestCenter, 
@@ -211,6 +211,27 @@ export default function BuilderWorkspace({ initialTenant }: BuilderWorkspaceProp
     })
   }
 
+  const [isApplying, startApplyTransition] = useTransition()
+  const [applySuccess, setApplySuccess] = useState(false)
+
+  const handleApplyPrebuilt = () => {
+    setError(null)
+    setApplySuccess(false)
+    
+    if (confirm("Applying the template copy will overwrite your current profile biography, skills, and solutions. Do you want to continue?")) {
+      startApplyTransition(async () => {
+        const res = await applyPrebuiltContent(selectedTemplateId)
+        if (res.error) {
+          setError(res.error)
+        } else {
+          setApplySuccess(true)
+          setTimeout(() => setApplySuccess(false), 3000)
+          window.location.reload()
+        }
+      })
+    }
+  }
+
   // Handle industry change (auto-selects first theme of that industry)
   const handleIndustryChange = (industryId: string) => {
     setSelectedIndustry(industryId)
@@ -319,20 +340,43 @@ export default function BuilderWorkspace({ initialTenant }: BuilderWorkspaceProp
           </div>
 
           {/* Style Preview details */}
-          <div className="p-4 border rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-800">
-            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
-              Selected Theme Specs
-            </h3>
-            <div className="flex flex-wrap gap-2 text-xs">
-              <span className="px-2.5 py-1 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono">
-                Font: {activeTemplateDetails.font === 'font-mono' ? 'Monospace' : activeTemplateDetails.font === 'font-serif' ? 'Serif' : 'Sans-serif'}
-              </span>
-              <span className="px-2.5 py-1 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                Mode: {activeTemplateDetails.isDark ? 'Dark Mode' : 'Light Mode'}
-              </span>
-              <span className="px-2.5 py-1 rounded flex items-center gap-1.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                Accent: <span className="w-3.5 h-3.5 rounded-full bg-current" style={{ color: activeTemplateDetails.isDark ? '#34d399' : '#2563eb' }} />
-              </span>
+          <div className="p-4 border rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-800 space-y-4">
+            <div>
+              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                Selected Theme Specs
+              </h3>
+              <div className="flex flex-wrap gap-2 text-xs">
+                <span className="px-2.5 py-1 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono">
+                  Font: {activeTemplateDetails.font === 'font-mono' ? 'Monospace' : activeTemplateDetails.font === 'font-serif' ? 'Serif' : 'Sans-serif'}
+                </span>
+                <span className="px-2.5 py-1 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                  Mode: {activeTemplateDetails.isDark ? 'Dark Mode' : 'Light Mode'}
+                </span>
+                <span className="px-2.5 py-1 rounded flex items-center gap-1.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                  Accent: <span className="w-3.5 h-3.5 rounded-full bg-current" style={{ color: activeTemplateDetails.isDark ? '#34d399' : '#2563eb' }} />
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={handleApplyPrebuilt}
+                disabled={isApplying}
+                className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-zinc-850 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer border border-zinc-800"
+              >
+                {applySuccess ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-green-500" />
+                    <span>Template Content Applied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5 text-yellow-500" />
+                    <span>{isApplying ? 'Applying Template Content...' : 'Apply Pre-built Industry Copy & Services'}</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
