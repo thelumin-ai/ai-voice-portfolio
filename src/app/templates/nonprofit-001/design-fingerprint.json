@@ -1,0 +1,27 @@
+{
+  "templateId": "nonprofit-001",
+  "niche": "nonprofit",
+  "headerArchetype": "sticky-navigation-with-phone-badge-and-donate-cta",
+  "heroArchetype": "left-aligned-editorial-serif-with-right-diagonal-pill-images",
+  "sectionSequence": [
+    "header",
+    "hero",
+    "programs-grid",
+    "welcome-mission-banner",
+    "fundraiser-split-circles",
+    "tabbed-choices-showcase",
+    "footer"
+  ],
+  "gridArchetype": "3-column-programs-cards-and-2-column-asymmetric-splits",
+  "imageTreatment": "overlapping-diagonal-pill-cylinders-and-dashed-circular-frames",
+  "typography": "high-contrast-editorial-serif-headings-and-sans-body",
+  "spacingDensity": "spacious-editorial",
+  "radiusSystem": "pill-cylinder-edges-and-curved-cards",
+  "footerArchetype": "minimal-dark-social-links-footer",
+  "mobileTransformation": "navigation-collapse-and-vertical-stacking-with-pill-scaling",
+  "distinctiveDecorativeFeatures": [
+    "angled-overlapping-triple-pill-image-frame",
+    "dashed-circular-concentric-geographical-rings",
+    "floating-interactive-sandbox-editor-panel"
+  ]
+}

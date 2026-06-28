@@ -42,7 +42,7 @@ export const INDUSTRIES: Industry[] = [
   { id: 'real_estate_luxury', name: 'Luxury Real Estate', category: 'Real Estate' },
   { id: 'real_estate_rent', name: 'Rental Real Estate', category: 'Real Estate' },
   { id: 'real_estate_modern', name: 'Modern Real Estate', category: 'Real Estate' },
-  { id: 'charity_gainlove', name: 'Charity Aid Network', category: 'Charity' }
+  { id: 'charity', name: 'Charity Aid Network', category: 'Charity' }
 ]
 
 export const THEME_STYLES: Omit<ThemeConfig, 'id' | 'name' | 'category'>[] = [
@@ -138,7 +138,7 @@ const styleSuffixes = [
   'dycrw',
   'renthu',
   'estate_teal',
-  'gainlove'
+  'nonprofit-001'
 ]
 
 const styleDisplayNames = [
@@ -168,7 +168,7 @@ export const PREBUILT_CONTENT: Record<string, PrebuiltContent> = {
     ],
     skills: ['Direito Corporativo', 'Lei de Danos Pessoais', 'Direito Tributário', 'Defesa Civil & Comercial'],
     services: [
-      { title: 'Assuntos Jurídicos Corporativos', description: 'Consultoria e assessoria completa para empresas, fusões, aquisições e conformidade regulatória.', icon: 'Cpu' },
+      { title: 'Assuntos Jurídicos Corporativos', description: 'Consultoria e assessoria completa para empresas, fusões, aquisições and conformidade regulatória.', icon: 'Cpu' },
       { title: 'Lei de Danos Pessoais', description: 'Representação ágil para assegurar compensações justas por acidentes e negligências de terceiros.', icon: 'Phone' },
       { title: 'Assessoria em Contratos', description: 'Redação, revisão e litígio de acordos civis e comerciais com máxima segurança documental.', icon: 'Bot' }
     ]
@@ -225,7 +225,7 @@ export const PREBUILT_CONTENT: Record<string, PrebuiltContent> = {
       { title: 'Key Woolgany Estate', description: 'Spacious suburban family estates featuring green yards and private solar arrays.', icon: 'Sparkles' }
     ]
   },
-  charity_gainlove: {
+  charity: {
     title: 'Justice begins where inequality ends',
     bio: [
       'We\'re building a world where everyone has the power to shape their lives.',
@@ -296,7 +296,7 @@ export function getTemplatesForIndustry(industryId: string): { id: string; name:
     real_estate_luxury: 'dycrw',
     real_estate_rent: 'renthu',
     real_estate_modern: 'estate_teal',
-    charity_gainlove: 'gainlove'
+    charity: 'nonprofit-001'
   }
 
   const prioritizedSuffix = customMapping[industryId]
