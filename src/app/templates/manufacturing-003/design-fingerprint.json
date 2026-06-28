@@ -1,0 +1,27 @@
+{
+  "templateId": "manufacturing-003",
+  "niche": "manufacturing",
+  "headerArchetype": "double-level-utility-bar-with-request-quote-cta",
+  "heroArchetype": "left-aligned-bold-sans-headings-with-right-pvc-product-photography",
+  "sectionSequence": [
+    "utility-bar",
+    "header",
+    "hero",
+    "pipe-products-grid",
+    "why-choose-us-manufacturing-split",
+    "industries-we-serve-icons-grid",
+    "footer"
+  ],
+  "gridArchetype": "5-column-product-grid-and-5-column-industries-icon-list",
+  "imageTreatment": "industrial-machinery-photography-and-clean-white-isolated-pipe-cards",
+  "typography": "heavy-sans-serif-headings-with-dense-regular-body",
+  "spacingDensity": "dense-corporate",
+  "radiusSystem": "square-edges-with-subtle-card-rounding",
+  "footerArchetype": "heavy-dark-blue-four-column-footer",
+  "mobileTransformation": "navigation-collapse-and-horizontal-scroller-grids",
+  "distinctiveDecorativeFeatures": [
+    "industrial-orange-gradient-arcs",
+    "orange-horizontal-stats-counter-banner",
+    "flat-minimal-vector-industry-icons"
+  ]
+}

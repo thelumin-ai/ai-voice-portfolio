@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { getTemplateById } from '@/lib/templates'
 import NonprofitServicesPage from '@/app/templates/nonprofit-001/services/page'
 import AgencyServicesPage from '@/app/templates/agency-002/services/page'
+import ManufacturingServicesPage from '@/app/templates/manufacturing-003/services/page'
 
 interface PageProps {
   params: Promise<{ subdomain: string }>
@@ -30,6 +31,9 @@ export default async function DynamicServicesPage({ params }: PageProps) {
   }
   if (theme.id.includes('agency-002')) {
     return <AgencyServicesPage />
+  }
+  if (theme.id.includes('manufacturing-003')) {
+    return <ManufacturingServicesPage />
   }
 
   // Fallback if other templates don't have services page yet

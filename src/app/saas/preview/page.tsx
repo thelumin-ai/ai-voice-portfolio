@@ -10,6 +10,9 @@ import NonprofitContactPage from '@/app/templates/nonprofit-001/contact/page'
 import AgencyAboutPage from '@/app/templates/agency-002/about/page'
 import AgencyServicesPage from '@/app/templates/agency-002/services/page'
 import AgencyContactPage from '@/app/templates/agency-002/contact/page'
+import ManufacturingAboutPage from '@/app/templates/manufacturing-003/about/page'
+import ManufacturingServicesPage from '@/app/templates/manufacturing-003/services/page'
+import ManufacturingContactPage from '@/app/templates/manufacturing-003/contact/page'
 import { 
   Phone, 
   Search, 
@@ -30,7 +33,7 @@ function SaaSPreviewContent() {
   
   // Extract industry ID from template ID (e.g. `legal_practice_advmarc` -> `legal_practice`)
   const parts = templateId.split('_')
-  const suffixes = ['advmarc', 'consult', 'dycrw', 'renthu', 'estate_teal', 'gainlove', 'agency-002']
+  const suffixes = ['advmarc', 'consult', 'dycrw', 'renthu', 'estate_teal', 'gainlove', 'agency-002', 'manufacturing-003']
   let industryId = parts.slice(0, -1).join('_')
   const lastTwo = parts.slice(-2).join('_')
   if (suffixes.includes(lastTwo)) {
@@ -86,6 +89,18 @@ function SaaSPreviewContent() {
     }
     if (activePage === 'contact') {
       return <AgencyContactPage />
+    }
+  }
+
+  if (theme.id.includes('manufacturing-003')) {
+    if (activePage === 'about') {
+      return <ManufacturingAboutPage />
+    }
+    if (activePage === 'services') {
+      return <ManufacturingServicesPage />
+    }
+    if (activePage === 'contact') {
+      return <ManufacturingContactPage />
     }
   }
 
@@ -206,7 +221,7 @@ function SaaSPreviewContent() {
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 leading-tight">
                 We Are Business Consultants Dedicated To Driving Success
               </h1>
-              <p className="text-slate-500 text-xs leading-relaxed">
+              <p className="text-slate-505 text-xs leading-relaxed">
                 {bio[0]}
               </p>
               <div>
@@ -234,7 +249,7 @@ function SaaSPreviewContent() {
                     <Cpu className="w-5 h-5" />
                   </div>
                   <h3 className="font-bold text-sm text-slate-800">{s.title}</h3>
-                  <p className="text-[11px] text-slate-500 leading-relaxed">{s.description}</p>
+                  <p className="text-[11px] text-slate-505 leading-relaxed">{s.description}</p>
                 </div>
               ))}
             </div>
@@ -242,19 +257,19 @@ function SaaSPreviewContent() {
             <div className="bg-[#0f4c81] text-white p-6 rounded-xl grid grid-cols-4 gap-2 text-center text-xs">
               <div>
                 <span className="text-lg font-extrabold text-[#f26522] block">680+</span>
-                <span className="text-[8px] text-slate-300 font-bold uppercase block mt-0.5">Trust Us</span>
+                <span className="text-[8px] text-slate-350 font-bold uppercase block mt-0.5">Trust Us</span>
               </div>
               <div>
                 <span className="text-lg font-extrabold text-[#f26522] block">1.3k</span>
-                <span className="text-[8px] text-slate-300 font-bold uppercase block mt-0.5">Projects</span>
+                <span className="text-[8px] text-slate-350 font-bold uppercase block mt-0.5">Projects</span>
               </div>
               <div>
                 <span className="text-lg font-extrabold text-[#f26522] block">97%</span>
-                <span className="text-[8px] text-slate-300 font-bold uppercase block mt-0.5">Success</span>
+                <span className="text-[8px] text-slate-350 font-bold uppercase block mt-0.5">Success</span>
               </div>
               <div>
                 <span className="text-lg font-extrabold text-[#f26522] block">15Y</span>
-                <span className="text-[8px] text-slate-300 font-bold uppercase block mt-0.5">Years</span>
+                <span className="text-[8px] text-slate-350 font-bold uppercase block mt-0.5">Years</span>
               </div>
             </div>
           </section>
@@ -327,7 +342,7 @@ function SaaSPreviewContent() {
                     Property Preview
                   </div>
                   <h3 className="font-bold text-xs text-white mb-1.5">{s.title}</h3>
-                  <p className="text-[11px] text-zinc-500 leading-relaxed">{s.description}</p>
+                  <p className="text-[11px] text-zinc-505 leading-relaxed">{s.description}</p>
                 </div>
               ))}
             </div>
