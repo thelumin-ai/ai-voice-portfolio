@@ -17,7 +17,7 @@ export interface ThemeConfig {
   id: string
   name: string
   isDark: boolean
-  layoutType: 'modern_dark' | 'split_screen' | 'minimalist_list'
+  layoutType: 'modern_dark' | 'split_screen' | 'minimalist_list' | 'gainlove' | 'ewebot' | 'sarvam' | 'moveaus' | 'ausroofing'
   bg: string
   text: string
   accent: string
@@ -56,6 +56,12 @@ export const INDUSTRIES: Industry[] = [
   { id: 'education_courses', name: 'Education & Courses' },
   { id: 'accounting_bookkeeping', name: 'Accounting & Bookkeeping' },
   { id: 'photography', name: 'Professional Photography' },
+  // Screenshot-based new templates
+  { id: 'charity_nonprofit', name: 'Charity & Non-Profit' },
+  { id: 'seo_agency', name: 'SEO & Digital Agency' },
+  { id: 'industrial_manufacturing', name: 'Industrial & Manufacturing' },
+  { id: 'moving_logistics', name: 'Moving & Logistics' },
+  { id: 'roofing_construction', name: 'Roofing & Construction' },
 ]
 
 export const THEME_STYLES: Omit<ThemeConfig, 'id' | 'name'>[] = [
@@ -92,9 +98,9 @@ export const THEME_STYLES: Omit<ThemeConfig, 'id' | 'name'>[] = [
     isDark: false,
     layoutType: 'split_screen',
     bg: 'bg-slate-50 text-slate-900',
-    text: 'text-slate-600',
+    text: 'text-slate-655 text-slate-500',
     accent: 'text-blue-600',
-    accentBorder: 'border-blue-200',
+    accentBorder: 'border-slate-200',
     accentBg: 'bg-blue-50',
     btn: 'bg-blue-600 text-white hover:bg-blue-700',
     cardBg: 'bg-white border-slate-200',
@@ -162,14 +168,14 @@ export const THEME_STYLES: Omit<ThemeConfig, 'id' | 'name'>[] = [
     isDark: false,
     layoutType: 'minimalist_list',
     bg: 'bg-white text-black',
-    text: 'text-zinc-600',
+    text: 'text-zinc-655 text-zinc-650',
     accent: 'text-zinc-900',
     accentBorder: 'border-zinc-200',
     accentBg: 'bg-zinc-50',
     btn: 'bg-black text-white hover:bg-zinc-800',
     cardBg: 'bg-white border-zinc-100',
     font: 'font-sans',
-    glow: 'from-zinc-100 to-transparent'
+    glow: 'from-zinc-105 to-transparent'
   },
   // 9. Violet Aurora (Dark) - Layout: modern_dark
   {
@@ -198,6 +204,81 @@ export const THEME_STYLES: Omit<ThemeConfig, 'id' | 'name'>[] = [
     cardBg: 'bg-zinc-950/60 border-zinc-800/80',
     font: 'font-sans',
     glow: 'from-slate-500/10 to-transparent'
+  },
+  
+  // ==========================================
+  // CUSTOM SCREENSHOT-BASED THEMES (11-15)
+  // ==========================================
+  
+  // 11. Gainlove (Charity Theme)
+  {
+    isDark: false,
+    layoutType: 'gainlove',
+    bg: 'bg-[#faf9f6] text-stone-900',
+    text: 'text-stone-600',
+    accent: 'text-[#d97706]',
+    accentBorder: 'border-stone-200',
+    accentBg: 'bg-[#d97706]/5',
+    btn: 'bg-[#1c1917] text-white hover:bg-stone-800',
+    cardBg: 'bg-white border-stone-200/80 shadow-sm',
+    font: 'font-serif',
+    glow: 'from-orange-100 to-transparent'
+  },
+  // 12. Ewebot (SEO/Digital Agency Theme)
+  {
+    isDark: false,
+    layoutType: 'ewebot',
+    bg: 'bg-white text-slate-800',
+    text: 'text-slate-500',
+    accent: 'text-[#6366f1]',
+    accentBorder: 'border-[#6366f1]/15',
+    accentBg: 'bg-[#6366f1]/5',
+    btn: 'bg-[#4f46e5] text-white hover:bg-[#4338ca]',
+    cardBg: 'bg-white border-slate-100 shadow-lg shadow-slate-100/40',
+    font: 'font-sans',
+    glow: 'from-indigo-100 to-transparent'
+  },
+  // 13. Sarvam (Industrial Theme)
+  {
+    isDark: false,
+    layoutType: 'sarvam',
+    bg: 'bg-slate-50 text-slate-900',
+    text: 'text-slate-600',
+    accent: 'text-[#f97316]',
+    accentBorder: 'border-slate-200',
+    accentBg: 'bg-[#f97316]/5',
+    btn: 'bg-[#1e3a8a] text-white hover:bg-[#172554]',
+    cardBg: 'bg-white border-slate-200 shadow-sm',
+    font: 'font-sans',
+    glow: 'from-blue-100 to-transparent'
+  },
+  // 14. Moveaus (Moving Services Theme)
+  {
+    isDark: false,
+    layoutType: 'moveaus',
+    bg: 'bg-white text-zinc-900',
+    text: 'text-zinc-600',
+    accent: 'text-[#ea580c]',
+    accentBorder: 'border-zinc-200',
+    accentBg: 'bg-[#ea580c]/5',
+    btn: 'bg-[#ea580c] text-white hover:bg-[#d97706]',
+    cardBg: 'bg-white border-zinc-200/80 shadow-sm',
+    font: 'font-sans',
+    glow: 'from-orange-100 to-transparent'
+  },
+  // 15. Ausroofing (Roofing Construction Theme)
+  {
+    isDark: true,
+    layoutType: 'ausroofing',
+    bg: 'bg-slate-900 text-slate-100',
+    text: 'text-slate-400',
+    accent: 'text-[#ea580c]',
+    accentBorder: 'border-slate-800',
+    accentBg: 'bg-[#ea580c]/10',
+    btn: 'bg-[#ea580c] text-white hover:bg-[#d97706]',
+    cardBg: 'bg-slate-950 border-slate-800/80 shadow-md',
+    font: 'font-sans',
+    glow: 'from-orange-500/10 to-transparent'
   }
 ]
 
@@ -212,7 +293,13 @@ const styleSuffixes = [
   'performance',
   'minimalist',
   'violet_aurora',
-  'steel_industrial'
+  'steel_industrial',
+  // Screenshot suffixes
+  'gainlove',
+  'ewebot',
+  'sarvam',
+  'moveaus',
+  'ausroofing'
 ]
 
 const styleDisplayNames = [
@@ -225,10 +312,16 @@ const styleDisplayNames = [
   'Performance Red (Dark)',
   'Minimalist (Light)',
   'Violet Aurora (Dark)',
-  'Steel Industrial (Dark)'
+  'Steel Industrial (Dark)',
+  // Screenshot names
+  'Gainlove (Charity Style)',
+  'Ewebot (SEO Agency Style)',
+  'Sarvam (Industrial Style)',
+  'Moveaus (Moving Service Style)',
+  'Ausroofing (Roofing Style)'
 ]
 
-// Pre-populated content dict for all 21 industries
+// Pre-populated content dict for all industries (including the 5 new ones)
 export const PREBUILT_CONTENT: Record<string, PrebuiltContent> = {
   automation_agency: {
     title: 'AI Automation & Voice Integration Labs',
@@ -502,6 +595,75 @@ export const PREBUILT_CONTENT: Record<string, PrebuiltContent> = {
       { title: 'Creative Brief Bot', description: 'Send online questionnaire links to client inbox immediately after booking is confirmed.', icon: 'Bot' },
       { title: 'Contract & Invoice Trigger', description: 'Send photoshoot agreements and initial deposit invoices to client email automatically.', icon: 'Sparkles' }
     ]
+  },
+
+  // ==========================================
+  // SCREENSHOT-BASED PREBUILT CONTENT (22-26)
+  // ==========================================
+  charity_nonprofit: {
+    title: 'Justice begins where inequality ends',
+    bio: [
+      'We are building a world where everyone has the power to shape their lives.',
+      'The Gainlove Global aid network establishes a thriving and connected community, ensuring each member has access to resources that enrich and empower.'
+    ],
+    skills: ['Anti-Poverty Program Design', 'Family Support Advocacy', 'Community Outreach Coordination', 'Crisis Funding Administration'],
+    services: [
+      { title: 'Anti-Poverty Programs & Services', description: 'Programs designed to relieve the effects of and address the root causes of poverty.', icon: 'Sparkles' },
+      { title: 'Family & Community Programs', description: 'Programs designed to educate and engage all ages of the community, offering various classes.', icon: 'Bot' },
+      { title: 'Teen Programs', description: 'Resource centers providing safe spaces and leadership training to promote youth engagement.', icon: 'Cpu' }
+    ]
+  },
+  seo_agency: {
+    title: 'Digital Products for Your Ideas',
+    bio: [
+      'Ensuring the best return on investment for your bespoke SEO campaign requirements.',
+      'We are passionate about our work, staying ahead of the curve to provide engaging and user-friendly systems.'
+    ],
+    skills: ['SEO Campaign Structuring', 'UX Design & Prototyping', 'Product Development & Scaling', 'Marketing & Brand Strategy'],
+    services: [
+      { title: 'Discover & Explore the Product', description: 'Analyzing market fit and understanding user pathways to design the perfect funnel.', icon: 'Sparkles' },
+      { title: 'Art Direction & Brand Strategy', description: 'Bespoke corporate identity guidelines and communications planning for high visibility.', icon: 'Bot' },
+      { title: 'Product UX, Design & Development', description: 'Building fast, accessible frontend interfaces optimized for conversion rates.', icon: 'Cpu' }
+    ]
+  },
+  industrial_manufacturing: {
+    title: 'Your Trusted Partner for PVC Pipes & Fittings',
+    bio: [
+      'Leading PVC pipe manufacturer providing high-quality, durable solutions for diverse industrial operations.',
+      'Engineered for maximum reliability, strength, and precision delivery to support modern infrastructure projects.'
+    ],
+    skills: ['UPVC Plumbing Systems', 'SWR Pipe Engineering', 'Borewell Casing Standards', 'Agriculture Irrigation Layouts'],
+    services: [
+      { title: 'uPVC Plumbing Pipes', description: 'Virgin raw materials ensuring durable, long-lasting pipes for home and commercial supply.', icon: 'Cpu' },
+      { title: 'SWR Pipes & Fittings', description: 'High-quality soil, waste, and rainwater venting systems certified for durability.', icon: 'Phone' },
+      { title: 'Borewell Casing Systems', description: 'High-tensile casing pipes designed for deep wells and rough geological structures.', icon: 'Bot' }
+    ]
+  },
+  moving_logistics: {
+    title: 'Stress-Free Moving Services for Homes & Businesses',
+    bio: [
+      'Local and long-distance moving, office relocations, and storage solutions.',
+      'Our team handles packing, loading, transport, and fragile items with 5-star customer-rated safety protocols.'
+    ],
+    skills: ['Fragile Item Packing', 'Office Relocations', 'Storage Solutions Coordination', 'Full Transit Insurance'],
+    services: [
+      { title: 'Local & Interstate Relocations', description: 'Rapid, stress-free household moves within state boundaries or across long distances.', icon: 'Phone' },
+      { title: 'Office & Corporate Moving', description: 'Minimal downtime relocation of server racks, office furniture, and company archives.', icon: 'Cpu' },
+      { title: 'Packing & Fragile Handling', description: 'Specialized wrapping and secure strapping for pianos, artwork, and precision machinery.', icon: 'Bot' }
+    ]
+  },
+  roofing_construction: {
+    title: 'Reliable Roofing, Repairs & Restoration',
+    bio: [
+      'Expert roof repairs, metal re-roofing, gutter replacement, and leak detection for residential properties.',
+      'Built to last and engineered for harsh weather conditions, backed by our 10-year workmanship warranty.'
+    ],
+    skills: ['Metal Re-Roofing', 'Gutter & Downpipe Refits', 'Leak Detection Analysis', 'Storm Damage Assessments'],
+    services: [
+      { title: 'Roof Repairs & Leak Detection', description: 'Fast, reliable diagnostics to spot roof breaches and seal leak points immediately.', icon: 'Bot' },
+      { title: 'Metal Re-Roofing & Tile replacement', description: 'Premium shingle or metal sheeting installations to upgrade structural durability.', icon: 'Cpu' },
+      { title: 'Gutter & Downpipe Installations', description: 'Custom zinc-alloy channel installations optimized for water management.', icon: 'Phone' }
+    ]
   }
 }
 
@@ -518,7 +680,7 @@ export function getTemplateById(templateId: string): ThemeConfig {
   const parts = templateId.split('_')
   if (parts.length < 2) return defaultTheme
 
-  // Find style suffix, e.g. `royal_gold`, `eco_teal`
+  // Find style suffix, e.g. `royal_gold`, `gainlove`, etc.
   let themeSuffix = parts[parts.length - 1]
   let industryId = parts.slice(0, -1).join('_')
 
@@ -547,14 +709,38 @@ export function getTemplateById(templateId: string): ThemeConfig {
   }
 }
 
-// Generate the list of 10 templates for a specific industry
+// Generate the list of templates for a specific industry
 export function getTemplatesForIndustry(industryId: string): { id: string; name: string; isDark: boolean }[] {
   const industry = INDUSTRIES.find(ind => ind.id === industryId)
   if (!industry) return []
 
-  return styleSuffixes.map((suffix, index) => ({
-    id: `${industryId}_${suffix}`,
-    name: styleDisplayNames[index],
-    isDark: THEME_STYLES[index].isDark
-  }))
+  // If it's one of the screenshot-based custom industries, prioritize its custom style first!
+  const customMapping: Record<string, string> = {
+    charity_nonprofit: 'gainlove',
+    seo_agency: 'ewebot',
+    industrial_manufacturing: 'sarvam',
+    moving_logistics: 'moveaus',
+    roofing_construction: 'ausroofing'
+  }
+
+  const prioritizedSuffix = customMapping[industryId]
+  const list = [...styleSuffixes]
+
+  if (prioritizedSuffix) {
+    // Reorder so that the custom matching style is first in the list
+    const idx = list.indexOf(prioritizedSuffix)
+    if (idx !== -1) {
+      list.splice(idx, 1)
+      list.unshift(prioritizedSuffix)
+    }
+  }
+
+  return list.map((suffix) => {
+    const idx = styleSuffixes.indexOf(suffix)
+    return {
+      id: `${industryId}_${suffix}`,
+      name: styleDisplayNames[idx],
+      isDark: THEME_STYLES[idx].isDark
+    }
+  })
 }

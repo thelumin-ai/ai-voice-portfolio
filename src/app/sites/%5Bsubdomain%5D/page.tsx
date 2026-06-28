@@ -17,6 +17,7 @@ import {
   Sparkles, 
   AlertCircle 
 } from 'lucide-react'
+import { revalidatePath } from 'next/cache'
 
 interface PageProps {
   params: Promise<{ subdomain: string }>
@@ -27,6 +28,31 @@ const iconMap: Record<string, any> = {
   Bot,
   Cpu,
   Sparkles
+}
+
+// Inline Moving Lead submission handler action
+async function submitMovingLead(formData: FormData) {
+  'use server'
+  const tenantId = formData.get('tenant_id') as string
+  const name = formData.get('name') as string
+  const phone = formData.get('phone') as string
+  const fromCity = formData.get('fromCity') as string
+  const toCity = formData.get('toCity') as string
+  const date = formData.get('date') as string
+  const propType = formData.get('propType') as string
+
+  const supabase = await createClient()
+  await supabase
+    .from('saas_leads')
+    .insert({
+      tenant_id: tenantId,
+      name,
+      phone,
+      email: 'not-provided@moving.com',
+      message: `Moving Request: From ${fromCity} to ${toCity} on ${date}. Property Size: ${propType}.`
+    })
+
+  revalidatePath(`/sites/[subdomain]`)
 }
 
 export async function generateMetadata({ params }: PageProps) {
@@ -51,7 +77,7 @@ export default async function SaasTenantPage({ params }: PageProps) {
   const resolvedParams = await params
   const supabase = await createClient()
 
-  // 1. Fetch tenant data
+  // Fetch tenant data
   const { data: tenant, error: tenantError } = await supabase
     .from('saas_tenants')
     .select('*')
@@ -62,7 +88,7 @@ export default async function SaasTenantPage({ params }: PageProps) {
     notFound()
   }
 
-  // 2. Fetch tenant services
+  // Fetch tenant services
   const { data: services } = await supabase
     .from('saas_services')
     .select('*')
@@ -76,12 +102,477 @@ export default async function SaasTenantPage({ params }: PageProps) {
   const ctaText = tenant.cta_text || 'Book Consultation'
   const consultationLink = tenant.consultation_link || '#'
 
-  // 3. Resolve Theme Details
+  // Resolve Theme Details
   const theme = getTemplateById(tenant.template_id || 'agency_automation_cyber')
 
-  // 4. Resolve Layout Order
+  // Resolve Layout Order
   const layout = (tenant.layout_structure || ['hero', 'services', 'about', 'consultation']) as string[]
   const visible = (tenant.visible_sections || ['hero', 'services', 'about', 'consultation']) as string[]
+
+  // ==========================================
+  // LAYOUT 11: GAINLOVE (CHARITY)
+  // ==========================================
+  const renderGainloveSection = (sectionId: string) => {
+    if (!visible.includes(sectionId)) return null
+
+    switch (sectionId) {
+      case 'hero':
+        return (
+          <header key="hero" className="max-w-5xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <span className="inline-block text-[#d97706] font-bold text-xs uppercase tracking-wider">
+                Gainlove Global Aid Network
+              </span>
+              <h1 className="text-4xl sm:text-5xl font-serif font-extrabold text-stone-900 leading-tight">
+                {title}
+              </h1>
+              <p className="text-stone-600 text-sm leading-relaxed max-w-md">
+                {bio[0]}
+              </p>
+              <div>
+                <a
+                  href={consultationLink}
+                  className="inline-block px-6 py-3 bg-stone-900 text-white font-bold text-xs rounded hover:bg-stone-800 transition-colors shadow"
+                >
+                  DONATE NOW
+                </a>
+              </div>
+            </div>
+            {/* Pill-shape overlapping mockup from screenshot */}
+            <div className="flex gap-4 justify-center items-center select-none pointer-events-none">
+              <div className="w-20 h-52 bg-stone-200 border-4 border-white shadow rounded-full rotate-12 transform translate-y-6 overflow-hidden flex items-end justify-center">
+                <span className="text-[10px] text-stone-400 font-bold uppercase mb-4">Support</span>
+              </div>
+              <div className="w-20 h-64 bg-stone-300 border-4 border-white shadow rounded-full rotate-12 overflow-hidden flex items-center justify-center">
+                <span className="text-[10px] text-stone-500 font-bold uppercase">Justice</span>
+              </div>
+              <div className="w-20 h-52 bg-stone-200 border-4 border-white shadow rounded-full rotate-12 transform -translate-y-6 overflow-hidden flex items-start justify-center">
+                <span className="text-[10px] text-stone-400 font-bold uppercase mt-4">Equality</span>
+              </div>
+            </div>
+          </header>
+        )
+      case 'services':
+        return (
+          <section key="services" className="max-w-5xl mx-auto px-6 py-16 border-t border-stone-200">
+            <div className="text-center max-w-xl mx-auto mb-12 space-y-2">
+              <h2 className="text-2xl font-serif font-extrabold text-stone-900">Our Programs</h2>
+              <p className="text-xs text-stone-500">Working directly inside communities to scale opportunities and aid networks.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {services?.map(s => (
+                <div key={s.id} className="bg-white border border-stone-200 rounded-xl overflow-hidden shadow-sm flex flex-col justify-between">
+                  <div className="h-28 bg-stone-100 flex items-center justify-center text-stone-400 font-bold uppercase text-xs border-b border-stone-100">
+                    Program Area
+                  </div>
+                  <div className="p-5 space-y-3 flex-grow">
+                    <h3 className="font-serif font-bold text-base text-stone-900">{s.title}</h3>
+                    <p className="text-xs text-stone-600 leading-relaxed">{s.description}</p>
+                  </div>
+                  <div className="p-5 pt-0">
+                    <a href={consultationLink} className="block text-center py-2 bg-stone-900 hover:bg-stone-800 text-white font-bold text-[10px] rounded uppercase tracking-wider">
+                      LEARN MORE
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      case 'about':
+        return (
+          <section key="about" className="max-w-5xl mx-auto px-6 py-16 border-t border-stone-200 grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div className="space-y-4">
+              <h2 className="text-2xl font-serif font-extrabold text-stone-900">About Our Network</h2>
+              {bio.slice(1).map((para, i) => (
+                <p key={i} className="text-stone-600 text-sm leading-relaxed">{para}</p>
+              ))}
+            </div>
+            <div className="bg-white border border-stone-200 p-6 rounded-xl space-y-4 shadow-sm">
+              <h3 className="font-serif font-bold text-sm text-stone-900">Support Competencies</h3>
+              <div className="grid grid-cols-1 gap-2">
+                {skills.map((skill, index) => (
+                  <div key={index} className="flex items-center gap-2 text-xs text-stone-700">
+                    <CheckCircle className="w-4 h-4 text-[#d97706] flex-shrink-0" />
+                    <span>{skill}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )
+      case 'consultation':
+        return (
+          <section key="consultation" className="max-w-3xl mx-auto px-6 py-16 text-center border-t border-stone-200 space-y-4">
+            <h2 className="text-3xl font-serif font-bold text-stone-900">Welcome to the Global Network</h2>
+            <p className="text-xs text-stone-500 max-w-md mx-auto">Get involved today or book a consulting call with our aid coordinators.</p>
+            <div className="flex justify-center gap-3">
+              <a href={consultationLink} className="px-5 py-2.5 bg-[#d97706] text-white hover:bg-amber-600 text-xs font-bold rounded">
+                GET INVOLVED
+              </a>
+              <a href={consultationLink} className="px-5 py-2.5 bg-stone-900 text-white hover:bg-stone-800 text-xs font-bold rounded">
+                DONATE NOW
+              </a>
+            </div>
+          </section>
+        )
+      default:
+        return null
+    }
+  }
+
+  // ==========================================
+  // LAYOUT 12: EWEBOT (SEO AGENCY)
+  // ==========================================
+  const renderEwebotSection = (sectionId: string) => {
+    if (!visible.includes(sectionId)) return null
+
+    switch (sectionId) {
+      case 'hero':
+        return (
+          <header key="hero" className="max-w-5xl mx-auto px-6 py-20 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <span className="inline-block text-[#6366f1] font-bold text-xs uppercase tracking-wider">
+                SEO &amp; Growth Agency
+              </span>
+              <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-800 leading-tight">
+                {title}
+              </h1>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                {bio[0]}
+              </p>
+              <div className="flex gap-3">
+                <a href={consultationLink} className="px-6 py-3 bg-[#4f46e5] text-white hover:bg-[#4338ca] font-bold text-xs rounded-lg shadow-md transition-colors">
+                  CONTACT TODAY
+                </a>
+              </div>
+            </div>
+            {/* Wave shape mockup from screenshot */}
+            <div className="relative h-64 bg-indigo-50 border border-indigo-100 rounded-3xl overflow-hidden flex items-center justify-center shadow-inner">
+              <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 via-transparent to-purple-500/10" />
+              <div className="text-center p-6 space-y-2 relative z-10">
+                <Globe className="w-12 h-12 mx-auto text-[#6366f1] animate-pulse" />
+                <span className="text-xs font-bold text-indigo-900 block">SEO &amp; Web Audit Tools</span>
+              </div>
+            </div>
+          </header>
+        )
+      case 'services':
+        return (
+          <section key="services" className="max-w-5xl mx-auto px-6 py-16 border-t border-slate-100">
+            <div className="text-center max-w-xl mx-auto mb-12">
+              <span className="text-xs font-bold text-[#6366f1] uppercase tracking-widest block mb-2">CARE FEATURES</span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800">Provide Awesome Service With Our Tools</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {services?.map(s => {
+                const IconComp = iconMap[s.icon || 'Cpu'] || Cpu
+                return (
+                  <div key={s.id} className="bg-white border border-slate-100 p-6 rounded-2xl shadow-lg shadow-slate-100/40 hover:shadow-indigo-100/50 transition-all text-center space-y-4">
+                    <div className="p-3 bg-indigo-50 text-[#6366f1] rounded-xl inline-block">
+                      <IconComp className="w-6 h-6" />
+                    </div>
+                    <h3 className="font-bold text-base text-slate-800">{s.title}</h3>
+                    <p className="text-xs text-slate-500 leading-relaxed">{s.description}</p>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )
+      case 'about':
+        return (
+          <section key="about" className="max-w-5xl mx-auto px-6 py-16 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div className="space-y-4">
+              <span className="text-xs font-bold text-[#6366f1] uppercase tracking-wider block">WHY CHOOSE US</span>
+              <h2 className="text-2xl font-extrabold text-slate-800">Boosts Your Website Traffic!</h2>
+              {bio.slice(1).map((para, i) => (
+                <p key={i} className="text-slate-500 text-sm leading-relaxed">{para}</p>
+              ))}
+            </div>
+            {/* Stats list from screenshot */}
+            <div className="grid grid-cols-3 gap-4 text-center items-center bg-slate-50 p-6 rounded-2xl border border-slate-100">
+              <div>
+                <span className="text-3xl font-extrabold text-[#6366f1] block">20+</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase mt-1 block">Employees</span>
+              </div>
+              <div className="border-l border-r border-slate-200">
+                <span className="text-3xl font-extrabold text-[#6366f1] block">150+</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase mt-1 block">Projects</span>
+              </div>
+              <div>
+                <span className="text-3xl font-extrabold text-[#6366f1] block">100+</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase mt-1 block">Clients</span>
+              </div>
+            </div>
+          </section>
+        )
+      default:
+        return null
+    }
+  }
+
+  // ==========================================
+  // LAYOUT 13: SARVAM (INDUSTRIAL MANUFACTURING)
+  // ==========================================
+  const renderSarvamSection = (sectionId: string) => {
+    if (!visible.includes(sectionId)) return null
+
+    switch (sectionId) {
+      case 'hero':
+        return (
+          <header key="hero" className="max-w-5xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <span className="inline-block text-[#f97316] font-bold text-xs uppercase tracking-wider border-l-2 border-[#f97316] pl-2">
+                ISO 9001:2015 Certified
+              </span>
+              <h1 className="text-3xl sm:text-5xl font-extrabold text-[#1e3a8a] leading-tight">
+                {title}
+              </h1>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                {bio[0]}
+              </p>
+              <div className="flex gap-3">
+                <a href={consultationLink} className="px-6 py-3 bg-[#1e3a8a] text-white hover:bg-[#172554] font-bold text-xs rounded transition-colors shadow">
+                  Explore Products
+                </a>
+              </div>
+            </div>
+            <div className="bg-slate-200 border border-slate-300 rounded-xl h-56 flex items-center justify-center text-slate-400 text-xs font-bold uppercase relative overflow-hidden select-none pointer-events-none">
+              <div className="absolute inset-0 bg-slate-900/10" />
+              <span>Pipe Manufacturing Showcase</span>
+            </div>
+          </header>
+        )
+      case 'services':
+        return (
+          <section key="services" className="max-w-5xl mx-auto px-6 py-16 border-t border-slate-200">
+            <div className="text-center max-w-xl mx-auto mb-12">
+              <h2 className="text-2xl font-extrabold text-[#1e3a8a]">Our PVC Pipe Products</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {services?.map(s => (
+                <div key={s.id} className="bg-white border border-slate-200 p-5 rounded-lg shadow-sm flex flex-col justify-between">
+                  <div className="h-24 bg-slate-100 flex items-center justify-center text-slate-400 font-bold uppercase text-[10px] mb-4">
+                    Industrial Fit Specs
+                  </div>
+                  <h3 className="font-bold text-sm text-[#1e3a8a] mb-2">{s.title}</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed mb-4">{s.description}</p>
+                  <a href={consultationLink} className="text-center py-2 bg-[#f97316] hover:bg-[#ea580c] text-white text-[10px] font-bold rounded uppercase tracking-wider block">
+                    Product Details
+                  </a>
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      case 'about':
+        return (
+          <section key="about" className="max-w-5xl mx-auto px-6 py-16 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div className="space-y-4">
+              <h2 className="text-2xl font-extrabold text-[#1e3a8a]">Why Choose Sarvam Pipes?</h2>
+              {bio.slice(1).map((para, i) => (
+                <p key={i} className="text-slate-655 text-sm leading-relaxed">{para}</p>
+              ))}
+            </div>
+            <div className="bg-[#1e3a8a] p-6 rounded-xl text-white space-y-4">
+              <h3 className="font-bold text-sm text-[#f97316]">Core Competencies</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {skills.map((skill, index) => (
+                  <div key={index} className="flex items-center gap-2 text-xs">
+                    <CheckCircle className="w-4 h-4 text-[#f97316] flex-shrink-0" />
+                    <span>{skill}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )
+      default:
+        return null
+    }
+  }
+
+  // ==========================================
+  // LAYOUT 14: MOVEAUS (MOVING)
+  // ==========================================
+  const renderMoveausSection = (sectionId: string) => {
+    if (!visible.includes(sectionId)) return null
+
+    switch (sectionId) {
+      case 'hero':
+        return (
+          <header key="hero" className="max-w-5xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <span className="inline-block text-[#ea580c] font-bold text-xs uppercase tracking-wider">
+                Full-Service Moving &amp; Storage
+              </span>
+              <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-800 leading-tight">
+                {title}
+              </h1>
+              <p className="text-zinc-600 text-sm leading-relaxed">
+                {bio[0]}
+              </p>
+              <div className="flex gap-3">
+                <a href="#quote-form" className="px-6 py-3 bg-[#ea580c] text-white hover:bg-[#d97706] font-bold text-xs rounded transition-colors shadow">
+                  GET A MOVING QUOTE
+                </a>
+              </div>
+            </div>
+            <div className="bg-zinc-100 border border-zinc-200 rounded-xl h-56 flex items-center justify-center text-zinc-400 text-xs font-bold uppercase relative overflow-hidden select-none pointer-events-none">
+              <span>Transit &amp; Removals Vehicle Mock</span>
+            </div>
+          </header>
+        )
+      case 'services':
+        return (
+          <section key="services" className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-200">
+            <div className="text-center max-w-xl mx-auto mb-12">
+              <h2 className="text-2xl font-bold text-slate-800">Our Moving Services</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {services?.map(s => (
+                <div key={s.id} className="bg-white border border-zinc-200 p-5 rounded-lg shadow-sm">
+                  <h3 className="font-bold text-sm text-[#ea580c] mb-2">{s.title}</h3>
+                  <p className="text-xs text-zinc-500 leading-relaxed">{s.description}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      case 'consultation':
+        return (
+          <section key="consultation" id="quote-form" className="max-w-3xl mx-auto px-6 py-16 border-t border-zinc-200">
+            <div className="bg-slate-50 border border-zinc-200 p-8 rounded-2xl shadow-sm space-y-6">
+              <div className="text-center space-y-2">
+                <h3 className="text-xl font-bold text-slate-800">Planning a Move Soon?</h3>
+                <p className="text-xs text-zinc-500">Get a fast, obligation-free quote from our relocation specialists.</p>
+              </div>
+
+              {/* Server Action Form submitting directly into the database */}
+              <form action={submitMovingLead} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="hidden" name="tenant_id" value={tenant.id} />
+                
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Your Name</label>
+                  <input required name="name" type="text" placeholder="John Doe" className="w-full p-2 text-xs border border-zinc-300 rounded bg-white text-zinc-800 focus:outline-none focus:ring-1 focus:ring-[#ea580c]" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Phone Number</label>
+                  <input required name="phone" type="tel" placeholder="+1 555-5555" className="w-full p-2 text-xs border border-zinc-300 rounded bg-white text-zinc-800 focus:outline-none focus:ring-1 focus:ring-[#ea580c]" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Moving From</label>
+                  <input required name="fromCity" type="text" placeholder="City or Zip Code" className="w-full p-2 text-xs border border-zinc-300 rounded bg-white text-zinc-800 focus:outline-none focus:ring-1 focus:ring-[#ea580c]" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Moving To</label>
+                  <input required name="toCity" type="text" placeholder="City or Zip Code" className="w-full p-2 text-xs border border-zinc-300 rounded bg-white text-zinc-800 focus:outline-none focus:ring-1 focus:ring-[#ea580c]" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Property Size</label>
+                  <select name="propType" className="w-full p-2 text-xs border border-zinc-300 rounded bg-white text-zinc-800 focus:outline-none focus:ring-1 focus:ring-[#ea580c]">
+                    <option value="1-bed">1 Bedroom House/Apartment</option>
+                    <option value="2-bed">2 Bedroom House/Apartment</option>
+                    <option value="3-bed+">3+ Bedroom House</option>
+                    <option value="office">Office Space / Commercial</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Moving Date</label>
+                  <input required name="date" type="date" className="w-full p-2 text-xs border border-zinc-300 rounded bg-white text-zinc-800 focus:outline-none focus:ring-1 focus:ring-[#ea580c]" />
+                </div>
+
+                <div className="md:col-span-2 pt-2">
+                  <button type="submit" className="w-full py-3 bg-[#ea580c] hover:bg-[#d97706] text-white font-bold text-xs uppercase tracking-wider rounded transition-colors cursor-pointer shadow">
+                    GET MY FREE QUOTE
+                  </button>
+                </div>
+              </form>
+            </div>
+          </section>
+        )
+      default:
+        return null
+    }
+  }
+
+  // ==========================================
+  // LAYOUT 15: AUSROOFING (ROOFING)
+  // ==========================================
+  const renderAusroofingSection = (sectionId: string) => {
+    if (!visible.includes(sectionId)) return null
+
+    switch (sectionId) {
+      case 'hero':
+        return (
+          <header key="hero" className="max-w-5xl mx-auto px-6 py-20 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <span className="inline-block text-[#ea580c] font-bold text-xs uppercase tracking-wider">
+                Australia's Roofing Specialists
+              </span>
+              <h1 className="text-4xl sm:text-5xl font-extrabold text-white leading-tight">
+                {title}
+              </h1>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                {bio[0]}
+              </p>
+              <div className="flex gap-3">
+                <a href="#inspection" className="px-6 py-3 bg-[#ea580c] text-white hover:bg-[#d97706] font-bold text-xs rounded transition-colors shadow">
+                  BOOK INSPECTION
+                </a>
+              </div>
+            </div>
+            <div className="bg-slate-950 border border-slate-800 rounded-xl h-56 flex items-center justify-center text-slate-500 text-xs font-bold uppercase relative overflow-hidden select-none pointer-events-none">
+              <span>Shingles Roof Restoration Mock</span>
+            </div>
+          </header>
+        )
+      case 'services':
+        return (
+          <section key="services" className="max-w-5xl mx-auto px-6 py-16 border-t border-slate-800">
+            <div className="text-center max-w-xl mx-auto mb-12">
+              <h2 className="text-2xl font-extrabold text-white">Our Roofing Services</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {services?.map(s => (
+                <div key={s.id} className="bg-slate-950 border border-slate-800 p-5 rounded-lg shadow-sm">
+                  <h3 className="font-bold text-sm text-[#ea580c] mb-2">{s.title}</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">{s.description}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      case 'about':
+        return (
+          <section key="about" className="max-w-5xl mx-auto px-6 py-16 border-t border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div className="space-y-4">
+              <h2 className="text-2xl font-extrabold text-white">Roof Repair &amp; Restoration</h2>
+              {bio.slice(1).map((para, i) => (
+                <p key={i} className="text-slate-400 text-sm leading-relaxed">{para}</p>
+              ))}
+            </div>
+            {/* Before / after mock card */}
+            <div className="bg-slate-950 border border-slate-850 p-6 rounded-xl space-y-4">
+              <h3 className="font-bold text-sm text-[#ea580c]">10-Year Workmanship Warranty</h3>
+              <div className="grid grid-cols-2 gap-3 text-center">
+                <div className="p-3 bg-red-950/20 border border-red-900/30 text-red-400 rounded-lg">
+                  <span className="text-[10px] uppercase font-bold block">BEFORE</span>
+                  <span className="text-xs font-semibold mt-1 block">Rusted &amp; Leaking</span>
+                </div>
+                <div className="p-3 bg-green-955/20 border border-green-900/30 text-green-400 rounded-lg">
+                  <span className="text-[10px] uppercase font-bold block">AFTER</span>
+                  <span className="text-xs font-semibold mt-1 block">Restored &amp; Protected</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        )
+      default:
+        return null
+    }
+  }
 
   // ==========================================
   // LAYOUT A: MODERN DARK GRID
@@ -397,10 +888,27 @@ export default async function SaasTenantPage({ params }: PageProps) {
 
       {/* Main Content Router */}
       <main className="flex-grow">
-        {theme.layoutType === 'split_screen' ? (
-          // ==========================================
-          // RENDER SPLIT-SCREEN LAYOUT DOM
-          // ==========================================
+        {theme.layoutType === 'gainlove' ? (
+          <div className="w-full">
+            {layout.map((sectionId) => renderGainloveSection(sectionId))}
+          </div>
+        ) : theme.layoutType === 'ewebot' ? (
+          <div className="w-full">
+            {layout.map((sectionId) => renderEwebotSection(sectionId))}
+          </div>
+        ) : theme.layoutType === 'sarvam' ? (
+          <div className="w-full">
+            {layout.map((sectionId) => renderSarvamSection(sectionId))}
+          </div>
+        ) : theme.layoutType === 'moveaus' ? (
+          <div className="w-full">
+            {layout.map((sectionId) => renderMoveausSection(sectionId))}
+          </div>
+        ) : theme.layoutType === 'ausroofing' ? (
+          <div className="w-full">
+            {layout.map((sectionId) => renderAusroofingSection(sectionId))}
+          </div>
+        ) : theme.layoutType === 'split_screen' ? (
           <div className="container mx-auto px-6 py-12 max-w-5xl relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
               {/* Left sticky column */}
@@ -434,16 +942,10 @@ export default async function SaasTenantPage({ params }: PageProps) {
             </div>
           </div>
         ) : theme.layoutType === 'minimalist_list' ? (
-          // ==========================================
-          // RENDER MINIMALIST LIST LAYOUT DOM
-          // ==========================================
           <div className="container mx-auto px-6 py-12 relative z-10">
             {layout.map((sectionId) => renderMinimalistListSection(sectionId))}
           </div>
         ) : (
-          // ==========================================
-          // RENDER MODERN DARK GRID DOM
-          // ==========================================
           <div className="w-full">
             {layout.map((sectionId) => renderModernDarkSection(sectionId))}
           </div>
