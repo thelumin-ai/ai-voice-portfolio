@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { DEFAULT_CONTENT } from './default-content'
 import { THEME_CONFIG } from './theme'
 import { 
@@ -14,13 +16,30 @@ import {
   Sparkles, 
   Edit3, 
   Eye, 
-  Globe 
+  Globe,
+  Scale
 } from 'lucide-react'
 
 export default function Nonprofit001Template() {
   const [content, setContent] = useState(DEFAULT_CONTENT)
   const [isEditing, setIsEditing] = useState(false)
   const [activeTab, setActiveTab] = useState('Health')
+  const pathname = usePathname() || ''
+
+  // Dynamic route prefix compiler
+  const getPathWithPrefix = (path: string) => {
+    if (pathname.startsWith('/templates/nonprofit-001/preview')) {
+      return `/templates/nonprofit-001/preview${path === '/' ? '' : path}`
+    }
+    if (pathname.startsWith('/templates/nonprofit-001')) {
+      return `/templates/nonprofit-001${path === '/' ? '' : path}`
+    }
+    const sitesMatch = pathname.match(/^\/sites\/([^/]+)/)
+    if (sitesMatch) {
+      return `/sites/${sitesMatch[1]}${path === '/' ? '' : path}`
+    }
+    return path
+  }
 
   // Edit handlers
   const handleTextChange = (section: string, field: string, value: string) => {
@@ -80,7 +99,7 @@ export default function Nonprofit001Template() {
       {/* 1. Header Navigation */}
       <nav className="w-full bg-[#faf9f6]/95 border-b border-stone-200 sticky top-0 z-40 backdrop-blur">
         <div className="max-w-[1240px] mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <Link href={getPathWithPrefix('/')} className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-500 via-[#d97706] to-emerald-500 p-0.5 flex items-center justify-center">
               <Heart className="w-4 h-4 text-white fill-white" />
             </div>
@@ -88,6 +107,7 @@ export default function Nonprofit001Template() {
               <input
                 type="text"
                 value={content.header.logoText}
+                onClick={(e) => e.preventDefault()}
                 onChange={(e) => handleTextChange('header', 'logoText', e.target.value)}
                 className="bg-white border border-stone-300 rounded p-1 text-sm font-bold text-stone-900 w-28 font-serif"
               />
@@ -96,15 +116,13 @@ export default function Nonprofit001Template() {
                 {content.header.logoText}
               </span>
             )}
-          </div>
+          </Link>
 
           <div className="hidden lg:flex items-center gap-8 text-[10px] font-sans font-extrabold tracking-widest text-stone-600">
-            <span className="hover:text-stone-900 transition-colors cursor-pointer text-[#d97706]">HOME</span>
-            <span className="hover:text-stone-900 transition-colors cursor-pointer">CAMPAIGNS</span>
-            <span className="hover:text-stone-900 transition-colors cursor-pointer">ABOUT</span>
-            <span className="hover:text-stone-900 transition-colors cursor-pointer">BLOG</span>
-            <span className="hover:text-stone-900 transition-colors cursor-pointer">PAGES</span>
-            <span className="hover:text-stone-900 transition-colors cursor-pointer">CONTACT US</span>
+            <Link href={getPathWithPrefix('/')} className="hover:text-stone-900 transition-colors text-[#d97706]">HOME</Link>
+            <Link href={getPathWithPrefix('/about')} className="hover:text-stone-900 transition-colors">ABOUT</Link>
+            <Link href={getPathWithPrefix('/services')} className="hover:text-stone-900 transition-colors">SERVICES</Link>
+            <Link href={getPathWithPrefix('/contact')} className="hover:text-stone-900 transition-colors">CONTACT US</Link>
           </div>
 
           <div className="flex items-center gap-6">
@@ -135,9 +153,9 @@ export default function Nonprofit001Template() {
                 className="bg-white border border-[#d97706] rounded p-1 text-[10px] text-stone-900 w-24 text-center font-sans font-bold"
               />
             ) : (
-              <button className={`px-5 py-2.5 ${THEME_CONFIG.btn} font-sans font-extrabold text-[9px] tracking-widest rounded transition-colors uppercase`}>
+              <Link href={getPathWithPrefix('/contact')} className={`px-5 py-2.5 ${THEME_CONFIG.btn} font-sans font-extrabold text-[9px] tracking-widest rounded transition-colors uppercase`}>
                 {content.header.donateText}
-              </button>
+              </Link>
             )}
           </div>
         </div>
@@ -152,39 +170,39 @@ export default function Nonprofit001Template() {
         <div className="max-w-[1240px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
           <div className="lg:col-span-7 space-y-6">
             <span className="inline-flex items-center rounded-full px-3 py-1 text-[9px] font-sans font-bold uppercase tracking-widest ring-1 ring-inset ring-[#d97706]/20 bg-[#d97706]/5 text-[#d97706]">
-              {content.hero.badge}
+              {content.home.badge}
             </span>
 
             {isEditing ? (
               <textarea
-                value={content.hero.heading}
-                onChange={(e) => handleTextChange('hero', 'heading', e.target.value)}
+                value={content.home.heading}
+                onChange={(e) => handleTextChange('home', 'heading', e.target.value)}
                 className="w-full bg-white border border-stone-300 rounded p-2 font-serif text-3xl sm:text-5xl font-extrabold text-stone-900 leading-tight"
                 rows={2}
               />
             ) : (
               <h1 className="text-4xl sm:text-6xl font-serif font-extrabold text-stone-900 leading-tight tracking-tight">
-                {content.hero.heading}
+                {content.home.heading}
               </h1>
             )}
 
             {isEditing ? (
               <textarea
-                value={content.hero.subheading}
-                onChange={(e) => handleTextChange('hero', 'subheading', e.target.value)}
+                value={content.home.subheading}
+                onChange={(e) => handleTextChange('home', 'subheading', e.target.value)}
                 className="w-full bg-white border border-stone-300 rounded p-2 text-stone-600 text-sm leading-relaxed"
                 rows={2}
               />
             ) : (
               <p className="text-stone-600 text-base sm:text-lg leading-relaxed max-w-lg">
-                {content.hero.subheading}
+                {content.home.subheading}
               </p>
             )}
 
             <div className="pt-2">
-              <button className="px-6 py-3.5 bg-stone-900 text-white hover:bg-stone-850 text-xs font-sans font-extrabold tracking-widest rounded transition-colors uppercase shadow-md">
-                {content.hero.ctaText}
-              </button>
+              <Link href={getPathWithPrefix('/contact')} className="inline-block px-6 py-3.5 bg-stone-900 text-white hover:bg-stone-850 text-xs font-sans font-extrabold tracking-widest rounded transition-colors uppercase shadow-md">
+                {content.home.ctaText}
+              </Link>
             </div>
           </div>
 
@@ -278,9 +296,9 @@ export default function Nonprofit001Template() {
                 </div>
 
                 <div className="p-6 pt-0">
-                  <span className="block text-center py-2.5 bg-stone-900 hover:bg-stone-850 text-white font-sans font-extrabold text-[9px] rounded uppercase tracking-widest cursor-pointer shadow-sm">
+                  <Link href={getPathWithPrefix('/services')} className="block text-center py-2.5 bg-stone-900 hover:bg-stone-850 text-white font-sans font-extrabold text-[9px] rounded uppercase tracking-widest shadow-sm">
                     LEARN MORE
-                  </span>
+                  </Link>
                 </div>
               </div>
             ))}
@@ -297,37 +315,37 @@ export default function Nonprofit001Template() {
 
           {isEditing ? (
             <textarea
-              value={content.welcome.heading}
-              onChange={(e) => handleTextChange('welcome', 'heading', e.target.value)}
+              value={content.home.welcomeHeading}
+              onChange={(e) => handleTextChange('home', 'welcomeHeading', e.target.value)}
               className="w-full bg-white border border-stone-300 rounded p-2 text-center font-serif text-2xl font-bold text-stone-900"
               rows={2}
             />
           ) : (
             <h2 className="text-3xl sm:text-4xl font-serif font-extrabold text-stone-900 leading-tight">
-              {content.welcome.heading}
+              {content.home.welcomeHeading}
             </h2>
           )}
 
           {isEditing ? (
             <textarea
-              value={content.welcome.description}
-              onChange={(e) => handleTextChange('welcome', 'description', e.target.value)}
+              value={content.home.welcomeDesc}
+              onChange={(e) => handleTextChange('home', 'welcomeDesc', e.target.value)}
               className="w-full bg-white border border-stone-300 rounded p-2 text-center text-stone-650 text-xs"
               rows={4}
             />
           ) : (
             <p className="text-stone-600 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
-              {content.welcome.description}
+              {content.home.welcomeDesc}
             </p>
           )}
 
           <div className="flex justify-center gap-3 font-sans font-bold text-[10px] tracking-widest uppercase">
-            <button className="px-6 py-3.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded transition-colors shadow">
-              {content.welcome.btnInvolved}
-            </button>
-            <button className="px-6 py-3.5 bg-stone-900 text-white hover:bg-stone-850 rounded transition-colors shadow">
-              {content.welcome.btnDonate}
-            </button>
+            <Link href={getPathWithPrefix('/about')} className="px-6 py-3.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded transition-colors shadow">
+              {content.home.btnInvolved}
+            </Link>
+            <Link href={getPathWithPrefix('/contact')} className="px-6 py-3.5 bg-stone-900 text-white hover:bg-stone-850 rounded transition-colors shadow">
+              {content.home.btnDonate}
+            </Link>
           </div>
         </div>
       </section>
@@ -358,52 +376,52 @@ export default function Nonprofit001Template() {
 
           <div className="lg:col-span-7 space-y-6">
             <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-[#d97706] block">
-              {content.fundraiser.category}
+              {content.home.fundraiserCategory}
             </span>
 
             {isEditing ? (
               <textarea
-                value={content.fundraiser.heading}
-                onChange={(e) => handleTextChange('fundraiser', 'heading', e.target.value)}
+                value={content.home.fundraiserHeading}
+                onChange={(e) => handleTextChange('home', 'fundraiserHeading', e.target.value)}
                 className="w-full bg-white border border-stone-300 rounded p-2 font-serif text-2xl font-bold text-stone-900"
                 rows={2}
               />
             ) : (
               <h2 className="text-3xl font-serif font-extrabold text-stone-900 leading-tight">
-                {content.fundraiser.heading}
+                {content.home.fundraiserHeading}
               </h2>
             )}
 
             {isEditing ? (
               <input
                 type="text"
-                value={content.fundraiser.subheading}
-                onChange={(e) => handleTextChange('fundraiser', 'subheading', e.target.value)}
+                value={content.home.fundraiserSubheading}
+                onChange={(e) => handleTextChange('home', 'fundraiserSubheading', e.target.value)}
                 className="w-full bg-white border border-stone-300 rounded p-1 font-serif text-sm font-bold text-stone-850"
               />
             ) : (
               <h4 className="font-serif font-bold text-base text-stone-850 italic">
-                {content.fundraiser.subheading}
+                {content.home.fundraiserSubheading}
               </h4>
             )}
 
             {isEditing ? (
               <textarea
-                value={content.fundraiser.description}
-                onChange={(e) => handleTextChange('fundraiser', 'description', e.target.value)}
+                value={content.home.fundraiserDesc}
+                onChange={(e) => handleTextChange('home', 'fundraiserDesc', e.target.value)}
                 className="w-full bg-white border border-stone-300 rounded p-2 text-stone-600 text-xs"
                 rows={4}
               />
             ) : (
               <p className="text-stone-600 text-sm leading-relaxed">
-                {content.fundraiser.description}
+                {content.home.fundraiserDesc}
               </p>
             )}
 
-            <div className="pt-2 flex items-center gap-1.5 text-xs font-sans font-extrabold tracking-wider text-[#d97706] hover:text-amber-600 cursor-pointer">
-              <span>{content.fundraiser.linkText}</span>
+            <Link href={getPathWithPrefix('/about')} className="pt-2 inline-flex items-center gap-1.5 text-xs font-sans font-extrabold tracking-wider text-[#d97706] hover:text-amber-600 transition-colors">
+              <span>{content.home.fundraiserLinkText}</span>
               <ArrowRight className="w-3.5 h-3.5" />
-            </div>
+            </Link>
           </div>
         </div>
       </section>
@@ -414,25 +432,25 @@ export default function Nonprofit001Template() {
           <div className="space-y-8">
             <div className="space-y-3">
               <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-[#d97706] block">
-                {content.choices.category}
+                {content.home.choicesCategory}
               </span>
 
               {isEditing ? (
                 <textarea
-                  value={content.choices.heading}
-                  onChange={(e) => handleTextChange('choices', 'heading', e.target.value)}
+                  value={content.home.choicesHeading}
+                  onChange={(e) => handleTextChange('home', 'choicesHeading', e.target.value)}
                   className="w-full bg-white border border-stone-300 rounded p-2 font-serif text-2xl font-bold text-stone-900"
                   rows={2}
                 />
               ) : (
                 <h2 className="text-3xl font-serif font-extrabold text-stone-900 leading-tight">
-                  {content.choices.heading}
+                  {content.home.choicesHeading}
                 </h2>
               )}
             </div>
 
             <div className="flex border-b border-stone-200 pb-3 gap-6 font-sans font-extrabold text-xs tracking-wider text-stone-500">
-              {content.choices.tabs.map((tab) => {
+              {['Health', 'Education', 'Clean Water', 'Emergency'].map((tab) => {
                 const isActive = activeTab === tab
                 return (
                   <button
@@ -452,16 +470,16 @@ export default function Nonprofit001Template() {
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-serif font-bold text-lg text-stone-900">{content.choices.subheading}</h4>
+              <h4 className="font-serif font-bold text-lg text-stone-900">{content.home.choicesSubheading}</h4>
               <p className="text-stone-600 text-sm leading-relaxed max-w-md">
-                {content.choices.tabDesc}
+                {content.home.choicesTabDesc}
               </p>
             </div>
           </div>
 
           <div className="bg-stone-200 rounded-2xl h-80 overflow-hidden shadow-md select-none pointer-events-none relative">
             <img 
-              src={content.choices.image}
+              src={content.home.choicesImage}
               alt="Feature Category"
               className="w-full h-full object-cover"
             />
@@ -475,9 +493,9 @@ export default function Nonprofit001Template() {
           <p>© {new Date().getFullYear()} {content.header.logoText} Global Aid Network. All rights reserved.</p>
           
           <div className="flex gap-6 font-bold uppercase tracking-wider text-[10px]">
-            <span className="hover:text-white cursor-pointer transition-colors">Privacy Policy</span>
-            <span className="hover:text-white cursor-pointer transition-colors">Terms of Service</span>
-            <span className="hover:text-white cursor-pointer transition-colors">Contact</span>
+            <Link href={getPathWithPrefix('/about')} className="hover:text-white transition-colors">About Us</Link>
+            <Link href={getPathWithPrefix('/services')} className="hover:text-white transition-colors">Services</Link>
+            <Link href={getPathWithPrefix('/contact')} className="hover:text-white transition-colors">Contact</Link>
           </div>
         </div>
       </footer>

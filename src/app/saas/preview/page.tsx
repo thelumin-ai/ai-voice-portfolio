@@ -4,20 +4,18 @@ import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { getTemplateById, PREBUILT_CONTENT } from '@/lib/templates'
+import NonprofitAboutPage from '@/app/templates/nonprofit-001/about/page'
+import NonprofitServicesPage from '@/app/templates/nonprofit-001/services/page'
+import NonprofitContactPage from '@/app/templates/nonprofit-001/contact/page'
 import { 
   Phone, 
-  CheckCircle, 
-  Mail, 
-  Calendar, 
+  Search, 
+  User, 
   ArrowRight, 
-  Github, 
-  Linkedin, 
-  Twitter, 
-  Globe, 
+  Heart, 
   Cpu, 
   Bot, 
   Sparkles, 
-  AlertCircle,
   Scale
 } from 'lucide-react'
 
@@ -25,6 +23,7 @@ function SaaSPreviewContent() {
   const searchParams = useSearchParams()
 
   const templateId = searchParams.get('template_id') || 'legal_practice_advmarc'
+  const activePage = searchParams.get('page') || 'home'
   
   // Extract industry ID from template ID (e.g. `legal_practice_advmarc` -> `legal_practice`)
   const parts = templateId.split('_')
@@ -61,7 +60,22 @@ function SaaSPreviewContent() {
   const theme = getTemplateById(templateId)
 
   // ==========================================
-  // LAYOUT 1: GRUPO ADVMARC (LAW FIRM)
+  // RENDER DYNAMIC CANVAS BY ACTIVE PAGE
+  // ==========================================
+  if (theme.layoutType === 'gainlove') {
+    if (activePage === 'about') {
+      return <NonprofitAboutPage />
+    }
+    if (activePage === 'services') {
+      return <NonprofitServicesPage />
+    }
+    if (activePage === 'contact') {
+      return <NonprofitContactPage />
+    }
+  }
+
+  // ==========================================
+  // LAYOUT 1: GRUPO ADVMARC (LAW FIRM) - DEFAULT PREVIEW
   // ==========================================
   const renderAdvmarcSection = (sectionId: string) => {
     if (!visible.includes(sectionId)) return null
@@ -87,7 +101,6 @@ function SaaSPreviewContent() {
                 </span>
               </div>
             </div>
-            {/* Elegant scales container preview */}
             <div className="md:col-span-5 flex justify-center opacity-85 select-none pointer-events-none">
               <div className="w-56 h-60 border border-stone-850 rounded-t-full bg-gradient-to-b from-[#c5a880]/5 to-transparent p-4 flex flex-col items-center justify-center">
                 <Scale className="w-20 h-20 text-[#c5a880] mb-2 animate-pulse" />
@@ -199,7 +212,6 @@ function SaaSPreviewContent() {
               <h2 className="text-lg font-extrabold text-slate-800">Discover The Core Principles That Guide Us</h2>
             </div>
             
-            {/* Services */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               {services.map(s => (
                 <div key={s.id} className="bg-white border border-slate-100 p-5 rounded-xl shadow-md space-y-3">
@@ -212,7 +224,6 @@ function SaaSPreviewContent() {
               ))}
             </div>
 
-            {/* Stats row */}
             <div className="bg-[#0f4c81] text-white p-6 rounded-xl grid grid-cols-4 gap-2 text-center text-xs">
               <div>
                 <span className="text-lg font-extrabold text-[#f26522] block">680+</span>
@@ -264,23 +275,22 @@ function SaaSPreviewContent() {
               <h1 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight">
                 {title}
               </h1>
-              <p className="text-zinc-550 text-xs leading-relaxed">
+              <p className="text-zinc-555 text-xs leading-relaxed">
                 {bio[0]}
               </p>
             </div>
 
-            {/* Search bar */}
             <div className="bg-[#121212] border border-zinc-850 p-3 rounded-lg grid grid-cols-4 gap-2 items-center text-xs">
               <div className="p-1">
-                <span className="text-[8px] uppercase font-bold text-zinc-500 block">Location</span>
+                <span className="text-[8px] uppercase font-bold text-zinc-505 block">Location</span>
                 <span className="text-[10px] text-white block mt-0.5 font-semibold">Suburbs</span>
               </div>
               <div className="p-1">
-                <span className="text-[8px] uppercase font-bold text-zinc-500 block">Type</span>
+                <span className="text-[8px] uppercase font-bold text-zinc-505 block">Type</span>
                 <span className="text-[10px] text-white block mt-0.5 font-semibold">Villa</span>
               </div>
               <div className="p-1">
-                <span className="text-[8px] uppercase font-bold text-zinc-500 block">Budget</span>
+                <span className="text-[8px] uppercase font-bold text-zinc-505 block">Budget</span>
                 <span className="text-[10px] text-[#d4af37] block mt-0.5 font-semibold">$2.5M+</span>
               </div>
               <span className="py-2 bg-[#d4af37] text-black text-center font-bold text-[10px] rounded uppercase tracking-wider block">
@@ -330,12 +340,11 @@ function SaaSPreviewContent() {
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0f2c59] leading-tight">
                 {title}
               </h1>
-              <p className="text-slate-500 text-xs leading-relaxed">
+              <p className="text-slate-505 text-xs leading-relaxed">
                 {bio[0]}
               </p>
             </div>
 
-            {/* Rent search bar */}
             <div className="bg-white border border-slate-200 p-3 rounded-lg shadow grid grid-cols-4 gap-2 items-center text-xs">
               <div className="p-1">
                 <span className="text-[8px] uppercase font-bold text-slate-400 block">Street</span>
@@ -369,7 +378,7 @@ function SaaSPreviewContent() {
                   </div>
                   <div className="p-4 space-y-1">
                     <h3 className="font-bold text-xs text-[#0f2c59]">{s.title}</h3>
-                    <p className="text-[11px] text-slate-500 leading-relaxed">{s.description}</p>
+                    <p className="text-[11px] text-slate-505 leading-relaxed">{s.description}</p>
                   </div>
                 </div>
               ))}
@@ -419,7 +428,7 @@ function SaaSPreviewContent() {
               {services.map(s => (
                 <div key={s.id} className="bg-white border border-teal-100 p-4 rounded-lg shadow-sm">
                   <h3 className="font-bold text-xs text-[#004d40] mb-1.5">{s.title}</h3>
-                  <p className="text-[11px] text-teal-850 leading-relaxed">{s.description}</p>
+                  <p className="text-[11px] text-teal-855 leading-relaxed">{s.description}</p>
                 </div>
               ))}
             </div>
@@ -431,95 +440,10 @@ function SaaSPreviewContent() {
   }
 
   // ==========================================
-  // LAYOUT 6: GAINLOVE (CHARITY & NON-PROFIT)
+  // DEFAULT CANVAS FALLBACK
   // ==========================================
-  const renderGainloveSection = (sectionId: string) => {
-    if (!visible.includes(sectionId)) return null
-
-    switch (sectionId) {
-      case 'hero':
-        return (
-          <header key="hero" className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-center relative z-10">
-            <div className="md:col-span-7 space-y-4">
-              <span className="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-widest bg-[#d97706]/10 text-[#d97706]">
-                Gainlove Global Action Group
-              </span>
-              <h1 className="text-3xl sm:text-4xl font-serif font-extrabold text-stone-900 leading-tight">
-                {title}
-              </h1>
-              <p className="text-stone-600 text-xs leading-relaxed max-w-md">
-                {bio[0]}
-              </p>
-              <div>
-                <span className="inline-block px-5 py-2.5 bg-stone-900 text-white font-bold text-[10px] rounded uppercase">
-                  DONATE NOW
-                </span>
-              </div>
-            </div>
-            {/* Visual Cylinders */}
-            <div className="md:col-span-5 flex justify-center items-center gap-4 relative select-none pointer-events-none">
-              <div className="w-16 h-40 bg-stone-200 border-4 border-white shadow rounded-full rotate-12 transform translate-y-4 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1542810634-71277d95dcbb?auto=format&fit=crop&q=80&w=300" className="w-full h-full object-cover grayscale" />
-              </div>
-              <div className="w-16 h-48 bg-stone-300 border-4 border-white shadow rounded-full rotate-12 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=300" className="w-full h-full object-cover" />
-              </div>
-              <div className="w-16 h-40 bg-stone-200 border-4 border-white shadow rounded-full rotate-12 transform -translate-y-4 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&q=80&w=300" className="w-full h-full object-cover grayscale" />
-              </div>
-            </div>
-          </header>
-        )
-      case 'services':
-        return (
-          <section key="services" className="max-w-5xl mx-auto px-6 py-12 border-t border-stone-200 relative z-10">
-            <div className="text-center max-w-xl mx-auto mb-8 space-y-2">
-              <h2 className="text-2xl font-serif font-extrabold text-stone-900">Our Programs</h2>
-              <p className="text-xs text-stone-500">{bio[1]}</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {services.map((s, idx) => {
-                const defaultImgs = [
-                  'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&q=80&w=600',
-                  'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=600',
-                  'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&q=80&w=600'
-                ]
-                return (
-                  <div key={s.id} className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between h-full">
-                    <div className="h-40 bg-stone-100 overflow-hidden">
-                      <img src={defaultImgs[idx % 3]} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="p-6 space-y-2 flex-grow text-center">
-                      <h3 className="font-serif font-bold text-base text-stone-900">{s.title}</h3>
-                      <p className="text-xs text-stone-600 leading-relaxed">{s.description}</p>
-                    </div>
-                    <div className="p-6 pt-0">
-                      <span className="block text-center py-2.5 bg-stone-900 text-white font-sans font-extrabold text-[9px] rounded uppercase tracking-widest cursor-pointer">
-                        LEARN MORE
-                      </span>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </section>
-        )
-      default:
-        return null
-    }
-  }
-
   return (
     <div className={`min-h-screen flex flex-col selection:bg-blue-600/30 overflow-x-hidden relative ${theme.bg} ${theme.font} select-none`}>
-      
-      {/* Background glow animations */}
-      {theme.layoutType === 'advmarc' && (
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[400px] opacity-25 pointer-events-none z-0">
-          <div className="absolute inset-0 bg-gradient-to-b via-transparent blur-3xl rounded-full from-[#c5a880]/15 to-transparent" />
-        </div>
-      )}
-
-      {/* Dynamic Header / Navbar */}
       <nav className={`w-full border-b backdrop-blur-md relative z-10 ${theme.isDark ? 'bg-black/80 border-white/5' : 'bg-white/80 border-black/5'}`}>
         <div className="mx-auto px-6 h-14 flex items-center justify-between max-w-5xl">
           <span className={`text-base font-bold tracking-tight ${theme.isDark ? 'text-white' : 'text-zinc-900'}`}>
@@ -531,51 +455,17 @@ function SaaSPreviewContent() {
         </div>
       </nav>
 
-      {/* Main Content Router */}
       <main className="flex-grow">
-        {theme.layoutType === 'advmarc' ? (
-          <div className="w-full">
-            {layout.map((sectionId) => renderAdvmarcSection(sectionId))}
-          </div>
-        ) : theme.layoutType === 'consult' ? (
-          <div className="w-full">
-            {layout.map((sectionId) => renderConsultSection(sectionId))}
-          </div>
-        ) : theme.layoutType === 'dycrw' ? (
-          <div className="w-full">
-            {layout.map((sectionId) => renderDycrwSection(sectionId))}
-          </div>
-        ) : theme.layoutType === 'renthu' ? (
-          <div className="w-full">
-            {layout.map((sectionId) => renderRenthulSection(sectionId))}
-          </div>
-        ) : theme.layoutType === 'estate_teal' ? (
-          <div className="w-full">
-            {layout.map((sectionId) => renderEstateTealSection(sectionId))}
-          </div>
-        ) : theme.layoutType === 'gainlove' ? (
-          <div className="w-full">
-            {layout.map((sectionId) => renderGainloveSection(sectionId))}
-          </div>
-        ) : (
-          <div className="w-full">
-            {layout.map((sectionId) => renderAdvmarcSection(sectionId))}
-          </div>
-        )}
+        <div className="w-full">
+          {layout.map((sectionId) => renderAdvmarcSection(sectionId))}
+        </div>
       </main>
 
-      {/* Footer */}
       <footer className={`border-t py-6 text-center text-[10px] relative z-10 ${theme.isDark ? 'border-white/5 text-zinc-500' : 'border-zinc-200 text-zinc-650'}`}>
         <div className="mx-auto px-6 flex items-center justify-between max-w-5xl gap-4">
           <p>© {new Date().getFullYear()} {companyName}. All rights reserved.</p>
-          <div className="flex gap-3">
-            <Linkedin className="w-3.5 h-3.5" />
-            <Github className="w-3.5 h-3.5" />
-            <Twitter className="w-3.5 h-3.5" />
-          </div>
         </div>
       </footer>
-
     </div>
   )
 }

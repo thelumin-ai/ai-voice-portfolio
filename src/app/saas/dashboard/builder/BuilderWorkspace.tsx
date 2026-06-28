@@ -32,8 +32,8 @@ import {
   Eye, 
   EyeOff, 
   AlertCircle,
-  Play,
-  RotateCcw
+  RotateCcw,
+  Layout
 } from 'lucide-react'
 
 // Sortable Section Row Component
@@ -130,6 +130,9 @@ export default function BuilderWorkspace({ initialTenant }: BuilderWorkspaceProp
     initialTenant.visible_sections || ['hero', 'services', 'about']
   )
 
+  // Page selector state
+  const [activePage, setActivePage] = useState<'home' | 'about' | 'services' | 'contact'>('home')
+
   // Theme states
   const initialTemplate = getTemplateById(initialTenant.template_id)
   
@@ -139,7 +142,7 @@ export default function BuilderWorkspace({ initialTenant }: BuilderWorkspaceProp
     const parts = initialTenant.template_id.split('_')
     if (parts.length < 2) return INDUSTRIES[0].id
     const lastTwo = parts.slice(-2).join('_')
-    const suffixes = ['advmarc', 'consult', 'dycrw', 'renthu', 'estate_teal', 'gainlove']
+    const suffixes = ['advmarc', 'consult', 'dycrw', 'renthu', 'estate_teal', 'nonprofit-001']
     if (suffixes.includes(lastTwo)) {
       return parts.slice(0, -2).join('_')
     }
@@ -223,8 +226,8 @@ export default function BuilderWorkspace({ initialTenant }: BuilderWorkspaceProp
 
   const activeTemplateDetails = getTemplateById(selectedTemplateId)
 
-  // Compile mock browser preview URL query parameters
-  const previewUrl = `/saas/preview?template_id=${selectedTemplateId}&layout=${layout.join(',')}&visible=${visibleSections.join(',')}&companyName=${encodeURIComponent(initialTenant.company_name)}`
+  // Compile mock browser preview URL query parameters (includes activePage)
+  const previewUrl = `/saas/preview?template_id=${selectedTemplateId}&layout=${layout.join(',')}&visible=${visibleSections.join(',')}&companyName=${encodeURIComponent(initialTenant.company_name)}&page=${activePage}`
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -267,6 +270,31 @@ export default function BuilderWorkspace({ initialTenant }: BuilderWorkspaceProp
         </div>
       )}
 
+      {/* Interactive Page Switcher Panel */}
+      <div className="bg-zinc-900/60 border border-zinc-850 p-4 rounded-2xl space-y-3">
+        <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+          <Layout className="w-4.5 h-4.5 text-zinc-500" />
+          Active Editing Page
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-zinc-950 p-1.5 rounded-xl border border-zinc-800">
+          {(['home', 'about', 'services', 'contact'] as const).map((pg) => {
+            const isActive = activePage === pg
+            return (
+              <button
+                key={pg}
+                type="button"
+                onClick={() => setActivePage(pg)}
+                className={`py-2 px-3 text-center rounded-lg uppercase text-[10px] font-extrabold tracking-widest transition-colors cursor-pointer ${
+                  isActive ? 'bg-blue-600 text-white shadow-md' : 'text-zinc-450 hover:text-white hover:bg-zinc-900/50'
+                }`}
+              >
+                {pg}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Stacked Sidebar Editor Controls */}
         <div className="lg:col-span-5 space-y-6">
@@ -293,7 +321,7 @@ export default function BuilderWorkspace({ initialTenant }: BuilderWorkspaceProp
                     >
                       {cat}
                       {isActive && (
-                        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+                        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-50" />
                       )}
                     </button>
                   )
@@ -416,37 +444,39 @@ export default function BuilderWorkspace({ initialTenant }: BuilderWorkspaceProp
             </div>
           </div>
 
-          {/* Card 2: Layout Reordering */}
-          <div className="bg-zinc-900/60 border border-zinc-850 p-6 rounded-2xl space-y-4">
-            <div>
-              <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                2. Layout Structure &amp; Sorting
-              </h2>
-              <p className="text-[11px] text-zinc-500 mt-1">
-                Drag the items to reorder page elements, or toggle visibility.
-              </p>
-            </div>
+          {/* Card 2: Layout Reordering (Only applies to home page layout) */}
+          {activePage === 'home' && (
+            <div className="bg-zinc-900/60 border border-zinc-850 p-6 rounded-2xl space-y-4">
+              <div>
+                <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                  2. Homepage Layout &amp; Sorting
+                </h2>
+                <p className="text-[11px] text-zinc-500 mt-1">
+                  Drag the items to reorder page elements, or toggle visibility.
+                </p>
+              </div>
 
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext items={layout} strategy={verticalListSortingStrategy}>
-                <div className="space-y-2">
-                  {layout.map((id) => (
-                    <SortableItem
-                      key={id}
-                      id={id}
-                      label={id.toUpperCase()}
-                      isVisible={visibleSections.includes(id)}
-                      onToggleVisibility={() => toggleVisibility(id)}
-                    />
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
-          </div>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext items={layout} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-2">
+                    {layout.map((id) => (
+                      <SortableItem
+                        key={id}
+                        id={id}
+                        label={id.toUpperCase()}
+                        isVisible={visibleSections.includes(id)}
+                        onToggleVisibility={() => toggleVisibility(id)}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            </div>
+          )}
 
         </div>
 
@@ -461,7 +491,7 @@ export default function BuilderWorkspace({ initialTenant }: BuilderWorkspaceProp
                 <span className="w-3 h-3 rounded-full bg-green-500/30" />
               </div>
               <div className="flex-grow max-w-sm mx-4 py-1 px-3 bg-zinc-950 border border-zinc-800 rounded-lg text-center text-[10px] text-zinc-500 font-mono truncate select-all">
-                {initialTenant.subdomain}.abimbola.ai/preview
+                {initialTenant.subdomain}.abimbola.ai/{activePage === 'home' ? '' : activePage}
               </div>
               <span className="text-[10px] text-zinc-500 font-mono">Live Preview</span>
             </div>
