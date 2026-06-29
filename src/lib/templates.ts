@@ -371,19 +371,6 @@ export const REAL_TEMPLATES: RealTemplate[] = [
     defaultPages: ['home', 'about', 'services', 'contact', 'quote'],
     previewRoute: '/templates/roofing-004/preview',
     styleIndex: 7
-  },
-  {
-    id: 'charity_gainlove',
-    name: 'Gainlove Charity (Single Page)',
-    slug: 'charity_gainlove',
-    category: 'Charity',
-    description: 'A clean, single-page charity and donation portal with quick links.',
-    isDark: false,
-    layoutType: 'gainlove',
-    niche: 'Charity Aid Network',
-    defaultPages: ['home'],
-    previewRoute: '/templates/charity_gainlove',
-    styleIndex: 5
   }
 ]
 
