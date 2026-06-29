@@ -331,7 +331,8 @@ function WebsiteEditorContent() {
   }
 
   // Handle updates to custom element content properties
-  const handleElementChange = (sectionId: string, elementId: string, field: string, value: any) => {
+  const handleElementChange = (sectionId: string | null, elementId: string | null, field: string, value: any) => {
+    if (!sectionId || !elementId) return
     const updated = { ...project }
     const pg = updated.pages[activePageId]
     if (pg && pg.sections[sectionId]) {
@@ -345,7 +346,8 @@ function WebsiteEditorContent() {
   }
 
   // Handle custom element style updates
-  const handleElementStyleChange = (sectionId: string, elementId: string, styleKey: string, value: any) => {
+  const handleElementStyleChange = (sectionId: string | null, elementId: string | null, styleKey: string, value: any) => {
+    if (!sectionId || !elementId) return
     const updated = { ...project }
     const pg = updated.pages[activePageId]
     if (pg && pg.sections[sectionId]) {
@@ -360,7 +362,8 @@ function WebsiteEditorContent() {
   }
 
   // Delete a custom element from section
-  const handleDeleteElement = (sectionId: string, elementId: string) => {
+  const handleDeleteElement = (sectionId: string | null, elementId: string | null) => {
+    if (!sectionId || !elementId) return
     if (confirm('Are you sure you want to delete this element?')) {
       const updated = { ...project }
       const pg = updated.pages[activePageId]
