@@ -4,6 +4,7 @@ import { getTemplateById } from '@/lib/templates'
 import NonprofitAboutPage from '@/app/templates/nonprofit-001/about/page'
 import AgencyAboutPage from '@/app/templates/agency-002/about/page'
 import ManufacturingAboutPage from '@/app/templates/manufacturing-003/about/page'
+import Roofing004AboutPage from '@/app/templates/roofing-004/about/page'
 
 interface PageProps {
   params: Promise<{ subdomain: string }>
@@ -34,6 +35,9 @@ export default async function DynamicAboutPage({ params }: PageProps) {
   }
   if (theme.id.includes('manufacturing-003')) {
     return <ManufacturingAboutPage />
+  }
+  if (theme.id.includes('roofing-004')) {
+    return <Roofing004AboutPage />
   }
 
   // Fallback if other templates don't have about page yet

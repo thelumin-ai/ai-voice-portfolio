@@ -4,6 +4,7 @@ import { getTemplateById } from '@/lib/templates'
 import NonprofitContactPage from '@/app/templates/nonprofit-001/contact/page'
 import AgencyContactPage from '@/app/templates/agency-002/contact/page'
 import ManufacturingContactPage from '@/app/templates/manufacturing-003/contact/page'
+import Roofing004ContactPage from '@/app/templates/roofing-004/contact/page'
 
 interface PageProps {
   params: Promise<{ subdomain: string }>
@@ -34,6 +35,9 @@ export default async function DynamicContactPage({ params }: PageProps) {
   }
   if (theme.id.includes('manufacturing-003')) {
     return <ManufacturingContactPage />
+  }
+  if (theme.id.includes('roofing-004')) {
+    return <Roofing004ContactPage />
   }
 
   // Fallback if other templates don't have contact page yet

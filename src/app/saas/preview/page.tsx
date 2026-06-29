@@ -13,6 +13,10 @@ import AgencyContactPage from '@/app/templates/agency-002/contact/page'
 import ManufacturingAboutPage from '@/app/templates/manufacturing-003/about/page'
 import ManufacturingServicesPage from '@/app/templates/manufacturing-003/services/page'
 import ManufacturingContactPage from '@/app/templates/manufacturing-003/contact/page'
+import Roofing004AboutPage from '@/app/templates/roofing-004/about/page'
+import Roofing004ServicesPage from '@/app/templates/roofing-004/services/page'
+import Roofing004ContactPage from '@/app/templates/roofing-004/contact/page'
+import Roofing004QuotePage from '@/app/templates/roofing-004/quote/page'
 import { 
   Phone, 
   Search, 
@@ -33,7 +37,7 @@ function SaaSPreviewContent() {
   
   // Extract industry ID from template ID (e.g. `legal_practice_advmarc` -> `legal_practice`)
   const parts = templateId.split('_')
-  const suffixes = ['advmarc', 'consult', 'dycrw', 'renthu', 'estate_teal', 'gainlove', 'agency-002', 'manufacturing-003']
+  const suffixes = ['advmarc', 'consult', 'dycrw', 'renthu', 'estate_teal', 'gainlove', 'agency-002', 'manufacturing-003', 'roofing-004']
   let industryId = parts.slice(0, -1).join('_')
   const lastTwo = parts.slice(-2).join('_')
   if (suffixes.includes(lastTwo)) {
@@ -101,6 +105,21 @@ function SaaSPreviewContent() {
     }
     if (activePage === 'contact') {
       return <ManufacturingContactPage />
+    }
+  }
+
+  if (theme.id.includes('roofing-004')) {
+    if (activePage === 'about') {
+      return <Roofing004AboutPage />
+    }
+    if (activePage === 'services') {
+      return <Roofing004ServicesPage />
+    }
+    if (activePage === 'contact') {
+      return <Roofing004ContactPage />
+    }
+    if (activePage === 'quote') {
+      return <Roofing004QuotePage />
     }
   }
 

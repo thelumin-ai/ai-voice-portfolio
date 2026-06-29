@@ -4,6 +4,7 @@ import { getTemplateById } from '@/lib/templates'
 import NonprofitServicesPage from '@/app/templates/nonprofit-001/services/page'
 import AgencyServicesPage from '@/app/templates/agency-002/services/page'
 import ManufacturingServicesPage from '@/app/templates/manufacturing-003/services/page'
+import Roofing004ServicesPage from '@/app/templates/roofing-004/services/page'
 
 interface PageProps {
   params: Promise<{ subdomain: string }>
@@ -34,6 +35,9 @@ export default async function DynamicServicesPage({ params }: PageProps) {
   }
   if (theme.id.includes('manufacturing-003')) {
     return <ManufacturingServicesPage />
+  }
+  if (theme.id.includes('roofing-004')) {
+    return <Roofing004ServicesPage />
   }
 
   // Fallback if other templates don't have services page yet

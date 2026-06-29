@@ -1,0 +1,30 @@
+{
+  "templateId": "roofing-004",
+  "niche": "roofing / construction",
+  "headerArchetype": "sticky-dark-surface-logo-left-nav-center-0px-radius-orange-cta-right",
+  "heroArchetype": "full-bleed-bg-image-directional-overlay-left-aligned-display-heading",
+  "sectionSequence": [
+    "header",
+    "hero",
+    "bento-services-grid",
+    "performance-photo-cards",
+    "footer"
+  ],
+  "gridArchetype": "asymmetric-bento-1-orange-plus-2x3-dark-cards-1px-gaps",
+  "imageTreatment": "industrial-dark-photography-directional-gradient-overlay-group-hover-scale",
+  "typography": "montserrat-800-display-xl-72px-work-sans-400-body-0.05em-label-tracking",
+  "colorDistribution": "131313-bg-202020-cards-353535-borders-ff5637-cta-orange-0e0e0e-footer",
+  "radiusSystem": "0px-everywhere-industrial-rectangular",
+  "cardTreatment": "sharp-rectangle-202020-bg-353535-border-orange-bottom-hover",
+  "ctaPattern": "full-width-orange-primary-plus-ghost-secondary-pair",
+  "footerArchetype": "true-black-0e0e0e-4col-brand-col-span-2-plus-two-link-columns",
+  "mobileTransformation": "hamburger-drawer-single-column-stack-36px-headline-64px-section-gap",
+  "spacingDensity": "premium-dark-generous-120px-desktop-120px-vertical",
+  "distinctiveDecorativeFeatures": [
+    "asymmetric-bento-grid-with-orange-highlight-block",
+    "directional-overlay-gradient-on-hero-image",
+    "1px-gap-bento-grid-using-background-color",
+    "group-hover-image-scale-on-performance-cards",
+    "0px-radius-everywhere-no-exceptions"
+  ]
+}

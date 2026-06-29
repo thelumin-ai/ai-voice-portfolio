@@ -16,9 +16,9 @@ export interface PrebuiltContent {
 export interface ThemeConfig {
   id: string
   name: string
-  category: 'Legal' | 'Consulting' | 'Real Estate' | 'Charity' | 'Agency'
+  category: 'Legal' | 'Consulting' | 'Real Estate' | 'Charity' | 'Agency' | 'Construction'
   isDark: boolean
-  layoutType: 'advmarc' | 'consult' | 'dycrw' | 'renthu' | 'estate_teal' | 'gainlove'
+  layoutType: 'advmarc' | 'consult' | 'dycrw' | 'renthu' | 'estate_teal' | 'gainlove' | 'roofing-004'
   bg: string
   text: string
   accent: string
@@ -33,7 +33,7 @@ export interface ThemeConfig {
 export interface Industry {
   id: string
   name: string
-  category: 'Legal' | 'Consulting' | 'Real Estate' | 'Charity' | 'Agency'
+  category: 'Legal' | 'Consulting' | 'Real Estate' | 'Charity' | 'Agency' | 'Construction'
 }
 
 export const INDUSTRIES: Industry[] = [
@@ -144,6 +144,20 @@ export const THEME_STYLES: Omit<ThemeConfig, 'id' | 'name' | 'category'>[] = [
     cardBg: 'bg-white border-slate-100 shadow-xl shadow-slate-200/50',
     font: 'font-sans',
     glow: 'from-[#4e31aa]/5 to-transparent'
+  },
+  // 8. IRONCLAD ROOFING (Dark Industrial)
+  {
+    isDark: true,
+    layoutType: 'roofing-004',
+    bg: 'bg-[#131313] text-[#e5e2e1]',
+    text: 'text-[#c6c6c7]',
+    accent: 'text-[#ffb4a5]',
+    accentBorder: 'border-[#5c403a]',
+    accentBg: 'bg-[#ff5637]/10',
+    btn: 'bg-[#ff5637] text-white hover:bg-[#ba1d00] font-semibold uppercase tracking-wider',
+    cardBg: 'bg-[#202020] border-[#353535]',
+    font: 'font-sans',
+    glow: 'from-[#ff5637]/10 to-transparent'
   }
 ]
 
@@ -154,7 +168,8 @@ const styleSuffixes = [
   'renthu',
   'estate_teal',
   'nonprofit-001',
-  'agency-002'
+  'agency-002',
+  'roofing-004'
 ]
 
 const styleDisplayNames = [
@@ -164,17 +179,19 @@ const styleDisplayNames = [
   'Rent H&U (Blue Glassmorphism)',
   'Teal & Salmon (Modern Real Estate)',
   'Gainlove (Charity Aid Network)',
-  'ewebot (Digital Agency)'
+  'ewebot (Digital Agency)',
+  'IRONCLAD ROOFING (Dark Industrial)'
 ]
 
-const styleCategories: ('Legal' | 'Consulting' | 'Real Estate' | 'Charity' | 'Agency')[] = [
+const styleCategories: ('Legal' | 'Consulting' | 'Real Estate' | 'Charity' | 'Agency' | 'Construction')[] = [
   'Legal',
   'Consulting',
   'Real Estate',
   'Real Estate',
   'Real Estate',
   'Charity',
-  'Agency'
+  'Agency',
+  'Construction'
 ]
 
 export const PREBUILT_CONTENT: Record<string, PrebuiltContent> = {
