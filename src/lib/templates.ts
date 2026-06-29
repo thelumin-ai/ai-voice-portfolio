@@ -16,7 +16,7 @@ export interface PrebuiltContent {
 export interface ThemeConfig {
   id: string
   name: string
-  category: 'Legal' | 'Consulting' | 'Real Estate' | 'Charity' | 'Agency' | 'Construction'
+  category: 'Legal' | 'Consulting' | 'Real Estate' | 'Charity' | 'Agency' | 'Construction' | 'Manufacturing'
   isDark: boolean
   layoutType: 'advmarc' | 'consult' | 'dycrw' | 'renthu' | 'estate_teal' | 'gainlove' | 'roofing-004'
   bg: string
@@ -33,7 +33,7 @@ export interface ThemeConfig {
 export interface Industry {
   id: string
   name: string
-  category: 'Legal' | 'Consulting' | 'Real Estate' | 'Charity' | 'Agency' | 'Construction'
+  category: 'Legal' | 'Consulting' | 'Real Estate' | 'Charity' | 'Agency' | 'Construction' | 'Manufacturing'
 }
 
 export const INDUSTRIES: Industry[] = [
@@ -43,7 +43,9 @@ export const INDUSTRIES: Industry[] = [
   { id: 'real_estate_rent', name: 'Rental Real Estate', category: 'Real Estate' },
   { id: 'real_estate_modern', name: 'Modern Real Estate', category: 'Real Estate' },
   { id: 'charity', name: 'Charity Aid Network', category: 'Charity' },
-  { id: 'agency', name: 'Digital Agency Hub', category: 'Agency' }
+  { id: 'agency', name: 'Digital Agency Hub', category: 'Agency' },
+  { id: 'construction_roofing', name: 'Roofing & Construction', category: 'Construction' },
+  { id: 'industrial_mfg', name: 'Manufacturing & Supply', category: 'Manufacturing' }
 ]
 
 export const THEME_STYLES: Omit<ThemeConfig, 'id' | 'name' | 'category'>[] = [
@@ -158,6 +160,20 @@ export const THEME_STYLES: Omit<ThemeConfig, 'id' | 'name' | 'category'>[] = [
     cardBg: 'bg-[#202020] border-[#353535]',
     font: 'font-sans',
     glow: 'from-[#ff5637]/10 to-transparent'
+  },
+  // 9. SARVAM PIPES (Mfg - Light Industrial)
+  {
+    isDark: false,
+    layoutType: 'renthu',
+    bg: 'bg-[#fafbfe] text-slate-800',
+    text: 'text-slate-500',
+    accent: 'text-[#0f2b5c]',
+    accentBorder: 'border-slate-200',
+    accentBg: 'bg-[#0f2b5c]/5',
+    btn: 'bg-[#f28500] text-white hover:bg-[#d97700] font-semibold',
+    cardBg: 'bg-white border-slate-100 shadow-md',
+    font: 'font-sans',
+    glow: 'from-[#0f2b5c]/5 to-transparent'
   }
 ]
 
@@ -288,8 +304,117 @@ export const PREBUILT_CONTENT: Record<string, PrebuiltContent> = {
   }
 }
 
-// Resolve template settings by its ID, e.g. `real_estate_luxury_dycrw`
+// ─── FLAT TEMPLATE REGISTRY (REAL TEMPLATES ONLY) ──────────────────────────
+export interface RealTemplate {
+  id: string
+  name: string
+  slug: string
+  category: 'Legal' | 'Consulting' | 'Real Estate' | 'Charity' | 'Agency' | 'Construction' | 'Manufacturing'
+  description: string
+  isDark: boolean
+  layoutType: string
+  niche: string
+  defaultPages: string[]
+  previewRoute: string
+  styleIndex: number
+}
+
+export const REAL_TEMPLATES: RealTemplate[] = [
+  {
+    id: 'charity_nonprofit-001',
+    name: 'Gainlove (Charity)',
+    slug: 'nonprofit-001',
+    category: 'Charity',
+    description: 'A fully responsive charity and non-profit template with modern donation flows.',
+    isDark: false,
+    layoutType: 'gainlove',
+    niche: 'Charity Aid Network',
+    defaultPages: ['home', 'about', 'services', 'contact'],
+    previewRoute: '/templates/nonprofit-001/preview',
+    styleIndex: 5
+  },
+  {
+    id: 'agency_agency-002',
+    name: 'ewebot (Agency)',
+    slug: 'agency-002',
+    category: 'Agency',
+    description: 'A sleek, tech-focused digital agency template with vibrant gradient overlays.',
+    isDark: false,
+    layoutType: 'consult',
+    niche: 'Digital Agency Hub',
+    defaultPages: ['home', 'about', 'services', 'contact'],
+    previewRoute: '/templates/agency-002/preview',
+    styleIndex: 6
+  },
+  {
+    id: 'business_consulting_manufacturing-003',
+    name: 'SARVAM PIPES (Mfg)',
+    slug: 'manufacturing-003',
+    category: 'Manufacturing',
+    description: 'An enterprise manufacturing and industrial supply template with clean product lists.',
+    isDark: false,
+    layoutType: 'renthu',
+    niche: 'Manufacturing & Supply',
+    defaultPages: ['home', 'about', 'services', 'contact'],
+    previewRoute: '/templates/manufacturing-003/preview',
+    styleIndex: 8
+  },
+  {
+    id: 'legal_practice_roofing-004',
+    name: 'IRONCLAD ROOFING',
+    slug: 'roofing-004',
+    category: 'Construction',
+    description: 'A bold, dark-themed roofing and construction services template with safety orange accents.',
+    isDark: true,
+    layoutType: 'roofing-004',
+    niche: 'Construction & Roofing',
+    defaultPages: ['home', 'about', 'services', 'contact', 'quote'],
+    previewRoute: '/templates/roofing-004/preview',
+    styleIndex: 7
+  },
+  {
+    id: 'charity_gainlove',
+    name: 'Gainlove Charity (Single Page)',
+    slug: 'charity_gainlove',
+    category: 'Charity',
+    description: 'A clean, single-page charity and donation portal with quick links.',
+    isDark: false,
+    layoutType: 'gainlove',
+    niche: 'Charity Aid Network',
+    defaultPages: ['home'],
+    previewRoute: '/templates/charity_gainlove',
+    styleIndex: 5
+  }
+]
+
+// Resolve template settings by its ID, e.g. `legal_practice_roofing-004`
 export function getTemplateById(templateId: string): ThemeConfig {
+  // Find in real templates first
+  const real = REAL_TEMPLATES.find(t => t.id === templateId)
+  if (real) {
+    const style = THEME_STYLES[real.styleIndex]
+    return {
+      id: real.id,
+      name: real.name,
+      category: real.category,
+      isDark: real.isDark,
+      layoutType: real.layoutType as any,
+      bg: style.bg,
+      text: style.text,
+      accent: style.accent,
+      accentBorder: style.accentBorder,
+      accentBg: style.accentBg,
+      btn: style.btn,
+      cardBg: style.cardBg,
+      font: style.font,
+      glow: style.glow
+    }
+  }
+
+  // Fallback for legacy template styles (advmarc, etc.)
+  const parts = templateId.split('_')
+  const themeSuffix = parts[parts.length - 1]
+  const styleIndex = styleSuffixes.indexOf(themeSuffix)
   const defaultTheme: ThemeConfig = {
     id: 'legal_practice_advmarc',
     name: 'Grupo ADVMARC - Law Firm',
@@ -297,40 +422,27 @@ export function getTemplateById(templateId: string): ThemeConfig {
     ...THEME_STYLES[0]
   }
 
-  if (!templateId) return defaultTheme
-
-  const parts = templateId.split('_')
-  if (parts.length < 2) return defaultTheme
-
-  // Find style suffix, e.g. `advmarc`, `consult`, etc.
-  let themeSuffix = parts[parts.length - 1]
-  let industryId = parts.slice(0, -1).join('_')
-
-  if (parts.length >= 3) {
-    const lastTwo = parts.slice(-2).join('_')
-    if (styleSuffixes.includes(lastTwo)) {
-      themeSuffix = lastTwo
-      industryId = parts.slice(0, -2).join('_')
+  if (styleIndex !== -1) {
+    const style = THEME_STYLES[styleIndex]
+    return {
+      id: templateId,
+      name: `${templateId.replace(/_/g, ' ')}`,
+      category: 'Legal',
+      isDark: style.isDark,
+      layoutType: style.layoutType as any,
+      bg: style.bg,
+      text: style.text,
+      accent: style.accent,
+      accentBorder: style.accentBorder,
+      accentBg: style.accentBg,
+      btn: style.btn,
+      cardBg: style.cardBg,
+      font: style.font,
+      glow: style.glow
     }
   }
 
-  const industry = INDUSTRIES.find(ind => ind.id === industryId)
-  const styleIndex = styleSuffixes.indexOf(themeSuffix)
-
-  if (!industry || styleIndex === -1) {
-    return defaultTheme
-  }
-
-  const style = THEME_STYLES[styleIndex]
-  const themeName = styleDisplayNames[styleIndex]
-  const category = styleCategories[styleIndex]
-
-  return {
-    id: templateId,
-    name: `${industry.name} - ${themeName}`,
-    category,
-    ...style
-  }
+  return defaultTheme
 }
 
 // Generate the list of templates for a specific industry
@@ -338,33 +450,13 @@ export function getTemplatesForIndustry(industryId: string): { id: string; name:
   const industry = INDUSTRIES.find(ind => ind.id === industryId)
   if (!industry) return []
 
-  const customMapping: Record<string, string> = {
-    legal_practice: 'advmarc',
-    business_consulting: 'consult',
-    real_estate_luxury: 'dycrw',
-    real_estate_rent: 'renthu',
-    real_estate_modern: 'estate_teal',
-    charity: 'nonprofit-001',
-    agency: 'agency-002'
-  }
-
-  const prioritizedSuffix = customMapping[industryId]
-  const list = [...styleSuffixes]
-
-  if (prioritizedSuffix) {
-    const idx = list.indexOf(prioritizedSuffix)
-    if (idx !== -1) {
-      list.splice(idx, 1)
-      list.unshift(prioritizedSuffix)
-    }
-  }
-
-  return list.map((suffix) => {
-    const idx = styleSuffixes.indexOf(suffix)
-    return {
-      id: `${industryId}_${suffix}`,
-      name: styleDisplayNames[idx],
-      isDark: THEME_STYLES[idx].isDark
-    }
-  })
+  // Filter templates matching the industry's category
+  return REAL_TEMPLATES
+    .filter(t => t.category === industry.category)
+    .map(t => ({
+      id: t.id,
+      name: t.name,
+      isDark: t.isDark
+    }))
 }
+

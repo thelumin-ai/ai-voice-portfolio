@@ -17,6 +17,13 @@ import Roofing004AboutPage from '@/app/templates/roofing-004/about/page'
 import Roofing004ServicesPage from '@/app/templates/roofing-004/services/page'
 import Roofing004ContactPage from '@/app/templates/roofing-004/contact/page'
 import Roofing004QuotePage from '@/app/templates/roofing-004/quote/page'
+
+// Main templates imports
+import Nonprofit001Template from '@/app/templates/nonprofit-001/page'
+import Agency002Template from '@/app/templates/agency-002/page'
+import Manufacturing003Template from '@/app/templates/manufacturing-003/page'
+import Roofing004Template from '@/app/templates/roofing-004/page'
+import CharityGainloveTemplate from '@/app/templates/charity_gainlove/page'
 import { 
   Phone, 
   Search, 
@@ -37,7 +44,7 @@ function SaaSPreviewContent() {
   
   // Extract industry ID from template ID (e.g. `legal_practice_advmarc` -> `legal_practice`)
   const parts = templateId.split('_')
-  const suffixes = ['advmarc', 'consult', 'dycrw', 'renthu', 'estate_teal', 'gainlove', 'agency-002', 'manufacturing-003', 'roofing-004']
+  const suffixes = ['advmarc', 'consult', 'dycrw', 'renthu', 'estate_teal', 'gainlove', 'nonprofit-001', 'agency-002', 'manufacturing-003', 'roofing-004']
   let industryId = parts.slice(0, -1).join('_')
   const lastTwo = parts.slice(-2).join('_')
   if (suffixes.includes(lastTwo)) {
@@ -72,7 +79,14 @@ function SaaSPreviewContent() {
   // ==========================================
   // RENDER DYNAMIC CANVAS BY ACTIVE PAGE
   // ==========================================
+  if (theme.id === 'charity_gainlove') {
+    return <CharityGainloveTemplate />
+  }
+
   if (theme.layoutType === 'gainlove') {
+    if (activePage === 'home') {
+      return <Nonprofit001Template />
+    }
     if (activePage === 'about') {
       return <NonprofitAboutPage />
     }
@@ -85,6 +99,9 @@ function SaaSPreviewContent() {
   }
 
   if (theme.id.includes('agency-002')) {
+    if (activePage === 'home') {
+      return <Agency002Template />
+    }
     if (activePage === 'about') {
       return <AgencyAboutPage />
     }
@@ -97,6 +114,9 @@ function SaaSPreviewContent() {
   }
 
   if (theme.id.includes('manufacturing-003')) {
+    if (activePage === 'home') {
+      return <Manufacturing003Template />
+    }
     if (activePage === 'about') {
       return <ManufacturingAboutPage />
     }
@@ -109,6 +129,9 @@ function SaaSPreviewContent() {
   }
 
   if (theme.id.includes('roofing-004')) {
+    if (activePage === 'home') {
+      return <Roofing004Template />
+    }
     if (activePage === 'about') {
       return <Roofing004AboutPage />
     }

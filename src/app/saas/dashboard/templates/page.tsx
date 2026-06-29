@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { getTemplateById, INDUSTRIES, getTemplatesForIndustry } from '@/lib/templates'
+import { getTemplateById, REAL_TEMPLATES } from '@/lib/templates'
 import { Search, Eye, ArrowRight, Layers, Sparkles } from 'lucide-react'
 
 interface TemplateCard {
@@ -15,6 +15,7 @@ interface TemplateCard {
   bgClass: string
   cardBgClass: string
   niche: string
+  previewRoute: string
 }
 
 export default function TemplatesPage() {
@@ -37,25 +38,21 @@ export default function TemplatesPage() {
   // Construct a list of registered templates
   const allTemplates: TemplateCard[] = []
   
-  INDUSTRIES.forEach(ind => {
-    getTemplatesForIndustry(ind.id).forEach(tpl => {
-      const details = getTemplateById(tpl.id)
-      const bgClass = details.bg.split(' ')[0] || 'bg-white'
-      const cardBgClass = details.cardBg.split(' ')[0] || 'bg-white'
-      
-      // Prevent duplicates by checking if templateId is already added
-      if (!allTemplates.some(t => t.id === tpl.id)) {
-        allTemplates.push({
-          id: tpl.id,
-          name: details.name.split(' - ')[1] || details.name,
-          category: details.category,
-          description: `A fully responsive ${details.category.toLowerCase()} template optimized for performance, conversion, and editing.`,
-          isDark: details.isDark,
-          bgClass,
-          cardBgClass,
-          niche: ind.name
-        })
-      }
+  REAL_TEMPLATES.forEach(tpl => {
+    const details = getTemplateById(tpl.id)
+    const bgClass = details.bg.split(' ')[0] || 'bg-white'
+    const cardBgClass = details.cardBg.split(' ')[0] || 'bg-white'
+    
+    allTemplates.push({
+      id: tpl.id,
+      name: tpl.name,
+      category: tpl.category,
+      description: tpl.description,
+      isDark: tpl.isDark,
+      bgClass,
+      cardBgClass,
+      niche: tpl.niche,
+      previewRoute: tpl.previewRoute
     })
   })
 
@@ -116,7 +113,6 @@ export default function TemplatesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map(tpl => {
-            const templateSuffix = tpl.id.split('_').pop() || 'nonprofit-001'
             return (
               <div 
                 key={tpl.id} 
@@ -160,7 +156,7 @@ export default function TemplatesPage() {
 
                   <div className="flex items-center gap-3 border-t border-zinc-850 pt-4 mt-2">
                     <a
-                      href={`/templates/${templateSuffix}/preview`}
+                      href={tpl.previewRoute}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 py-2 px-3 bg-zinc-850 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-semibold border border-zinc-800 transition-all"

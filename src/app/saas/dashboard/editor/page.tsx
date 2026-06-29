@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { projectsRepo, Project, ProjectPage, ProjectSection } from '@/lib/projectsRepo'
-import { getTemplateById } from '@/lib/templates'
+import { getTemplateById, REAL_TEMPLATES } from '@/lib/templates'
 import { 
   ArrowLeft, 
   Monitor, 
@@ -128,8 +128,16 @@ export default function WebsiteEditorPage() {
   const theme = getTemplateById(project.templateId)
 
   // Compile iframe preview URL
-  const previewSuffix = theme.id.split('_').pop() || 'nonprofit-001'
-  const iframeUrl = `/templates/${previewSuffix}/preview?project_id=${project.id}&page=${activePageId}`
+  const realTemplate = REAL_TEMPLATES.find(t => t.id === project.templateId)
+  const previewSuffix = realTemplate ? realTemplate.slug : (theme.id.split('_').pop() || 'nonprofit-001')
+  
+  const isSinglePage = realTemplate?.defaultPages.length === 1
+  const pagePath = (activePageId === 'home' || isSinglePage) ? '' : `/${activePageId}`
+  
+  const isGainloveSingle = project.templateId === 'charity_gainlove'
+  const iframeUrl = isGainloveSingle
+    ? `/templates/charity_gainlove?project_id=${project.id}`
+    : `/templates/${previewSuffix}/preview${pagePath}?project_id=${project.id}`
 
   // Handlers for Content tab
   const handleMetaChange = (field: 'seoTitle' | 'seoDescription', value: string) => {

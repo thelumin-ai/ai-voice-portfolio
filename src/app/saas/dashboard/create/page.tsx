@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { getTemplateById, INDUSTRIES, getTemplatesForIndustry } from '@/lib/templates'
+import { getTemplateById, REAL_TEMPLATES } from '@/lib/templates'
 import { projectsRepo } from '@/lib/projectsRepo'
 import { ArrowLeft, ArrowRight, Check, Sparkles, ChevronRight, Layers, FileText, Globe } from 'lucide-react'
 
@@ -38,19 +38,11 @@ export default function CreateWebsitePage() {
   }, [templateIdParam])
 
   // Get list of unique templates
-  const allTemplates: { id: string; name: string; category: string }[] = []
-  INDUSTRIES.forEach(ind => {
-    getTemplatesForIndustry(ind.id).forEach(t => {
-      if (!allTemplates.some(x => x.id === t.id)) {
-        const details = getTemplateById(t.id)
-        allTemplates.push({
-          id: t.id,
-          name: details.name.split(' - ')[1] || details.name,
-          category: details.category
-        })
-      }
-    })
-  })
+  const allTemplates: { id: string; name: string; category: string }[] = REAL_TEMPLATES.map(t => ({
+    id: t.id,
+    name: t.name,
+    category: t.category
+  }))
 
   // Handle final project creation
   const handleCreate = () => {
