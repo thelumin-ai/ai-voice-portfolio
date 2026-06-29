@@ -38,6 +38,8 @@ export interface Project {
   status: 'Draft' | 'Published' | 'Unpublished'
   lastEdited: string
   pages: Record<string, ProjectPage>
+  themeColor?: string
+  tagline?: string
 }
 
 export interface MediaItem {
@@ -578,8 +580,40 @@ export function useTemplateContent(templateId: string, defaultContent: any) {
       }
     }
     
+    // Element selection interceptor inside the iframe
+    const handleDocumentClick = (e: MouseEvent) => {
+      if (window.parent !== window) {
+        const target = e.target as HTMLElement
+        // Find closest heading, paragraph, button, image, link, list item, or section
+        const editableEl = target.closest('h1, h2, h3, h4, h5, h6, p, a, button, img, li, section')
+        if (editableEl) {
+          e.preventDefault()
+          e.stopPropagation()
+          
+          const sectionEl = target.closest('section') || target.closest('[data-section-id]')
+          const sectionId = sectionEl?.getAttribute('data-section-id') || sectionEl?.id || 'hero'
+          
+          // Determine element type/ID
+          const tag = editableEl.tagName.toLowerCase()
+          let elementId = editableEl.id || `${sectionId}-${tag}`
+          
+          window.parent.postMessage({
+            type: 'ELEMENT_SELECTED',
+            sectionId,
+            elementId,
+            elementType: tag
+          }, '*')
+        }
+      }
+    }
+    
     window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
+    document.addEventListener('click', handleDocumentClick, true)
+    
+    return () => {
+      window.removeEventListener('message', handleMessage)
+      document.removeEventListener('click', handleDocumentClick, true)
+    }
   }, [templateId, defaultContent])
 
   return content

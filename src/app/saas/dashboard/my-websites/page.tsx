@@ -151,7 +151,7 @@ export default function MyWebsitesPage() {
                 {/* Actions row */}
                 <div className="flex items-center gap-2 border-t border-zinc-800/80 pt-4 mt-4">
                   <Link
-                    href={`/saas/dashboard/editor?project_id=${proj.id}`}
+                    href={`/saas/editor?project_id=${proj.id}`}
                     className="flex-grow flex items-center justify-center gap-1.5 py-2 px-3 bg-zinc-850 hover:bg-zinc-800 text-white rounded-lg border border-zinc-800 text-[11px] font-semibold"
                   >
                     <Edit3 className="w-3.5 h-3.5 text-zinc-400" />

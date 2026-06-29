@@ -43,9 +43,9 @@ const Consultation = nextDynamic(() => import("@/components/home/Consultation"))
 const Estimator = nextDynamic(() => import("@/components/home/Estimator"));
 const RoiCalculator = nextDynamic(() => import("@/components/home/RoiCalculator"));
 
-import { getSiteSettings } from "./admin/(protected)/settings/actions";
-import { getContentSettings } from "./admin/(protected)/content/actions";
-import { getTestimonials } from "./admin/(protected)/testimonials/actions";
+import { getSiteSettings } from "@/app/admin/(protected)/settings/actions";
+import { getContentSettings } from "@/app/admin/(protected)/content/actions";
+import { getTestimonials } from "@/app/admin/(protected)/testimonials/actions";
 
 export default async function Home() {
   const { data: settings } = await getSiteSettings();

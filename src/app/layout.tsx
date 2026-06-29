@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
-import dynamic from 'next/dynamic';
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
-
-const FloatingChatbot = dynamic(() => import("@/components/FloatingChatbot"));
-import { getSiteSettings } from "./admin/(protected)/settings/actions";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -69,16 +63,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { data: settings } = await getSiteSettings();
-  
-  let consultationLink = "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021";
-  if (settings?.consultation_provider === 'fiverr' && settings?.consultation_link_fiverr) {
-      consultationLink = settings.consultation_link_fiverr;
-  } else if (settings?.consultation_provider === 'calendly' && settings?.consultation_link_calendly) {
-      consultationLink = settings.consultation_link_calendly;
-  } else if (settings?.consultation_link_upwork) {
-      consultationLink = settings.consultation_link_upwork;
-  }
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -130,12 +114,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar consultationLink={consultationLink} />
-          <main className="flex-grow">
-            {children}
-          </main>
-          <Footer />
-          <FloatingChatbot />
+          {children}
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

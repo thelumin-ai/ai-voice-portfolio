@@ -71,7 +71,7 @@ export default function CreateWebsitePage() {
     })
 
     // Redirect to the editor page with the new project ID
-    router.push(`/saas/dashboard/editor?project_id=${newProject.id}`)
+    router.push(`/saas/editor?project_id=${newProject.id}`)
   }
 
   const selectedTheme = selectedTemplateId ? getTemplateById(selectedTemplateId) : null

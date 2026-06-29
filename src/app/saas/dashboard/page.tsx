@@ -235,7 +235,7 @@ export default function SaasDashboardPage() {
                   <div className="flex items-center justify-between border-t border-zinc-800/80 pt-4 mt-4">
                     {/* Primary Edit */}
                     <Link
-                      href={`/saas/dashboard/editor?project_id=${proj.id}`}
+                      href={`/saas/editor?project_id=${proj.id}`}
                       className="inline-flex items-center gap-1.5 py-2 px-3 bg-zinc-850 hover:bg-zinc-800 text-white rounded-lg border border-zinc-800 hover:border-zinc-750 transition-all text-[11px] font-bold"
                     >
                       <Edit3 className="w-3.5 h-3.5 text-zinc-400" />
