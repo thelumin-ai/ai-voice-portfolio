@@ -2,7 +2,16 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SaaSLogoutButton from './SaaSLogoutButton'
-import { LayoutDashboard, Settings, Compass, HelpCircle, Layers } from 'lucide-react'
+import { 
+  LayoutDashboard, 
+  Globe, 
+  Layers, 
+  Image, 
+  Settings, 
+  HelpCircle, 
+  CreditCard, 
+  Compass 
+} from 'lucide-react'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -46,23 +55,55 @@ export default async function SaasDashboardLayout({ children }: LayoutProps) {
               className="flex items-center gap-2.5 px-4 py-3 text-zinc-300 hover:text-white hover:bg-zinc-800/40 rounded-xl transition-all text-xs font-semibold"
             >
               <LayoutDashboard className="w-4 h-4 text-zinc-400" />
-              <span>Websites & Projects</span>
+              <span>Dashboard</span>
             </Link>
 
             <Link
-              href="/saas/dashboard/builder"
+              href="/saas/dashboard/my-websites"
+              className="flex items-center gap-2.5 px-4 py-3 text-zinc-300 hover:text-white hover:bg-zinc-800/40 rounded-xl transition-all text-xs font-semibold"
+            >
+              <Globe className="w-4 h-4 text-zinc-400" />
+              <span>My Websites</span>
+            </Link>
+
+            <Link
+              href="/saas/dashboard/templates"
               className="flex items-center gap-2.5 px-4 py-3 text-zinc-300 hover:text-white hover:bg-zinc-800/40 rounded-xl transition-all text-xs font-semibold"
             >
               <Layers className="w-4 h-4 text-zinc-400" />
-              <span>Theme Builder</span>
+              <span>Templates</span>
             </Link>
 
             <Link
-              href="/saas/dashboard/settings"
+              href="/saas/dashboard/media"
+              className="flex items-center gap-2.5 px-4 py-3 text-zinc-300 hover:text-white hover:bg-zinc-800/40 rounded-xl transition-all text-xs font-semibold"
+            >
+              <Image className="w-4 h-4 text-zinc-400" />
+              <span>Media Library</span>
+            </Link>
+
+            <Link
+              href="/saas/dashboard/site-settings"
               className="flex items-center gap-2.5 px-4 py-3 text-zinc-300 hover:text-white hover:bg-zinc-800/40 rounded-xl transition-all text-xs font-semibold"
             >
               <Settings className="w-4 h-4 text-zinc-400" />
-              <span>General Settings</span>
+              <span>Site Settings</span>
+            </Link>
+
+            <Link
+              href="/saas/dashboard/billing"
+              className="flex items-center gap-2.5 px-4 py-3 text-zinc-300 hover:text-white hover:bg-zinc-800/40 rounded-xl transition-all text-xs font-semibold"
+            >
+              <CreditCard className="w-4 h-4 text-zinc-400" />
+              <span>Billing</span>
+            </Link>
+
+            <Link
+              href="/saas/dashboard/help"
+              className="flex items-center gap-2.5 px-4 py-3 text-zinc-300 hover:text-white hover:bg-zinc-800/40 rounded-xl transition-all text-xs font-semibold"
+            >
+              <HelpCircle className="w-4 h-4 text-zinc-400" />
+              <span>Help &amp; Docs</span>
             </Link>
           </nav>
         </div>

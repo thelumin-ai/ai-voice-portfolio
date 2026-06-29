@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { DEFAULT_CONTENT } from '../default-content'
 import { Header, Footer, useTemplateRouter } from '../page'
+import { useTemplateContent } from '@/lib/projectsRepo'
 
 export default function Roofing004Services() {
-  const [content] = useState(DEFAULT_CONTENT)
+  const content = useTemplateContent('roofing-004', DEFAULT_CONTENT)
   const go = useTemplateRouter()
 
   return (
@@ -28,7 +28,7 @@ export default function Roofing004Services() {
               {content.services.bannerLabel}
             </span>
             <h1 className="r004-montserrat text-3xl md:text-[48px] font-black text-white leading-tight tracking-tight max-w-2xl">
-              {content.services.bannerHeading.split('\n').map((line, i) => (
+              {content.services.bannerHeading.split('\n').map((line: string, i: number) => (
                 <span key={i}>
                   {line}
                   {i < content.services.bannerHeading.split('\n').length - 1 && <br />}
@@ -44,7 +44,7 @@ export default function Roofing004Services() {
         {/* Six Service Cards */}
         <section className="w-full max-w-[1280px] mx-auto px-5 md:px-6 py-20 md:py-28">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {content.services.servicesList.map((svc, idx) => (
+            {content.services.servicesList.map((svc: any, idx: number) => (
               <div
                 key={idx}
                 className="bg-[#202020] border border-[#353535] p-10 flex flex-col gap-5 hover:border-[#ff5637]/60 transition-colors duration-200 group"
@@ -76,7 +76,7 @@ export default function Roofing004Services() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 relative">
               {/* Connector line (desktop) */}
               <div className="hidden md:block absolute top-8 left-[calc(16.67%+24px)] right-[calc(16.67%+24px)] h-[2px] bg-[#353535]" />
-              {content.services.processSteps.map((step, idx) => (
+              {content.services.processSteps.map((step: any, idx: number) => (
                 <div key={idx} className="relative flex flex-col gap-5">
                   <div className="flex items-center gap-4">
                     <span className="r004-montserrat text-[#ff5637] text-3xl font-black leading-none flex-shrink-0">

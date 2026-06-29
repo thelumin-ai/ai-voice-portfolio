@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import { DEFAULT_CONTENT } from '../default-content'
 import { Header, Footer, useTemplateRouter } from '../page'
+import { useTemplateContent } from '@/lib/projectsRepo'
 
 export default function Roofing004Quote() {
-  const [content] = useState(DEFAULT_CONTENT)
+  const content = useTemplateContent('roofing-004', DEFAULT_CONTENT)
   const go = useTemplateRouter()
   const [submitted, setSubmitted] = useState(false)
   const [form, setForm] = useState({
@@ -100,7 +101,7 @@ export default function Roofing004Quote() {
                     className="r004-input"
                     placeholder="John Smith"
                     value={form.name}
-                    onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((p: any) => ({ ...p, name: e.target.value }))}
                     required
                   />
                 </div>
@@ -113,7 +114,7 @@ export default function Roofing004Quote() {
                     className="r004-input"
                     placeholder="you@company.com"
                     value={form.email}
-                    onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((p: any) => ({ ...p, email: e.target.value }))}
                     required
                   />
                 </div>
@@ -129,7 +130,7 @@ export default function Roofing004Quote() {
                     className="r004-input"
                     placeholder="+1 (800) 000-0000"
                     value={form.phone}
-                    onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((p: any) => ({ ...p, phone: e.target.value }))}
                   />
                 </div>
                 <div>
@@ -140,11 +141,11 @@ export default function Roofing004Quote() {
                     <select
                       className="r004-select"
                       value={form.projectType}
-                      onChange={(e) => setForm((p) => ({ ...p, projectType: e.target.value }))}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm((p: any) => ({ ...p, projectType: e.target.value }))}
                       required
                     >
                       <option value="">Select project type…</option>
-                      {content.quote.projectTypes.map((t) => (
+                      {content.quote.projectTypes.map((t: string) => (
                         <option key={t} value={t}>
                           {t}
                         </option>
@@ -166,7 +167,7 @@ export default function Roofing004Quote() {
                   className="r004-input"
                   placeholder="e.g. 2,400"
                   value={form.squareFeet}
-                  onChange={(e) => setForm((p) => ({ ...p, squareFeet: e.target.value }))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((p: any) => ({ ...p, squareFeet: e.target.value }))}
                 />
               </div>
 
@@ -179,7 +180,7 @@ export default function Roofing004Quote() {
                   className="r004-input resize-none"
                   placeholder="Describe your project, current roof condition, timeline, and any specific requirements…"
                   value={form.message}
-                  onChange={(e) => setForm((p) => ({ ...p, message: e.target.value }))}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm((p: any) => ({ ...p, message: e.target.value }))}
                 />
               </div>
 

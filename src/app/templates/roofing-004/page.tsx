@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { DEFAULT_CONTENT } from './default-content'
+import { useTemplateContent } from '@/lib/projectsRepo'
 
 // ─── Route helper ───────────────────────────────────────────────────────────
 function useTemplateRouter() {
@@ -191,7 +192,7 @@ function Footer({
 
 // ─── Home page ───────────────────────────────────────────────────────────────
 export default function Roofing004Template() {
-  const [content] = useState(DEFAULT_CONTENT)
+  const content = useTemplateContent('roofing-004', DEFAULT_CONTENT)
   const go = useTemplateRouter()
 
   return (
@@ -226,7 +227,7 @@ export default function Roofing004Template() {
           <div className="relative z-10 w-full max-w-[1280px] mx-auto px-5 md:px-6 py-24">
             <div className="max-w-2xl">
               <h1 className="r004-montserrat text-4xl sm:text-5xl md:text-[72px] font-black text-white leading-[1.05] tracking-tight mb-6">
-                {content.home.heroHeading.split('\n').map((line, i) => (
+                {content.home.heroHeading.split('\n').map((line: string, i: number) => (
                   <span key={i}>
                     {line}
                     {i < content.home.heroHeading.split('\n').length - 1 && <br />}
@@ -260,7 +261,7 @@ export default function Roofing004Template() {
             {/* Orange highlight block */}
             <div className="bg-[#ff5637] p-10 lg:p-14 flex flex-col justify-center relative overflow-hidden">
               <h2 className="r004-montserrat text-2xl md:text-[32px] font-black text-white mb-5 leading-tight relative z-10">
-                {content.home.bentoHeading.split('\n').map((line, i) => (
+                {content.home.bentoHeading.split('\n').map((line: string, i: number) => (
                   <span key={i}>
                     {line}
                     {i < content.home.bentoHeading.split('\n').length - 1 && <br />}
@@ -282,7 +283,7 @@ export default function Roofing004Template() {
 
             {/* 2×3 service card grid */}
             <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[1px] bg-[#131313]">
-              {content.home.services.map((svc, idx) => (
+              {content.home.services.map((svc: any, idx: number) => (
                 <div
                   key={idx}
                   className="bg-[#2a2a2a] p-8 flex flex-col gap-4 hover:border-b-2 hover:border-[#ff5637] transition-all duration-200 group"
@@ -309,7 +310,7 @@ export default function Roofing004Template() {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {content.home.performanceCards.map((card, idx) => (
+            {content.home.performanceCards.map((card: any, idx: number) => (
               <div
                 key={idx}
                 className="bg-[#202020] border border-[#353535] flex flex-col group overflow-hidden hover:border-[#ff5637]/50 transition-colors duration-300"

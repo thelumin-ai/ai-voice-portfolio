@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { DEFAULT_CONTENT } from '../default-content'
 import { Header, Footer, useTemplateRouter } from '../page'
+import { useTemplateContent } from '@/lib/projectsRepo'
 
 export default function Roofing004About() {
-  const [content] = useState(DEFAULT_CONTENT)
+  const content = useTemplateContent('roofing-004', DEFAULT_CONTENT)
   const go = useTemplateRouter()
 
   return (
@@ -28,7 +28,7 @@ export default function Roofing004About() {
               {content.about.bannerLabel}
             </span>
             <h1 className="r004-montserrat text-3xl md:text-[48px] font-black text-white leading-tight tracking-tight max-w-2xl">
-              {content.about.bannerHeading.split('\n').map((line, i) => (
+              {content.about.bannerHeading.split('\n').map((line: string, i: number) => (
                 <span key={i}>
                   {line}
                   {i < content.about.bannerHeading.split('\n').length - 1 && <br />}
@@ -76,7 +76,7 @@ export default function Roofing004About() {
               {content.about.valuesHeading}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {content.about.values.map((v, idx) => (
+              {content.about.values.map((v: any, idx: number) => (
                 <div key={idx} className="bg-[#202020] border border-[#353535] p-8 space-y-4">
                   <span className="block text-[#ff5637] font-black text-xl r004-montserrat">
                     {String(idx + 1).padStart(2, '0')}
@@ -92,7 +92,7 @@ export default function Roofing004About() {
         {/* Stats Counter */}
         <section className="w-full max-w-[1280px] mx-auto px-5 md:px-6 py-20 md:py-28">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-12">
-            {content.about.stats.map((s, idx) => (
+            {content.about.stats.map((s: any, idx: number) => (
               <div key={idx} className="text-center border-t-2 border-[#ff5637] pt-8">
                 <span className="block r004-montserrat text-5xl md:text-6xl font-black text-white mb-3">
                   {s.value}

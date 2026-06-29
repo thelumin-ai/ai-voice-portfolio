@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import { DEFAULT_CONTENT } from '../default-content'
 import { Header, Footer, useTemplateRouter } from '../page'
+import { useTemplateContent } from '@/lib/projectsRepo'
 
 export default function Roofing004Contact() {
-  const [content] = useState(DEFAULT_CONTENT)
+  const content = useTemplateContent('roofing-004', DEFAULT_CONTENT)
   const go = useTemplateRouter()
   const [formState, setFormState] = useState({ name: '', email: '', phone: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
@@ -157,7 +158,7 @@ export default function Roofing004Contact() {
                       className="r004-input"
                       placeholder="John Smith"
                       value={formState.name}
-                      onChange={(e) => setFormState((p) => ({ ...p, name: e.target.value }))}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormState((p: any) => ({ ...p, name: e.target.value }))}
                       required
                     />
                   </div>
@@ -171,7 +172,7 @@ export default function Roofing004Contact() {
                         className="r004-input"
                         placeholder="you@company.com"
                         value={formState.email}
-                        onChange={(e) => setFormState((p) => ({ ...p, email: e.target.value }))}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormState((p: any) => ({ ...p, email: e.target.value }))}
                         required
                       />
                     </div>
@@ -184,7 +185,7 @@ export default function Roofing004Contact() {
                         className="r004-input"
                         placeholder="+1 (800) 000-0000"
                         value={formState.phone}
-                        onChange={(e) => setFormState((p) => ({ ...p, phone: e.target.value }))}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormState((p: any) => ({ ...p, phone: e.target.value }))}
                       />
                     </div>
                   </div>
@@ -197,7 +198,7 @@ export default function Roofing004Contact() {
                       className="r004-input resize-none"
                       placeholder="Tell us about your project..."
                       value={formState.message}
-                      onChange={(e) => setFormState((p) => ({ ...p, message: e.target.value }))}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormState((p: any) => ({ ...p, message: e.target.value }))}
                       required
                     />
                   </div>
