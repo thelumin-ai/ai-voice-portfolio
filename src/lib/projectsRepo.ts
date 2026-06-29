@@ -1,11 +1,22 @@
 'use client'
 
+export interface ProjectElement {
+  id: string
+  type: 'heading' | 'paragraph' | 'button' | 'image' | 'divider' | 'slider' | 'accordion' | 'form' | string
+  content: Record<string, any>
+  styles?: Record<string, any>
+  responsiveStyles?: Record<string, any>
+}
+
 export interface ProjectSection {
   id: string
   type: string
   title: string
   content: Record<string, any>
   isVisible: boolean
+  styles?: Record<string, any>
+  responsiveStyles?: Record<string, any>
+  elements?: ProjectElement[]
 }
 
 export interface ProjectPage {
@@ -38,6 +49,7 @@ export interface Project {
   status: 'Draft' | 'Published' | 'Unpublished'
   lastEdited: string
   pages: Record<string, ProjectPage>
+  publishedPages?: Record<string, ProjectPage>
   themeColor?: string
   tagline?: string
 }
@@ -495,39 +507,60 @@ export const projectsRepo = {
 import { useState, useEffect } from 'react'
 
 export function useTemplateContent(templateId: string, defaultContent: any) {
+  const [project, setProject] = useState<Project | null>(null)
+  const [activePageId, setActivePageId] = useState<string>('home')
   const [content, setContent] = useState(defaultContent)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
     const projectId = params.get('project_id')
+    const mode = params.get('mode')
+
+    // Determine activePageId based on route path
+    const pathname = window.location.pathname
+    let resolvedPageId = 'home'
+    if (pathname.includes('/about')) resolvedPageId = 'about'
+    else if (pathname.includes('/services')) resolvedPageId = 'services'
+    else if (pathname.includes('/contact')) resolvedPageId = 'contact'
+    else if (pathname.includes('/quote')) resolvedPageId = 'quote'
+    
+    setActivePageId(resolvedPageId)
+
     if (!projectId) return
 
     const loadContent = () => {
       const saved = localStorage.getItem(`project_content_${projectId}`)
       if (saved) {
         try {
-          const project = JSON.parse(saved)
-          const compiledContent = JSON.parse(JSON.stringify(defaultContent))
+          const proj: Project = JSON.parse(saved)
+          setProject(proj)
+
+          // Determine which pages structure to use (draft or published snapshot)
+          const pagesToUse = (mode === 'published' && proj.publishedPages) ? proj.publishedPages : proj.pages
           
-          // Map header / contact details
+          // Build a reactive compiledContent object starting from defaultContent
+          const compiledContent = JSON.parse(JSON.stringify(defaultContent))
+
+          // Map global settings
           if (compiledContent.header) {
-            compiledContent.header.logoText = project.companyName || compiledContent.header.logoText
-            compiledContent.header.phone = project.phone || compiledContent.header.phone
-            compiledContent.header.email = project.email || compiledContent.header.email
-            compiledContent.header.address = project.address || compiledContent.header.address
-            compiledContent.header.ctaText = project.ctaText || compiledContent.header.ctaText
+            compiledContent.header.logoText = proj.companyName || compiledContent.header.logoText
+            compiledContent.header.phone = proj.phone || compiledContent.header.phone
+            compiledContent.header.email = proj.email || compiledContent.header.email
+            compiledContent.header.address = proj.address || compiledContent.header.address
+            compiledContent.header.ctaText = proj.ctaText || compiledContent.header.ctaText
+            compiledContent.header.quoteText = proj.ctaText || compiledContent.header.quoteText || 'Get a Quote'
+            compiledContent.header.donateText = proj.ctaText || compiledContent.header.donateText || 'Donate Now'
           }
 
-          // Map footer details
           if (compiledContent.footer) {
-            compiledContent.footer.tagline = project.tagline || compiledContent.footer.tagline || ''
-            compiledContent.footer.copyright = `© ${new Date().getFullYear()} ${project.companyName}. All Rights Reserved.`
+            compiledContent.footer.tagline = proj.tagline || compiledContent.footer.tagline || ''
+            compiledContent.footer.copyright = `© ${new Date().getFullYear()} ${proj.companyName}. All Rights Reserved.`
           }
 
           // Map pages
-          Object.keys(project.pages).forEach(pageId => {
-            const page = project.pages[pageId]
+          Object.keys(pagesToUse).forEach(pageId => {
+            const page = pagesToUse[pageId]
             
             if (pageId === 'about' && compiledContent.about) {
               compiledContent.about.bannerHeading = page.sections.banner?.content?.heading || compiledContent.about.bannerHeading
@@ -563,7 +596,7 @@ export function useTemplateContent(templateId: string, defaultContent: any) {
               }
             }
           })
-          
+
           setContent(compiledContent)
         } catch (e) {
           console.error('Failed to parse project content:', e)
@@ -585,11 +618,22 @@ export function useTemplateContent(templateId: string, defaultContent: any) {
       if (window.parent !== window) {
         const target = e.target as HTMLElement
         // Find closest heading, paragraph, button, image, link, list item, or section
-        const editableEl = target.closest('h1, h2, h3, h4, h5, h6, p, a, button, img, li, section')
+        const editableEl = target.closest('h1, h2, h3, h4, h5, h6, p, a, button, img, li, section') as HTMLElement
         if (editableEl) {
           e.preventDefault()
           e.stopPropagation()
           
+          // Clear previous outlines
+          document.querySelectorAll('.active-outline').forEach(el => {
+            el.classList.remove('active-outline')
+            ;(el as HTMLElement).style.outline = ''
+          })
+
+          // Add active outline
+          editableEl.classList.add('active-outline')
+          editableEl.style.outline = '2px solid #3b82f6'
+          editableEl.style.outlineOffset = '2px'
+
           const sectionEl = target.closest('section') || target.closest('[data-section-id]')
           const sectionId = sectionEl?.getAttribute('data-section-id') || sectionEl?.id || 'hero'
           
@@ -606,15 +650,63 @@ export function useTemplateContent(templateId: string, defaultContent: any) {
         }
       }
     }
+
+    // Double-click inline text editing bridge inside the iframe
+    const handleDoubleClick = (e: MouseEvent) => {
+      if (window.parent !== window) {
+        const target = e.target as HTMLElement
+        const editableEl = target.closest('h1, h2, h3, h4, h5, h6, p, a, button') as HTMLElement
+        if (editableEl) {
+          e.preventDefault()
+          e.stopPropagation()
+          
+          // Make editable
+          editableEl.contentEditable = 'true'
+          editableEl.focus()
+          
+          // Selection highlight border for editing mode
+          editableEl.style.outline = '2px dashed #10b981'
+          editableEl.style.outlineOffset = '2px'
+          
+          const handleBlur = () => {
+            editableEl.contentEditable = 'false'
+            editableEl.style.outline = ''
+            
+            const sectionEl = target.closest('section') || target.closest('[data-section-id]')
+            const sectionId = sectionEl?.getAttribute('data-section-id') || sectionEl?.id || 'hero'
+            let elementId = editableEl.id || `${sectionId}-${editableEl.tagName.toLowerCase()}`
+            const newText = editableEl.innerText || editableEl.textContent || ''
+            
+            window.parent.postMessage({
+              type: 'INLINE_TEXT_UPDATED',
+              sectionId,
+              elementId,
+              text: newText
+            }, '*')
+            
+            editableEl.removeEventListener('blur', handleBlur)
+          }
+          
+          editableEl.addEventListener('blur', handleBlur)
+        }
+      }
+    }
     
     window.addEventListener('message', handleMessage)
     document.addEventListener('click', handleDocumentClick, true)
+    document.addEventListener('dblclick', handleDoubleClick, true)
     
     return () => {
       window.removeEventListener('message', handleMessage)
       document.removeEventListener('click', handleDocumentClick, true)
+      document.removeEventListener('dblclick', handleDoubleClick, true)
     }
   }, [templateId, defaultContent])
 
-  return content
+  const resolvedMode = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('mode') : null
+  const activePage = project 
+    ? ((resolvedMode === 'published' && project.publishedPages) ? project.publishedPages[activePageId] : project.pages[activePageId]) 
+    : null
+
+  return { content, project, activePage, activePageId }
 }

@@ -6,7 +6,7 @@ import { Header, Footer, useTemplateRouter } from '../page'
 import { useTemplateContent } from '@/lib/projectsRepo'
 
 export default function Roofing004About() {
-  const content = useTemplateContent('roofing-004', DEFAULT_CONTENT)
+  const { content } = useTemplateContent('roofing-004', DEFAULT_CONTENT)
   const go = useTemplateRouter()
 
   return (

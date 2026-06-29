@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { DEFAULT_CONTENT } from './default-content'
 import { useTemplateContent } from '@/lib/projectsRepo'
+import { renderCustomElements } from '@/lib/builderUtils'
 
 // ─── Route helper ───────────────────────────────────────────────────────────
 function useTemplateRouter() {
@@ -192,8 +193,26 @@ function Footer({
 
 // ─── Home page ───────────────────────────────────────────────────────────────
 export default function Roofing004Template() {
-  const content = useTemplateContent('roofing-004', DEFAULT_CONTENT)
+  const { content, project, activePage } = useTemplateContent('roofing-004', DEFAULT_CONTENT)
   const go = useTemplateRouter()
+
+  // Compile helper to apply section and custom element styling
+  const getSectionClasses = (sectionId: string, defaultClasses = '') => {
+    const section = activePage?.sections?.[sectionId]
+    if (!section) return defaultClasses
+    const classes = [defaultClasses]
+    if (section.styles?.bgColor) classes.push(section.styles.bgColor)
+    if (section.styles?.padding) classes.push(section.styles.padding)
+    if (section.content?.align === 'center') classes.push('text-center')
+    else if (section.content?.align === 'right') classes.push('text-right')
+    if (section.content?.hideDesktop === true || section.content?.hideDesktop === 'true') classes.push('lg:hidden')
+    if (section.content?.hideTablet === true || section.content?.hideTablet === 'true') classes.push('md:max-lg:hidden')
+    if (section.content?.hideMobile === true || section.content?.hideMobile === 'true') classes.push('max-md:hidden')
+    return classes.join(' ')
+  }
+
+  // Get layout section list
+  const layout = activePage?.layout || ['hero', 'bento', 'performance']
 
   return (
     <div className="min-h-screen bg-[#131313] text-[#e5e2e1] font-sans overflow-x-hidden">
@@ -211,139 +230,182 @@ export default function Roofing004Template() {
       <div className="r004-root">
         <Header content={content} go={go} />
 
-        {/* ── HERO ──────────────────────────────────────────────────── */}
-        <section className="relative w-full min-h-[700px] md:min-h-[820px] flex items-center">
-          {/* Background image */}
-          <div className="absolute inset-0 z-0">
-            <img
-              src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=1600"
-              alt={content.home.heroImageAlt}
-              className="w-full h-full object-cover object-center"
-            />
-            <div className="absolute inset-0 r004-hero-overlay" />
-          </div>
+        {layout.map((sectionId) => {
+          const section = activePage?.sections?.[sectionId]
+          const isVisible = section ? section.isVisible : true
+          if (!isVisible) return null
 
-          {/* Content */}
-          <div className="relative z-10 w-full max-w-[1280px] mx-auto px-5 md:px-6 py-24">
-            <div className="max-w-2xl">
-              <h1 className="r004-montserrat text-4xl sm:text-5xl md:text-[72px] font-black text-white leading-[1.05] tracking-tight mb-6">
-                {content.home.heroHeading.split('\n').map((line: string, i: number) => (
-                  <span key={i}>
-                    {line}
-                    {i < content.home.heroHeading.split('\n').length - 1 && <br />}
-                  </span>
-                ))}
-              </h1>
-              <p className="text-lg text-[#c6c6c7] leading-relaxed mb-10 max-w-xl">
-                {content.home.heroSubtext}
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Link
-                  href={go('/quote')}
-                  className="inline-flex items-center px-8 py-4 bg-[#ff5637] hover:bg-[#ba1d00] text-white font-bold uppercase tracking-wider text-sm transition-colors"
-                >
-                  {content.home.heroCta}
-                </Link>
-                <Link
-                  href={go('/services')}
-                  className="inline-flex items-center px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-[#131313] font-bold uppercase tracking-wider text-sm transition-colors"
-                >
-                  {content.home.heroCtaSecondary}
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
+          // Resolve section type
+          const sectionType = section ? section.type : sectionId
 
-        {/* ── BENTO SERVICES GRID ───────────────────────────────────── */}
-        <section className="w-full max-w-[1280px] mx-auto px-5 md:px-6 py-20 md:py-28">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-[1px] bg-[#131313]">
-            {/* Orange highlight block */}
-            <div className="bg-[#ff5637] p-10 lg:p-14 flex flex-col justify-center relative overflow-hidden">
-              <h2 className="r004-montserrat text-2xl md:text-[32px] font-black text-white mb-5 leading-tight relative z-10">
-                {content.home.bentoHeading.split('\n').map((line: string, i: number) => (
-                  <span key={i}>
-                    {line}
-                    {i < content.home.bentoHeading.split('\n').length - 1 && <br />}
-                  </span>
-                ))}
-              </h2>
-              <p className="text-white/90 text-sm leading-relaxed mb-8 relative z-10">
-                {content.home.bentoDesc}
-              </p>
-              <Link
-                href={go('/contact')}
-                className="self-start inline-flex items-center border-2 border-white text-white hover:bg-white hover:text-[#ff5637] font-bold uppercase tracking-wider text-xs px-6 py-3 transition-colors relative z-10"
+          if (sectionType === 'hero') {
+            const heroData = section?.content || content.home
+            return (
+              <section 
+                key={sectionId} 
+                id={sectionId} 
+                data-section-id={sectionId}
+                className={getSectionClasses(sectionId, "relative w-full min-h-[700px] md:min-h-[820px] flex items-center")}
               >
-                {content.home.bentoCta}
-              </Link>
-              {/* Decorative circle */}
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-40 h-40 bg-[#131313] rounded-full z-0 opacity-30 hidden lg:block" />
-            </div>
-
-            {/* 2×3 service card grid */}
-            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[1px] bg-[#131313]">
-              {content.home.services.map((svc: any, idx: number) => (
-                <div
-                  key={idx}
-                  className="bg-[#2a2a2a] p-8 flex flex-col gap-4 hover:border-b-2 hover:border-[#ff5637] transition-all duration-200 group"
-                >
-                  <span className="material-symbols-outlined text-[#ff5637] text-[32px] leading-none">
-                    {svc.icon}
-                  </span>
-                  <div>
-                    <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-2">
-                      {svc.title}
-                    </h3>
-                    <p className="text-[#c6c6c7] text-sm leading-relaxed">{svc.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── PERFORMANCE CARDS ─────────────────────────────────────── */}
-        <section className="w-full max-w-[1280px] mx-auto px-5 md:px-6 pb-24">
-          <h2 className="r004-montserrat text-3xl md:text-[48px] font-black text-white text-center mb-14 tracking-tight">
-            {content.home.performanceHeading}
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {content.home.performanceCards.map((card: any, idx: number) => (
-              <div
-                key={idx}
-                className="bg-[#202020] border border-[#353535] flex flex-col group overflow-hidden hover:border-[#ff5637]/50 transition-colors duration-300"
-              >
-                {/* Image */}
-                <div className="h-56 overflow-hidden relative flex-shrink-0">
+                {/* Background image */}
+                <div className="absolute inset-0 z-0 select-none pointer-events-none">
                   <img
-                    src={card.image}
-                    alt={card.imageAlt}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    src={heroData.bgImage || heroData.image || "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=1600"}
+                    alt={content.home.heroImageAlt || "Hero"}
+                    className="w-full h-full object-cover object-center"
                   />
-                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors duration-300" />
+                  <div className="absolute inset-0 r004-hero-overlay" />
                 </div>
 
                 {/* Content */}
-                <div className="p-8 flex flex-col flex-grow">
-                  <h3 className="r004-montserrat text-[28px] font-black text-white mb-4 leading-tight">
-                    {card.heading}
-                  </h3>
-                  <p className="text-[#c6c6c7] text-sm leading-relaxed mb-8 flex-grow">
-                    {card.desc}
-                  </p>
-                  <Link
-                    href={go(card.link)}
-                    className="block text-center bg-[#ff5637] hover:bg-[#ba1d00] text-white font-bold uppercase tracking-wider text-sm py-4 transition-colors"
-                  >
-                    {card.cta}
-                  </Link>
+                <div className="relative z-10 w-full max-w-[1280px] mx-auto px-5 md:px-6 py-24 text-left">
+                  <div className="max-w-2xl">
+                    <h1 id={`${sectionId}-heading`} className="r004-montserrat text-4xl sm:text-5xl md:text-[72px] font-black text-white leading-[1.05] tracking-tight mb-6">
+                      {(heroData.heading || '').split('\n').map((line: string, i: number, arr: any[]) => (
+                        <span key={i}>
+                          {line}
+                          {i < arr.length - 1 && <br />}
+                        </span>
+                      ))}
+                    </h1>
+                    <p id={`${sectionId}-subtext`} className="text-lg text-[#c6c6c7] leading-relaxed mb-10 max-w-xl">
+                      {heroData.subtext || heroData.subheading}
+                    </p>
+                    <div className="flex flex-wrap gap-4">
+                      <Link
+                        id={`${sectionId}-ctaText`}
+                        href={go('/quote')}
+                        className="inline-flex items-center px-8 py-4 bg-[#ff5637] hover:bg-[#ba1d00] text-white font-bold uppercase tracking-wider text-sm transition-colors"
+                      >
+                        {heroData.ctaText || heroData.cta}
+                      </Link>
+                      <Link
+                        href={go('/services')}
+                        className="inline-flex items-center px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-[#131313] font-bold uppercase tracking-wider text-sm transition-colors"
+                      >
+                        {heroData.ctaSecondary || 'View Services'}
+                      </Link>
+                    </div>
+                    {/* Render any added custom elements */}
+                    {section && renderCustomElements(section.elements)}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              </section>
+            )
+          }
+
+          if (sectionType === 'bento') {
+            const bentoData = section?.content || content.home
+            return (
+              <section 
+                key={sectionId} 
+                id={sectionId}
+                data-section-id={sectionId}
+                className={getSectionClasses(sectionId, "w-full max-w-[1280px] mx-auto px-5 md:px-6 py-20 md:py-28")}
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-[1px] bg-[#131313]">
+                  {/* Orange highlight block */}
+                  <div className="bg-[#ff5637] p-10 lg:p-14 flex flex-col justify-center relative overflow-hidden text-left">
+                    <h2 id={`${sectionId}-heading`} className="r004-montserrat text-2xl md:text-[32px] font-black text-white mb-5 leading-tight relative z-10">
+                      {(bentoData.heading || '').split('\n').map((line: string, i: number, arr: any[]) => (
+                        <span key={i}>
+                          {line}
+                          {i < arr.length - 1 && <br />}
+                        </span>
+                      ))}
+                    </h2>
+                    <p id={`${sectionId}-subtext`} className="text-white/90 text-sm leading-relaxed mb-8 relative z-10">
+                      {bentoData.subtext || bentoData.desc}
+                    </p>
+                    <Link
+                      id={`${sectionId}-ctaText`}
+                      href={go('/contact')}
+                      className="self-start inline-flex items-center border-2 border-white text-white hover:bg-white hover:text-[#ff5637] font-bold uppercase tracking-wider text-xs px-6 py-3 transition-colors relative z-10"
+                    >
+                      {bentoData.ctaText || bentoData.cta || 'Contact Us'}
+                    </Link>
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-40 h-40 bg-[#131313] rounded-full z-0 opacity-30 hidden lg:block" />
+                  </div>
+
+                  {/* 2×3 service card grid */}
+                  <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[1px] bg-[#131313]">
+                    {(bentoData.items || bentoData.services || []).map((svc: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="bg-[#2a2a2a] p-8 flex flex-col gap-4 hover:border-b-2 hover:border-[#ff5637] transition-all duration-200 group text-left"
+                      >
+                        <span className="material-symbols-outlined text-[#ff5637] text-[32px] leading-none">
+                          {svc.icon || 'star'}
+                        </span>
+                        <div>
+                          <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-2">
+                            {svc.title}
+                          </h3>
+                          <p className="text-[#c6c6c7] text-sm leading-relaxed">{svc.desc || svc.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Render custom elements */}
+                {section && renderCustomElements(section.elements)}
+              </section>
+            )
+          }
+
+          if (sectionType === 'performance') {
+            const perfData = section?.content || content.home
+            return (
+              <section 
+                key={sectionId} 
+                id={sectionId}
+                data-section-id={sectionId}
+                className={getSectionClasses(sectionId, "w-full max-w-[1280px] mx-auto px-5 md:px-6 pb-24")}
+              >
+                <h2 id={`${sectionId}-heading`} className="r004-montserrat text-3xl md:text-[48px] font-black text-white text-center mb-14 tracking-tight">
+                  {perfData.heading || perfData.performanceHeading}
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {(perfData.cards || perfData.performanceCards || []).map((card: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="bg-[#202020] border border-[#353535] flex flex-col group overflow-hidden hover:border-[#ff5637]/50 transition-colors duration-300 text-left"
+                    >
+                      <div className="h-56 overflow-hidden relative flex-shrink-0">
+                        <img
+                          src={card.image}
+                          alt={card.imageAlt || card.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors duration-300" />
+                      </div>
+
+                      <div className="p-8 flex flex-col flex-grow">
+                        <h3 className="r004-montserrat text-[28px] font-black text-white mb-4 leading-tight">
+                          {card.heading || card.title}
+                        </h3>
+                        <p className="text-[#c6c6c7] text-sm leading-relaxed mb-8 flex-grow">
+                          {card.desc || card.description}
+                        </p>
+                        <Link
+                          href={go(card.link || '#')}
+                          className="block text-center bg-[#ff5637] hover:bg-[#ba1d00] text-white font-bold uppercase tracking-wider text-sm py-4 transition-colors"
+                        >
+                          {card.cta || 'Learn More'}
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Render custom elements */}
+                {section && renderCustomElements(section.elements)}
+              </section>
+            )
+          }
+
+          return null
+        })}
 
         <Footer content={content} go={go} />
       </div>

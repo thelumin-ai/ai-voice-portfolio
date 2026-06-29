@@ -6,7 +6,7 @@ import { Header, Footer, useTemplateRouter } from '../page'
 import { useTemplateContent } from '@/lib/projectsRepo'
 
 export default function Roofing004Contact() {
-  const content = useTemplateContent('roofing-004', DEFAULT_CONTENT)
+  const { content } = useTemplateContent('roofing-004', DEFAULT_CONTENT)
   const go = useTemplateRouter()
   const [formState, setFormState] = useState({ name: '', email: '', phone: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
