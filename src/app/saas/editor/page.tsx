@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { projectsRepo, Project, ProjectPage, ProjectSection } from '@/lib/projectsRepo'
@@ -43,6 +43,19 @@ import {
 } from 'lucide-react'
 
 export default function WebsiteEditorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-white font-semibold">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-4"></div>
+        <p>Loading editor workspace...</p>
+      </div>
+    }>
+      <WebsiteEditorContent />
+    </Suspense>
+  )
+}
+
+function WebsiteEditorContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const projectId = searchParams.get('project_id')

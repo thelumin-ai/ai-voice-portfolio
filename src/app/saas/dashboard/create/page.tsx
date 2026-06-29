@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { getTemplateById, REAL_TEMPLATES } from '@/lib/templates'
@@ -8,6 +8,19 @@ import { projectsRepo } from '@/lib/projectsRepo'
 import { ArrowLeft, ArrowRight, Check, Sparkles, ChevronRight, Layers, FileText, Globe } from 'lucide-react'
 
 export default function CreateWebsitePage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-3xl mx-auto py-12 text-center text-zinc-400">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+        <p>Loading creator wizard...</p>
+      </div>
+    }>
+      <CreateWebsiteContent />
+    </Suspense>
+  )
+}
+
+function CreateWebsiteContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const templateIdParam = searchParams.get('template_id')

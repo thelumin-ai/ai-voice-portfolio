@@ -2,6 +2,8 @@ import { MetadataRoute } from 'next'
 import { getPublishedBlogPosts } from '@/app/admin/(protected)/blog/actions'
 import { getUseCases } from '@/app/admin/(protected)/use-cases/actions'
 
+export const dynamic = 'force-dynamic'
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://abimbola-ai-portfolio.vercel.app'
   
