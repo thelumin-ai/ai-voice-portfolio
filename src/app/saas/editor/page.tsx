@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { projectsRepo, Project, ProjectPage, ProjectSection } from '@/lib/projectsRepo'
+import { projectsRepo, Project, ProjectPage, ProjectSection, ProjectElement } from '@/lib/projectsRepo'
 import { getTemplateById, REAL_TEMPLATES } from '@/lib/templates'
 import { 
   ArrowLeft, 
