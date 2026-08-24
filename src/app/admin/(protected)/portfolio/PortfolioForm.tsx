@@ -196,7 +196,9 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
         <CardContent className="p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Title</label>
+              <label className="text-sm font-medium">
+                Title <span className="text-red-500">*</span>
+              </label>
               <input
                 {...form.register('title')}
                 className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
@@ -208,21 +210,54 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Industry Tag</label>
+              <label className="text-sm font-medium">
+                Industry Tag <span className="text-red-500">*</span>
+              </label>
               <CategorySelect
                 value={form.watch('industry_tag')}
                 onChange={(val) => form.setValue('industry_tag', val)}
               />
+              {form.formState.errors.industry_tag && (
+                <p className="text-sm text-red-500">{String(form.formState.errors.industry_tag?.message || '')}</p>
+              )}
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Short Description</label>
+            <label className="text-sm font-medium flex items-center justify-between">
+              <span>
+                Portfolio Description <span className="text-red-500">*</span>
+              </span>
+            </label>
             <textarea
               {...form.register('short_description')}
-              rows={3}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              rows={5}
+              maxLength={2500}
+              placeholder="Enter a detailed description of the project (up to 2,500 characters)..."
+              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700 focus:ring-2 focus:ring-blue-500 resize-y"
             />
+            <div className="flex justify-between items-center text-xs">
+              {form.formState.errors.short_description ? (
+                <p className="text-xs text-red-500 font-medium">
+                  {String(form.formState.errors.short_description?.message || '')}
+                </p>
+              ) : (
+                <span className="text-zinc-500 dark:text-zinc-400">
+                  Previews display first 400 characters; full modal displays complete text.
+                </span>
+              )}
+              <span
+                className={`font-mono text-xs font-semibold px-2 py-0.5 rounded ${
+                  (form.watch('short_description') || '').length >= 2500
+                    ? 'bg-red-500/10 text-red-500 border border-red-500/20'
+                    : (form.watch('short_description') || '').length >= 2300
+                    ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400'
+                }`}
+              >
+                {(form.watch('short_description') || '').length.toLocaleString()} / 2,500 characters
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -350,18 +385,33 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={form.formState.errors.cover_image_url ? 'border-red-500/50' : ''}>
         <CardContent className="p-6 space-y-4">
-          <div className="flex justify-between items-center mb-4">
-            <label className="text-sm font-medium">Cover Image</label>
-            <Button type="button" variant="outline" size="sm" onClick={() => setShowImageAi(!showImageAi)} className="text-purple-500 border-purple-200 hover:bg-purple-50 dark:hover:bg-purple-900/20">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+            <div>
+              <label className="text-sm font-medium flex items-center gap-1.5">
+                Portfolio Cover Image / Graphic <span className="text-red-500">*</span>
+              </label>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Required. Every portfolio project must have an uploaded graphic for card display and previews.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowImageAi(!showImageAi)}
+              className="text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800/50 hover:bg-purple-50 dark:hover:bg-purple-900/20 self-start sm:self-auto"
+            >
               <Sparkles className="w-4 h-4 mr-2" /> AI Generate
             </Button>
           </div>
           
           {showImageAi && (
             <div className="p-4 bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30 rounded-lg space-y-4 mb-4">
-              <h4 className="font-semibold text-purple-700 dark:text-purple-400 flex items-center"><Bot className="w-4 h-4 mr-2" /> Generate Cover Image</h4>
+              <h4 className="font-semibold text-purple-700 dark:text-purple-400 flex items-center">
+                <Bot className="w-4 h-4 mr-2" /> Generate Cover Image with AI
+              </h4>
               <textarea 
                 value={imageAiPrompt}
                 onChange={(e) => setImageAiPrompt(e.target.value)}
@@ -370,25 +420,78 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
                 rows={2}
               />
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setShowImageAi(false)}>Cancel</Button>
-                <Button type="button" size="sm" className="bg-purple-600 hover:bg-purple-700 text-white" onClick={handleGenerateCoverImage} disabled={isGeneratingImage}>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setShowImageAi(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  onClick={handleGenerateCoverImage}
+                  disabled={isGeneratingImage}
+                >
                   {isGeneratingImage ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</> : 'Generate Image'}
                 </Button>
               </div>
             </div>
           )}
 
-          <div className="flex items-center gap-4">
-            {form.watch('cover_image_url') && (
-              <img src={form.watch('cover_image_url')} alt="Cover" className="w-20 h-20 object-cover rounded-md" />
-            )}
-            <label className="cursor-pointer flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-md hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
-              <UploadCloud className="w-5 h-5 mr-2" />
-              <span>Upload Image</span>
-              <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-            </label>
-            <input type="hidden" {...form.register('cover_image_url')} />
-          </div>
+          {form.watch('cover_image_url') ? (
+            <div className="rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-950/40 p-4 space-y-4">
+              <div className="relative aspect-[16/9] max-w-md mx-auto rounded-lg overflow-hidden border border-zinc-800 shadow-inner bg-zinc-900">
+                <img
+                  src={form.watch('cover_image_url')}
+                  alt="Portfolio Cover Preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-xs">
+                <span className="text-zinc-500 truncate max-w-sm" title={form.watch('cover_image_url')}>
+                  {form.watch('cover_image_url')}
+                </span>
+                <div className="flex items-center gap-2">
+                  <label className="cursor-pointer flex items-center justify-center px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors font-medium">
+                    <UploadCloud className="w-3.5 h-3.5 mr-1.5" />
+                    <span>Replace Image</span>
+                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                  </label>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={() => form.setValue('cover_image_url', '')}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl p-8 text-center hover:border-blue-500/50 transition-colors bg-zinc-50/50 dark:bg-zinc-900/30">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <UploadCloud className="w-6 h-6" />
+              </div>
+              <h4 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-1">
+                Upload Portfolio Graphic / Image <span className="text-red-500">*</span>
+              </h4>
+              <p className="text-xs text-zinc-500 mb-4">PNG, JPG, WebP, or SVG (Required)</p>
+              <div className="flex justify-center gap-3">
+                <label className="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow-sm">
+                  <UploadCloud className="w-4 h-4 mr-2" />
+                  <span>Select Image File</span>
+                  <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                </label>
+              </div>
+            </div>
+          )}
+
+          {form.formState.errors.cover_image_url && (
+            <p className="text-sm text-red-500 font-medium">
+              {String(form.formState.errors.cover_image_url?.message || 'Portfolio image is required')}
+            </p>
+          )}
+          <input type="hidden" {...form.register('cover_image_url')} />
         </CardContent>
       </Card>
 

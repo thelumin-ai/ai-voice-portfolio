@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { PlayCircle, X } from "lucide-react";
+import { PlayCircle, X, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getPortfolioProjects } from "@/app/admin/(protected)/portfolio/actions";
@@ -223,8 +223,18 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                                     <X className="w-6 h-6 text-gray-500" />
                                 </button>
                             </div>
-
                             <div className="p-8 md:p-12 max-h-[70vh] overflow-y-auto">
+                                {/* Full Portfolio Cover Image Banner */}
+                                {selectedProject.cover_image_url && (
+                                    <div className="mb-8 rounded-2xl overflow-hidden aspect-[16/9] max-h-80 w-full border border-black/10 dark:border-white/10 bg-zinc-950 shadow-md">
+                                        <img
+                                            src={selectedProject.cover_image_url}
+                                            alt={selectedProject.title}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                )}
+
                                 {selectedProject.project_type === 'iframe' && (
                                     <div className="max-w-md mx-auto h-[600px] bg-zinc-100 dark:bg-black rounded-3xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 relative">
                                         <iframe
@@ -343,8 +353,8 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                                             />
                                         ) : (
                                             <video 
-                                                key={videoSrc}
-                                                src={videoSrc}
+                                                key={videoSrc} 
+                                                src={videoSrc} 
                                                 controls 
                                                 className="w-full h-full"
                                             >
@@ -355,22 +365,36 @@ export default function Portfolio({ showAll = false }: { showAll?: boolean }) {
                                     );
                                 })()}
                                 
-                                <div className="mt-12 pt-8 border-t border-black/5 dark:border-white/5 grid grid-cols-1 md:grid-cols-2 gap-12">
+                                <div className="mt-12 pt-8 border-t border-black/5 dark:border-white/5 space-y-8">
                                     <div>
-                                        <h4 className="font-bold text-black dark:text-white mb-4 uppercase tracking-tighter text-sm">Deployment Strategy</h4>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{selectedProject.short_description}</p>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-black dark:text-white mb-4 uppercase tracking-tighter text-sm">Key Performance Indicators</h4>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            {selectedProject.metrics?.map((m: any, i: number) => (
-                                                <div key={i} className="bg-gray-50 dark:bg-black/40 border border-black/5 dark:border-white/5 rounded-xl p-4">
-                                                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-500">{m.value}</div>
-                                                    <div className="text-[10px] text-gray-500 uppercase font-bold">{m.label}</div>
-                                                </div>
-                                            ))}
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h4 className="font-bold text-black dark:text-white uppercase tracking-wider text-xs">
+                                                Full Project Overview & Description
+                                            </h4>
+                                            <span className="text-[11px] text-gray-500 font-mono">
+                                                {(selectedProject.short_description || '').length.toLocaleString()} / 2,500 characters
+                                            </span>
+                                        </div>
+                                        <div className="p-6 rounded-2xl bg-gray-50 dark:bg-black/40 border border-black/5 dark:border-white/5 text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                                            {selectedProject.short_description || getPremiumDescription(selectedProject.title, '')}
                                         </div>
                                     </div>
+
+                                    {selectedProject.metrics && Array.isArray(selectedProject.metrics) && selectedProject.metrics.length > 0 && (
+                                        <div>
+                                            <h4 className="font-bold text-black dark:text-white mb-4 uppercase tracking-wider text-xs">
+                                                Key Performance Indicators
+                                            </h4>
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                                {selectedProject.metrics.map((m: any, i: number) => (
+                                                    <div key={i} className="bg-gray-50 dark:bg-black/40 border border-black/5 dark:border-white/5 rounded-xl p-4">
+                                                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-500">{m.value}</div>
+                                                        <div className="text-[10px] text-gray-500 uppercase font-bold mt-1">{m.label}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             
@@ -476,8 +500,8 @@ function getPremiumMetrics(title: string, metrics: any): { value: string, label:
 function PortfolioCard({ item, index, onClick }: { item: any, index: number, onClick: () => void }) {
     const title = item.title || 'AI Automation Suite';
     const tag = getPremiumTag(title, item.industry_tag || '');
-    const desc = getPremiumDescription(title, item.short_description || '');
-    const displayMetrics = getPremiumMetrics(title, item.metrics || []);
+    const rawDesc = getPremiumDescription(title, item.short_description || '');
+    const previewDesc = rawDesc.length > 400 ? `${rawDesc.slice(0, 400)}...` : rawDesc;
 
     return (
         <motion.div
@@ -487,32 +511,57 @@ function PortfolioCard({ item, index, onClick }: { item: any, index: number, onC
             transition={{ delay: (index % 3) * 0.1 }}
             className="h-full"
         >
-            <div className={`p-6 md:p-8 rounded-3xl bg-gradient-to-br ${item.color || 'from-blue-500/10 to-indigo-500/10'} border border-black/5 dark:${item.borderColor || 'border-blue-500/20'} backdrop-blur-md relative overflow-hidden group shadow-sm dark:shadow-none bg-white/50 dark:bg-black/20 transition-all duration-500 hover:scale-[1.02] h-full flex flex-col min-h-[350px]`}>
-                <div className="absolute inset-0 bg-white/10 dark:bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className={`p-6 md:p-7 rounded-3xl bg-gradient-to-br ${item.color || 'from-blue-500/10 to-indigo-500/10'} border border-black/10 dark:${item.borderColor || 'border-blue-500/20'} backdrop-blur-md relative overflow-hidden group shadow-sm dark:shadow-none bg-white/70 dark:bg-zinc-900/60 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/10 h-full flex flex-col justify-between min-h-[460px]`}>
+                <div className="absolute inset-0 bg-white/10 dark:bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                 
                 <div className="relative z-10 flex flex-col h-full">
-                    <span className="text-xs font-bold text-blue-700 dark:text-blue-400 mb-2 uppercase tracking-widest">{tag}</span>
-                    <h3 className="text-xl md:text-2xl font-bold text-black dark:text-white mb-3 transition-colors duration-300">{title}</h3>
-                    <p className="text-gray-800 dark:text-gray-200 text-sm md:text-base mb-8 flex-grow leading-relaxed transition-colors duration-300">{desc}</p>
-
-                    <div className="flex flex-wrap gap-4 mb-8">
-                        {displayMetrics.map((metric: any, i: number) => (
-                            <div key={i} className="flex flex-col">
-                                <span className="text-lg font-bold text-black dark:text-white">{metric.value}</span>
-                                <span className="text-[10px] text-gray-700 dark:text-gray-400 uppercase font-semibold">{metric.label}</span>
+                    {/* 1. PORTFOLIO IMAGE (Fixed Aspect Ratio) */}
+                    <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden bg-zinc-950/80 mb-5 flex-shrink-0 border border-black/5 dark:border-white/10 shadow-inner">
+                        {item.cover_image_url ? (
+                            <img
+                                src={item.cover_image_url}
+                                alt={title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-900/40 via-indigo-900/30 to-zinc-900/50 text-zinc-400 text-xs font-bold uppercase tracking-widest p-4 text-center">
+                                AI Voice System
                             </div>
-                        ))}
+                        )}
+                        <div className="absolute top-3 left-3">
+                            <span className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-black/70 backdrop-blur-md text-blue-400 border border-white/10 uppercase tracking-wider">
+                                {tag}
+                            </span>
+                        </div>
                     </div>
 
-                    <button
-                        onClick={onClick}
-                        className="inline-flex items-center text-sm font-bold text-black dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 mt-auto text-left"
-                    >
-                        <PlayCircle className="w-5 h-5 mr-2 flex-shrink-0" /> 
-                        <span className="truncate">
-                            {item.project_type === 'webrtc' ? 'TALK TO AGENT' : item.project_type === 'iframe' ? 'TRY LIVE DEMO' : item.project_type === 'audio' ? 'LISTEN TO CALL' : 'WATCH DEMO'}
-                        </span>
-                    </button>
+                    {/* 2. Portfolio Title (Uniform Height) */}
+                    <h3 className="text-lg md:text-xl font-bold text-black dark:text-white mb-2 line-clamp-2 h-[3.25rem] leading-snug transition-colors duration-300">
+                        {title}
+                    </h3>
+
+                    {/* 3. First 400 characters preview with fixed height container */}
+                    <div className="mb-4 h-[4rem] overflow-hidden">
+                        <p className="text-gray-600 dark:text-gray-300 text-xs md:text-sm line-clamp-3 leading-relaxed">
+                            {previewDesc}
+                        </p>
+                    </div>
+
+                    {/* 4. View Project Action (Anchored at Bottom) */}
+                    <div className="mt-auto pt-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between">
+                        <button
+                            onClick={onClick}
+                            className="inline-flex items-center text-sm font-bold text-black dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 text-left"
+                        >
+                            <span>View Project</span>
+                            <ArrowRight className="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform flex-shrink-0" />
+                        </button>
+                        {item.project_type && (
+                            <span className="text-[10px] text-zinc-500 uppercase font-semibold">
+                                {item.project_type === 'webrtc' ? 'Interactive AI' : item.project_type === 'audio' ? 'Audio Call' : item.project_type === 'video' ? 'Video Demo' : 'Live Demo'}
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
         </motion.div>

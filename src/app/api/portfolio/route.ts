@@ -25,6 +25,14 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
+        if (description.length > 2500) {
+            return NextResponse.json({ error: "Portfolio description must not exceed 2,500 characters" }, { status: 400 });
+        }
+
+        if (title.length > 200) {
+            return NextResponse.json({ error: "Portfolio title must not exceed 200 characters" }, { status: 400 });
+        }
+
         const metrics = metricsStr ? JSON.parse(metricsStr) : [];
 
         // Handle file upload if a file was provided

@@ -43,7 +43,8 @@ export async function createPortfolioProject(values: PortfolioFormValues) {
   // Validate input
   const parsed = portfolioSchema.safeParse(values)
   if (!parsed.success) {
-    return { error: 'Invalid form data' }
+    const firstError = parsed.error.issues?.[0]?.message || 'Invalid form data'
+    return { error: firstError }
   }
 
   const { id, ...dataToInsert } = parsed.data
@@ -69,7 +70,8 @@ export async function updatePortfolioProject(id: string, values: PortfolioFormVa
   // Validate input
   const parsed = portfolioSchema.safeParse(values)
   if (!parsed.success) {
-    return { error: 'Invalid form data' }
+    const firstError = parsed.error.issues?.[0]?.message || 'Invalid form data'
+    return { error: firstError }
   }
 
   const { id: _id, ...dataToUpdate } = parsed.data
