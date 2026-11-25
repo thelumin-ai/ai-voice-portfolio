@@ -5,7 +5,10 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, Edit2, Trash2, Eye } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { deletePortfolioProject } from './actions'
+import type { PortfolioMediaFile, PortfolioMetric } from '@/lib/types'
 
 export interface PortfolioItem {
   id: string
@@ -13,9 +16,9 @@ export interface PortfolioItem {
   industry_tag: string
   short_description?: string
   case_study_body?: string
-  metrics?: any
+  metrics?: PortfolioMetric[] | string
   integrations?: string[]
-  media_files?: any[]
+  media_files?: PortfolioMediaFile[]
   project_type?: 'webrtc' | 'audio' | 'video' | 'iframe'
   media_url?: string
   api_key?: string
@@ -30,9 +33,11 @@ interface Props {
   id: string
   item: PortfolioItem
   onPreview: (item: PortfolioItem) => void
+  reorderDisabled?: boolean
 }
 
-export function SortableItem({ id, item, onPreview }: Props) {
+export function SortableItem({ id, item, onPreview, reorderDisabled = false }: Props) {
+  const router = useRouter()
   const {
     attributes,
     listeners,
@@ -40,7 +45,7 @@ export function SortableItem({ id, item, onPreview }: Props) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id })
+  } = useSortable({ id, disabled: reorderDisabled })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -50,7 +55,12 @@ export function SortableItem({ id, item, onPreview }: Props) {
 
   const handleDelete = async () => {
     if (confirm(`Are you sure you want to delete "${item.title}"?`)) {
-      await deletePortfolioProject(id)
+      const res = await deletePortfolioProject(id)
+      if (res?.error) {
+        alert(res.error)
+      } else {
+        router.refresh()
+      }
     }
   }
 
@@ -66,13 +76,14 @@ export function SortableItem({ id, item, onPreview }: Props) {
       }`}
     >
       <div className="flex flex-col sm:flex-row h-full">
-        {/* Consistent Fixed Aspect Ratio Image Section */}
         <div className="relative w-full sm:w-48 sm:min-w-[12rem] h-36 sm:h-auto bg-zinc-950 flex-shrink-0 overflow-hidden">
           {item.cover_image_url ? (
-            <img
+            <Image
               src={item.cover_image_url}
               alt={item.title}
-              className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+              fill
+              unoptimized
+              className="object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-zinc-800/50 text-zinc-500 text-xs font-medium">
@@ -82,7 +93,6 @@ export function SortableItem({ id, item, onPreview }: Props) {
           <div className="absolute inset-0 bg-gradient-to-r from-transparent to-zinc-900/90 sm:to-zinc-900/40" />
         </div>
 
-        {/* Content Section with 400-char truncated preview */}
         <div className="flex-1 p-5 flex flex-col justify-center min-w-0">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
@@ -113,7 +123,6 @@ export function SortableItem({ id, item, onPreview }: Props) {
             </span>
           </div>
 
-          {/* 400-character description preview with line-clamp */}
           {desc && (
             <p className="text-xs text-zinc-400 mt-2 line-clamp-2 sm:line-clamp-3 leading-relaxed">
               {previewDesc}
@@ -121,20 +130,28 @@ export function SortableItem({ id, item, onPreview }: Props) {
           )}
         </div>
 
-        {/* Actions Section */}
         <div className="flex sm:flex-col items-center justify-between sm:justify-center gap-2 p-4 sm:p-5 bg-zinc-950/30 sm:border-l border-zinc-800/50 flex-shrink-0">
           <button
-            className="cursor-grab p-2.5 rounded-lg bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all active:cursor-grabbing"
-            {...attributes}
-            {...listeners}
-            title="Drag to reorder"
+            type="button"
+            disabled={reorderDisabled}
+            className={`p-2.5 rounded-lg bg-zinc-800/50 transition-all ${
+              reorderDisabled
+                ? 'text-zinc-600 opacity-40 cursor-not-allowed'
+                : 'cursor-grab text-zinc-400 hover:text-white hover:bg-zinc-700 active:cursor-grabbing'
+            }`}
+            {...(reorderDisabled ? {} : attributes)}
+            {...(reorderDisabled ? {} : listeners)}
+            aria-label={`Drag to reorder ${item.title}`}
+            title={reorderDisabled ? 'Clear filters to reorder' : 'Drag to reorder'}
           >
             <GripVertical className="h-4 w-4" />
           </button>
-          
+
           <div className="flex sm:flex-col items-center gap-2">
             <button
+              type="button"
               onClick={() => onPreview(item)}
+              aria-label={`Preview ${item.title}`}
               title="Preview full portfolio details"
               className="p-2.5 rounded-lg bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all"
             >
@@ -142,13 +159,16 @@ export function SortableItem({ id, item, onPreview }: Props) {
             </button>
             <Link
               href={`/admin/portfolio/${id}`}
+              aria-label={`Edit ${item.title}`}
               title="Edit project"
               className="p-2.5 rounded-lg bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-blue-600 transition-all"
             >
               <Edit2 className="h-4 w-4" />
             </Link>
             <button
+              type="button"
               onClick={handleDelete}
+              aria-label={`Delete ${item.title}`}
               title="Delete project"
               className="p-2.5 rounded-lg bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-red-600 transition-all"
             >
@@ -160,4 +180,3 @@ export function SortableItem({ id, item, onPreview }: Props) {
     </div>
   )
 }
-

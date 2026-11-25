@@ -9,7 +9,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
 import { UploadCloud } from 'lucide-react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
+import { getErrorMessage } from '@/lib/errors'
 
 interface TechStackFormProps {
   initialData?: TechStackFormValues & { id: string }
@@ -48,6 +50,7 @@ export function TechStackForm({ initialData }: TechStackFormProps) {
     const file = e.target.files?.[0]
     if (!file) return
 
+    setError(null)
     try {
       const fileExt = file.name.split('.').pop()
       const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
@@ -61,8 +64,8 @@ export function TechStackForm({ initialData }: TechStackFormProps) {
 
       const { data } = supabase.storage.from('portfolio_media').getPublicUrl(filePath)
       form.setValue('icon_url', data.publicUrl)
-    } catch (error: any) {
-      alert(`Error uploading image: ${error.message}`)
+    } catch (err: unknown) {
+      setError(`Error uploading image: ${getErrorMessage(err)}`)
     }
   }
 
@@ -84,8 +87,8 @@ export function TechStackForm({ initialData }: TechStackFormProps) {
         router.push('/admin/tech-stack')
         router.refresh()
       }
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setIsSubmitting(false)
     }
@@ -173,7 +176,14 @@ export function TechStackForm({ initialData }: TechStackFormProps) {
           <div className="flex items-center gap-4">
             {form.watch('icon_url') && (
               <div className="p-4 bg-white dark:bg-zinc-800 rounded-md border dark:border-zinc-700">
-                <img src={form.watch('icon_url')} alt="Icon" className="w-12 h-12 object-contain" />
+                <Image
+                  src={form.watch('icon_url') || ''}
+                  alt="Icon"
+                  width={48}
+                  height={48}
+                  unoptimized
+                  className="w-12 h-12 object-contain"
+                />
               </div>
             )}
             <label className="cursor-pointer flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-md hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">

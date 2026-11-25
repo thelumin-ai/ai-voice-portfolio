@@ -6,6 +6,8 @@ import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, Edit, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { deleteTestimonial } from './actions'
 
 interface TestimonialItem {
@@ -18,6 +20,7 @@ interface TestimonialItem {
 }
 
 export function SortableItem({ id, item }: { id: string; item: TestimonialItem }) {
+  const router = useRouter()
   const {
     attributes,
     listeners,
@@ -36,7 +39,12 @@ export function SortableItem({ id, item }: { id: string; item: TestimonialItem }
 
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this testimonial?')) {
-      await deleteTestimonial(id)
+      const res = await deleteTestimonial(id)
+      if (res?.error) {
+        alert(res.error)
+      } else {
+        router.refresh()
+      }
     }
   }
 
@@ -48,13 +56,12 @@ export function SortableItem({ id, item }: { id: string; item: TestimonialItem }
         isDragging ? 'shadow-2xl shadow-blue-500/20 ring-2 ring-blue-500 z-50 scale-[1.02]' : 'hover:border-zinc-600/50 hover:bg-zinc-800/80'
       }`}
     >
-      {/* Quote Watermark */}
       <div className="absolute -top-4 -right-4 text-9xl text-zinc-800/30 font-serif leading-none select-none pointer-events-none group-hover:text-blue-900/20 transition-colors duration-500">
         &ldquo;
       </div>
 
       <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-5 w-full sm:w-auto">
+        <div className="flex items-center gap-4 sm:gap-5 w-full sm:w-auto min-w-0">
           <div
             {...attributes}
             {...listeners}
@@ -63,29 +70,36 @@ export function SortableItem({ id, item }: { id: string; item: TestimonialItem }
           >
             <GripVertical className="h-5 w-5" />
           </div>
-          
-          <div>
-            <div className="flex items-center gap-3">
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-3 min-w-0">
               {item.image_url ? (
-                <img src={item.image_url} alt={item.client_name} className="w-8 h-8 rounded-full object-cover border border-zinc-700" />
+                <Image
+                  src={item.image_url}
+                  alt={item.client_name}
+                  width={32}
+                  height={32}
+                  unoptimized
+                  className="w-8 h-8 rounded-full object-cover border border-zinc-700 shrink-0"
+                />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
+                <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700 shrink-0">
                   <span className="text-xs font-bold text-zinc-400">{item.client_name.charAt(0)}</span>
                 </div>
               )}
-              <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
+              <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors truncate">
                 {item.client_name}
               </h3>
             </div>
             {item.company && (
-              <p className="text-sm font-medium text-zinc-400 mt-1 tracking-wide uppercase pl-11">
+              <p className="text-sm font-medium text-zinc-400 mt-1 tracking-wide uppercase pl-11 truncate">
                 {item.company}
               </p>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-4 w-full sm:w-auto justify-end border-t sm:border-t-0 border-zinc-800/50 pt-4 sm:pt-0">
+        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-zinc-800/50 pt-4 sm:pt-0 shrink-0">
           <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md border ${
             item.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
             item.status === 'draft' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
@@ -93,14 +107,14 @@ export function SortableItem({ id, item }: { id: string; item: TestimonialItem }
           }`}>
             {item.status}
           </span>
-          
+
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" asChild className="bg-zinc-800 text-zinc-300 hover:text-white hover:bg-blue-600 border border-zinc-700 hover:border-transparent transition-all rounded-lg">
-              <Link href={`/admin/testimonials/${id}`}>
+              <Link href={`/admin/testimonials/${id}`} aria-label={`Edit ${item.client_name}`}>
                 <Edit className="h-4 w-4" />
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" className="bg-zinc-800 text-zinc-300 hover:text-white hover:bg-red-600 border border-zinc-700 hover:border-transparent transition-all rounded-lg" onClick={handleDelete}>
+            <Button type="button" variant="ghost" size="icon" aria-label={`Delete ${item.client_name}`} className="bg-zinc-800 text-zinc-300 hover:text-white hover:bg-red-600 border border-zinc-700 hover:border-transparent transition-all rounded-lg" onClick={handleDelete}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>

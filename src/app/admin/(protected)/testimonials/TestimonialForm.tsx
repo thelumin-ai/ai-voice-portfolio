@@ -8,6 +8,7 @@ import { createTestimonial, updateTestimonial } from './actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
+import { getErrorMessage } from '@/lib/errors'
 
 interface TestimonialFormProps {
   initialData?: TestimonialFormValues & { id: string }
@@ -50,8 +51,8 @@ export function TestimonialForm({ initialData }: TestimonialFormProps) {
         router.push('/admin/testimonials')
         router.refresh()
       }
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setIsSubmitting(false)
     }
@@ -99,16 +100,22 @@ export function TestimonialForm({ initialData }: TestimonialFormProps) {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Rating (1-5)</label>
               <input
                 type="number"
                 min="1"
                 max="5"
-                {...form.register('rating', { valueAsNumber: true })}
+                {...form.register('rating', {
+                  setValueAs: (v) =>
+                    v === '' || v === null || Number.isNaN(Number(v)) ? undefined : Number(v),
+                })}
                 className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
               />
+              {form.formState.errors.rating && (
+                <p className="text-sm text-red-500">{form.formState.errors.rating.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">

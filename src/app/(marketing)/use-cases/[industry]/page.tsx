@@ -1,12 +1,19 @@
-import { getUseCaseBySlug } from "@/app/admin/(protected)/use-cases/actions";
+import { getPublishedUseCaseBySlug } from "@/app/admin/(protected)/use-cases/actions";
 import { getSiteSettings } from "@/app/admin/(protected)/settings/actions";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, CheckCircle2 } from "lucide-react";
 import WebRTCVoiceDemo from "@/components/WebRTCVoiceDemo";
+import { sanitizeHref } from "@/lib/url";
+import { serializeJsonLd } from "@/lib/seo/jsonLd";
+import type { UseCaseFlowStep, UseCaseRecord, UseCaseResultItem } from "@/lib/types";
 
-// Fallback data for when the database is empty
-const fallbackUseCases: Record<string, any> = {
+interface UseCaseDetail extends Omit<UseCaseRecord, 'problem'> {
+    problem: string;
+    vapiAgentId?: string;
+}
+
+const fallbackUseCases: Record<string, UseCaseDetail> = {
     "real-estate": {
         name: "Real Estate",
         industry_slug: "real-estate",
@@ -190,46 +197,98 @@ const fallbackUseCases: Record<string, any> = {
     },
 };
 
+export async function generateMetadata({ params }: { params: Promise<{ industry: string }> }) {
+    const { industry } = await params;
+    const { data: useCase } = await getPublishedUseCaseBySlug(industry);
+    const data = useCase || fallbackUseCases[industry];
+
+    if (!data) {
+        return { title: 'Use Case Not Found' };
+    }
+
+    return {
+        title: `${data.name} — ${data.headline} | Abimbola.AI`,
+        description: data.subhead,
+        alternates: { canonical: `/use-cases/${industry}` },
+        ...(data.cover_image_url
+            ? {
+                  openGraph: {
+                      title: `${data.name} — ${data.headline}`,
+                      description: data.subhead,
+                      images: [data.cover_image_url],
+                  },
+              }
+            : {}),
+    };
+}
+
 export default async function IndustryPage({ params }: { params: Promise<{ industry: string }> }) {
     const { industry } = await params;
-    
-    // Fetch dynamic data from DB
-    const { data: useCase, error } = await getUseCaseBySlug(industry);
 
-    // Fall back to hardcoded data if DB is empty
+    const { data: useCase, error } = await getPublishedUseCaseBySlug(industry);
     const fallback = fallbackUseCases[industry];
-    
+
     if ((error || !useCase) && !fallback) {
         notFound();
     }
 
     const data = useCase || fallback;
 
-    // Fetch consultation link from settings
     const { data: settings } = await getSiteSettings();
-    let consultationLink = "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021";
+    let rawConsult = "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021";
     if (settings?.consultation_provider === 'fiverr' && settings?.consultation_link_fiverr) {
-        consultationLink = settings.consultation_link_fiverr;
+        rawConsult = settings.consultation_link_fiverr;
     } else if (settings?.consultation_provider === 'calendly' && settings?.consultation_link_calendly) {
-        consultationLink = settings.consultation_link_calendly;
+        rawConsult = settings.consultation_link_calendly;
     } else if (settings?.consultation_link_upwork) {
-        consultationLink = settings.consultation_link_upwork;
+        rawConsult = settings.consultation_link_upwork;
     }
+    const consultationLink = sanitizeHref(rawConsult, "/#consultation");
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://abimbola-ai-portfolio.vercel.app').replace(/\/+$/, '');
+    const pageUrl = `${siteUrl}/use-cases/${industry}`;
+    const useCaseStructuredData = {
+        '@context': 'https://schema.org',
+        '@graph': [
+            {
+                '@type': 'Service',
+                name: `${data.name} — ${data.headline}`,
+                description: data.subhead,
+                serviceType: data.name,
+                url: pageUrl,
+                provider: {
+                    '@type': 'Person',
+                    name: 'Abimbola Akinsanmi',
+                },
+            },
+            {
+                '@type': 'BreadcrumbList',
+                itemListElement: [
+                    { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+                    { '@type': 'ListItem', position: 2, name: 'Use Cases', item: `${siteUrl}/use-cases` },
+                    { '@type': 'ListItem', position: 3, name: data.name, item: pageUrl },
+                ],
+            },
+        ],
+    };
 
     return (
-        <div className="bg-black min-h-screen pt-24 pb-16">
+        <div className="bg-black text-white min-h-screen pt-16 pb-16 overflow-x-clip">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: serializeJsonLd(useCaseStructuredData) }}
+            />
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Breadcrumbs */}
-                <div className="flex items-center text-sm text-gray-400 mb-8">
+                <div className="flex flex-wrap items-center text-sm text-gray-400 mb-8 gap-1">
                     <Link href="/" className="hover:text-white transition-colors">Home</Link>
-                    <ChevronRight className="h-4 w-4 mx-2" />
-                    <Link href="/#use-cases" className="hover:text-white transition-colors">Use Cases</Link>
-                    <ChevronRight className="h-4 w-4 mx-2" />
+                    <ChevronRight className="h-4 w-4 mx-1" />
+                    <Link href="/use-cases" className="hover:text-white transition-colors">Use Cases</Link>
+                    <ChevronRight className="h-4 w-4 mx-1" />
                     <span className="text-white bg-white/10 px-2 py-1 rounded">{data.name}</span>
                 </div>
 
                 <div className="max-w-4xl mb-20 relative">
-                    <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-600/20 blur-[50px] rounded-full" />
+                    <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-600/20 blur-[50px] rounded-full pointer-events-none" />
                     <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight relative z-10">
                         {data.headline}
                     </h1>
@@ -238,18 +297,15 @@ export default async function IndustryPage({ params }: { params: Promise<{ indus
                     </p>
                 </div>
 
-                {/* content grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                {/* Content grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
                     {/* Left Column (Info) */}
-                    <div className="lg:col-span-2 space-y-16">
-
-                        {/* Problem */}
+                    <div className="lg:col-span-7 space-y-16">
                         <section>
                             <h2 className="text-2xl font-bold text-white mb-4 border-b border-white/10 pb-2">The Challenge</h2>
                             <p className="text-gray-300 text-lg leading-relaxed">{data.problem}</p>
                         </section>
 
-                        {/* Features */}
                         <section>
                             <h2 className="text-2xl font-bold text-white mb-6 border-b border-white/10 pb-2">What The AI Does</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -262,31 +318,28 @@ export default async function IndustryPage({ params }: { params: Promise<{ indus
                             </div>
                         </section>
 
-                        {/* Conversation Flow */}
                         <section>
                             <h2 className="text-2xl font-bold text-white mb-6 border-b border-white/10 pb-2">Conversation Flow Logic</h2>
                             <div className="space-y-4">
-                                {data.flow?.map((step: any, i: number) => (
-                                    <div key={i} className="glass-panel p-6 flex gap-4 items-start">
+                                {data.flow?.map((step: UseCaseFlowStep, i: number) => (
+                                    <div key={i} className="bg-zinc-900/80 border border-white/10 rounded-2xl p-6 flex gap-4 items-start">
                                         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold border border-blue-500/30">
                                             {i + 1}
                                         </div>
                                         <div>
-                                            <h4 className="text-white font-semibold mb-1">{step.step}</h4>
+                                            <h3 className="text-white font-semibold mb-1">{step.step}</h3>
                                             <p className="text-gray-400 text-sm">{step.desc}</p>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         </section>
-
                     </div>
 
                     {/* Right Column (Demo & Results) */}
-                    <div className="space-y-8">
-                        {/* Demo Card */}
-                        <div className="glass-panel border-blue-500/30 p-8 sticky top-24">
-                            <h3 className="text-xl font-bold text-white mb-2">Talk to the Agent</h3>
+                    <div className="lg:col-span-5 space-y-8">
+                        <div className="bg-zinc-900/80 backdrop-blur-lg border border-blue-500/30 rounded-2xl p-6 xl:sticky xl:top-20">
+                            <h2 className="text-xl font-bold text-white mb-2">Talk to the Agent</h2>
                             <p className="text-gray-400 text-sm mb-6">Test the live AI configuration for the {data.name} industry.</p>
 
                             {data.vapiAgentId ? (
@@ -295,12 +348,12 @@ export default async function IndustryPage({ params }: { params: Promise<{ indus
                                         agentRole={data.name}
                                         vapiAgentId={(() => {
                                             const urlOrId = data.vapiAgentId;
-                                            if (urlOrId.includes('vapi.ai') && urlOrId.includes('assistantId=')) {
+                                            if (urlOrId.includes('vapi.ai')) {
                                                 try {
                                                     const urlObj = new URL(urlOrId);
-                                                    const assistantId = urlObj.searchParams.get('assistantId');
+                                                    const assistantId = urlObj.searchParams.get('assistantId') || urlObj.searchParams.get('id');
                                                     if (assistantId) return assistantId;
-                                                } catch(e) {}
+                                                } catch {}
                                             }
                                             return urlOrId;
                                         })()}
@@ -323,12 +376,11 @@ export default async function IndustryPage({ params }: { params: Promise<{ indus
                             </Link>
                         </div>
 
-                        {/* Results */}
                         <div className="grid grid-cols-1 gap-4">
-                            <h3 className="text-lg font-semibold text-white mb-2">Expected Results</h3>
-                            {data.results?.map((result: any, i: number) => (
-                                <div key={i} className="bg-zinc-900 border border-white/5 rounded-xl p-4 flex flex-col items-center text-center">
-                                    <span className="text-3xl font-black text-white text-gradient mb-1">{result.stat}</span>
+                            <h2 className="text-lg font-semibold text-white mb-2">Expected Results</h2>
+                            {data.results?.map((result: UseCaseResultItem, i: number) => (
+                                <div key={i} className="bg-zinc-900 border border-white/10 rounded-xl p-4 flex flex-col items-center text-center">
+                                    <span className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-400 mb-1">{result.stat}</span>
                                     <span className="text-xs text-gray-400 uppercase tracking-wider">{result.label}</span>
                                 </div>
                             ))}
@@ -337,9 +389,9 @@ export default async function IndustryPage({ params }: { params: Promise<{ indus
                 </div>
 
                 {/* Final CTA */}
-                <div className="mt-24 text-center glass-panel p-12 border-blue-500/20">
+                <div className="mt-24 text-center bg-zinc-900/80 backdrop-blur-lg rounded-2xl p-8 md:p-12 border border-blue-500/20">
                     <h2 className="text-3xl font-bold text-white mb-4">Ready to automate your {data.name} operations?</h2>
-                    <p className="text-gray-400 mb-8 max-w-2xl mx-auto">Stop leaving money on the table. Let's build a custom voice AI system designed perfectly for your specific business logic.</p>
+                    <p className="text-gray-400 mb-8 max-w-2xl mx-auto">Stop leaving money on the table. Let&apos;s build a custom voice AI system designed perfectly for your specific business logic.</p>
                     <Link
                         href={consultationLink}
                         target="_blank"

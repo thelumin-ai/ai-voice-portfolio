@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, ChevronRight, Loader2, Zap, Clock, DollarSign, Mic, Bot, GitBranch, Phone } from "lucide-react";
-import Link from "next/link";
 
 const steps = [
     { id: 1, title: "Use Case", desc: "What do you need the AI to do?" },
@@ -34,14 +33,17 @@ const timelines = [
     { id: "flexible", label: "Flexible (5–8 weeks)", multiplier: 0.85, icon: DollarSign, color: "text-green-400 border-green-400/30 bg-green-400/10" },
 ];
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function Estimator() {
     const [step, setStep] = useState(1);
     const [selectedUseCase, setSelectedUseCase] = useState<string | null>(null);
     const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
     const [selectedTimeline, setSelectedTimeline] = useState<string | null>(null);
-    const [formData, setFormData] = useState({ name: "", email: "", business: "" });
+    const [formData, setFormData] = useState({ name: "", email: "", business: "", website: "" });
     const [submitted, setSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     const getBase = () => useCases.find(u => u.id === selectedUseCase)?.base || 0;
     const getFeatureCost = () => selectedFeatures.reduce((acc, fId) => acc + (features.find(f => f.id === fId)?.cost || 0), 0);
@@ -53,6 +55,16 @@ export default function Estimator() {
     };
 
     const handleSubmit = async () => {
+        setSubmitError(null);
+        if (!formData.name.trim()) {
+            setSubmitError("Please enter your name.");
+            return;
+        }
+        if (!EMAIL_REGEX.test(formData.email.trim())) {
+            setSubmitError("Please enter a valid email address.");
+            return;
+        }
+
         setSubmitting(true);
         try {
             const useCaseLabel = useCases.find(u => u.id === selectedUseCase)?.label || selectedUseCase || '';
@@ -63,9 +75,10 @@ export default function Estimator() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    name: formData.name,
-                    email: formData.email,
-                    business: formData.business,
+                    name: formData.name.trim(),
+                    email: formData.email.trim(),
+                    business: formData.business.trim(),
+                    website: formData.website,
                     useCase: useCaseLabel,
                     features: featureLabels,
                     timeline: timelineLabel,
@@ -76,11 +89,12 @@ export default function Estimator() {
             if (res.ok) {
                 setSubmitted(true);
             } else {
-                alert('There was an issue submitting your request. Please try again.');
+                const payload = await res.json().catch(() => ({}));
+                setSubmitError(payload?.error || 'There was an issue submitting your request. Please try again.');
             }
         } catch (err) {
             console.error(err);
-            alert('Failed to send request. Please check your internet connection.');
+            setSubmitError('Failed to send request. Please check your internet connection.');
         } finally {
             setSubmitting(false);
         }
@@ -88,9 +102,9 @@ export default function Estimator() {
 
     const canProceed = () => {
         if (step === 1) return !!selectedUseCase;
-        if (step === 2) return true; // features are optional
+        if (step === 2) return true;
         if (step === 3) return !!selectedTimeline;
-        if (step === 4) return formData.name && formData.email;
+        if (step === 4) return formData.name.trim().length > 0 && EMAIL_REGEX.test(formData.email.trim());
         return false;
     };
 
@@ -118,7 +132,7 @@ export default function Estimator() {
                 </div>
 
                 {/* Step Indicators */}
-                <div className="flex items-center justify-center mb-10 gap-2">
+                <div className="flex flex-wrap items-center justify-center mb-10 gap-2">
                     {steps.map((s, i) => (
                         <div key={s.id} className="flex items-center">
                             <div
@@ -142,7 +156,7 @@ export default function Estimator() {
                     <AnimatePresence mode="wait">
                         {/* Step 1 - Use Case */}
                         {step === 1 && (
-                            <motion.div key="step1" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="p-8 md:p-12">
+                            <motion.div key="step1" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="p-6 sm:p-8 md:p-12">
                                 <h3 className="text-2xl font-bold text-black dark:text-white mb-2">What do you need the AI to do?</h3>
                                 <p className="text-gray-500 dark:text-gray-400 mb-8">Choose the primary use case for your AI system.</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -151,6 +165,7 @@ export default function Estimator() {
                                         return (
                                             <button
                                                 key={uc.id}
+                                                type="button"
                                                 onClick={() => setSelectedUseCase(uc.id)}
                                                 className={`p-6 rounded-2xl border-2 text-left transition-all duration-200 ${
                                                     selectedUseCase === uc.id
@@ -173,13 +188,14 @@ export default function Estimator() {
 
                         {/* Step 2 - Features */}
                         {step === 2 && (
-                            <motion.div key="step2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="p-8 md:p-12">
+                            <motion.div key="step2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="p-6 sm:p-8 md:p-12">
                                 <h3 className="text-2xl font-bold text-black dark:text-white mb-2">Select additional features</h3>
                                 <p className="text-gray-500 dark:text-gray-400 mb-8">Choose any integrations or capabilities. You can skip this step.</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {features.map(f => (
                                         <button
                                             key={f.id}
+                                            type="button"
                                             onClick={() => toggleFeature(f.id)}
                                             className={`p-5 rounded-2xl border-2 text-left transition-all duration-200 relative ${
                                                 selectedFeatures.includes(f.id)
@@ -203,8 +219,8 @@ export default function Estimator() {
 
                         {/* Step 3 - Timeline */}
                         {step === 3 && (
-                            <motion.div key="step3" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="p-8 md:p-12">
-                                <h3 className="text-2xl font-bold text-black dark:text-white mb-2">What's your timeline?</h3>
+                            <motion.div key="step3" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="p-6 sm:p-8 md:p-12">
+                                <h3 className="text-2xl font-bold text-black dark:text-white mb-2">What&apos;s your timeline?</h3>
                                 <p className="text-gray-500 dark:text-gray-400 mb-8">Timeline affects the final price.</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     {timelines.map(t => {
@@ -212,6 +228,7 @@ export default function Estimator() {
                                         return (
                                             <button
                                                 key={t.id}
+                                                type="button"
                                                 onClick={() => setSelectedTimeline(t.id)}
                                                 className={`p-6 rounded-2xl border-2 text-left transition-all duration-200 ${
                                                     selectedTimeline === t.id
@@ -234,13 +251,13 @@ export default function Estimator() {
 
                         {/* Step 4 - Quote */}
                         {step === 4 && !submitted && (
-                            <motion.div key="step4" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="p-8 md:p-12">
+                            <motion.div key="step4" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="p-6 sm:p-8 md:p-12">
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                                     {/* Estimate Summary */}
                                     <div>
-                                        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 text-white mb-6">
-                                            <div className="text-sm font-semibold opacity-70 uppercase tracking-wider mb-2">Your Estimated Investment</div>
-                                            <div className="text-5xl font-black mb-1">${totalEstimate.toLocaleString()}</div>
+                                        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white mb-6">
+                                            <div className="text-sm font-semibold opacity-80 uppercase tracking-wider mb-2">Your Estimated Investment</div>
+                                            <div className="text-4xl sm:text-5xl font-black mb-1">${totalEstimate.toLocaleString()}</div>
                                             <div className="text-blue-200 text-sm">One-time project fee</div>
                                         </div>
                                         <div className="space-y-2">
@@ -271,11 +288,17 @@ export default function Estimator() {
                                     {/* Contact Form */}
                                     <div>
                                         <h3 className="text-xl font-bold text-black dark:text-white mb-2">Get your detailed quote</h3>
-                                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">I'll review your requirements and send a detailed proposal within 24 hours.</p>
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">I&apos;ll review your requirements and send a detailed proposal within 24 hours.</p>
+                                        {submitError && (
+                                            <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm">
+                                                {submitError}
+                                            </div>
+                                        )}
                                         <div className="space-y-4">
                                             <div>
-                                                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 block">Your Name *</label>
+                                                <label htmlFor="estimator-name" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 block">Your Name *</label>
                                                 <input
+                                                    id="estimator-name"
                                                     type="text"
                                                     value={formData.name}
                                                     onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
@@ -284,8 +307,9 @@ export default function Estimator() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 block">Email Address *</label>
+                                                <label htmlFor="estimator-email" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 block">Email Address *</label>
                                                 <input
+                                                    id="estimator-email"
                                                     type="email"
                                                     value={formData.email}
                                                     onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
@@ -294,8 +318,9 @@ export default function Estimator() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 block">Business / Company</label>
+                                                <label htmlFor="estimator-business" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 block">Business / Company</label>
                                                 <input
+                                                    id="estimator-business"
                                                     type="text"
                                                     value={formData.business}
                                                     onChange={e => setFormData(p => ({ ...p, business: e.target.value }))}
@@ -303,6 +328,16 @@ export default function Estimator() {
                                                     className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
+                                            <input
+                                                type="text"
+                                                name="website"
+                                                value={formData.website}
+                                                onChange={e => setFormData(p => ({ ...p, website: e.target.value }))}
+                                                tabIndex={-1}
+                                                autoComplete="off"
+                                                aria-hidden="true"
+                                                className="hidden"
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -311,13 +346,13 @@ export default function Estimator() {
 
                         {/* Submitted */}
                         {submitted && (
-                            <motion.div key="submitted" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-12 text-center">
+                            <motion.div key="submitted" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-8 sm:p-12 text-center">
                                 <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
                                     <CheckCircle2 className="w-10 h-10 text-green-600" />
                                 </div>
-                                <h3 className="text-3xl font-bold text-black dark:text-white mb-3">You're all set!</h3>
+                                <h3 className="text-3xl font-bold text-black dark:text-white mb-3">You&apos;re all set!</h3>
                                 <p className="text-gray-500 dark:text-gray-400 mb-2">Your estimate has been received.</p>
-                                <p className="text-gray-500 dark:text-gray-400 mb-8">I'll review your requirements and send a detailed proposal to <span className="text-blue-600 dark:text-blue-400 font-semibold">{formData.email}</span> within 24 hours.</p>
+                                <p className="text-gray-500 dark:text-gray-400 mb-8">I&apos;ll review your requirements and send a detailed proposal to <span className="text-blue-600 dark:text-blue-400 font-semibold">{formData.email}</span> within 24 hours.</p>
                                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-6 max-w-sm mx-auto">
                                     <div className="text-3xl font-black text-blue-600 dark:text-blue-400 mb-1">${totalEstimate.toLocaleString()}</div>
                                     <div className="text-sm text-gray-500 dark:text-gray-400">Estimated project investment</div>
@@ -328,30 +363,33 @@ export default function Estimator() {
 
                     {/* Navigation Footer */}
                     {!submitted && (
-                        <div className="px-8 md:px-12 pb-8 flex items-center justify-between border-t border-black/5 dark:border-white/5 pt-6">
+                        <div className="px-4 sm:px-8 md:px-12 pb-6 sm:pb-8 flex flex-wrap items-center justify-between gap-3 border-t border-black/5 dark:border-white/5 pt-6">
                             <button
+                                type="button"
                                 onClick={() => setStep(s => Math.max(1, s - 1))}
                                 disabled={step === 1}
-                                className="px-6 py-2.5 text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white disabled:opacity-30 transition-colors"
+                                className="px-4 sm:px-6 py-2.5 text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white disabled:opacity-30 transition-colors"
                             >
                                 ← Back
                             </button>
 
-                            <div className="text-sm text-gray-400">Step {step} of {steps.length}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">Step {step} of {steps.length}</div>
 
                             {step < 4 ? (
                                 <button
+                                    type="button"
                                     onClick={() => setStep(s => s + 1)}
                                     disabled={!canProceed()}
-                                    className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                    className="px-6 sm:px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                                 >
                                     Continue →
                                 </button>
                             ) : (
                                 <button
+                                    type="button"
                                     onClick={handleSubmit}
                                     disabled={!canProceed() || submitting}
-                                    className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                                    className="px-6 sm:px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                                 >
                                     {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</> : 'Get My Proposal →'}
                                 </button>

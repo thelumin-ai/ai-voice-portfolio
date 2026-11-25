@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { serializeJsonLd } from "@/lib/seo/jsonLd";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -17,9 +18,6 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://abimbola-ai-portfolio.vercel.app'),
   title: "AI Voice Automation Engineer | Abimbola Akinsanmi",
   description: "High-converting AI voice agents that automatically call leads, qualify prospects, and schedule appointments.",
-  alternates: {
-    canonical: '/',
-  },
   verification: {
     google: "ua1-FfmwrIXAlxh92HTeJ4tqadx-m-dGx5Nki3eqdVw",
   },
@@ -64,50 +62,19 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
 
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://abimbola-ai-portfolio.vercel.app').replace(/\/+$/, '');
   const jsonLd = {
     "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Person",
-        "@id": "https://abimbola-ai-portfolio.vercel.app/#person",
-        "name": "Abimbola Akinsanmi",
-        "jobTitle": "AI Voice Automation Engineer",
-        "url": "https://abimbola-ai-portfolio.vercel.app",
-        "sameAs": [
-          "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021",
-          "https://github.com/thelumin-ai"
-        ],
-        "knowsAbout": ["AI Voice Agents", "WebRTC Voice Automations", "Next.js Development", "Supabase Backend Architecture", "Vapi.ai", "Retell AI Real-Time Voice Agents"]
-      },
-      {
-        "@type": "WebSite",
-        "@id": "https://abimbola-ai-portfolio.vercel.app/#website",
-        "url": "https://abimbola-ai-portfolio.vercel.app",
-        "name": "AI Voice Automation Engineer | Abimbola Akinsanmi",
-        "publisher": {
-          "@id": "https://abimbola-ai-portfolio.vercel.app/#person"
-        }
-      },
-      {
-        "@type": "ProfessionalService",
-        "@id": "https://abimbola-ai-portfolio.vercel.app/#service",
-        "name": "Abimbola AI Voice Automation & SaaS Systems",
-        "url": "https://abimbola-ai-portfolio.vercel.app",
-        "image": "https://abimbola-ai-portfolio.vercel.app/og-image.png",
-        "description": "High-converting AI voice agents that automatically call leads, qualify prospects, and schedule appointments.",
-        "address": {
-          "@type": "PostalAddress",
-          "addressLocality": "Lagos",
-          "addressCountry": "NG"
-        },
-        "priceRange": "$$"
-      }
-    ]
+    "@type": "WebSite",
+    "@id": `${siteUrl}/#website`,
+    "url": siteUrl,
+    "name": "AI Voice Automation Engineer | Abimbola Akinsanmi",
+    "description": "High-converting AI voice agents that automatically call leads, qualify prospects, and schedule appointments.",
   };
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${outfit.variable} font-sans antialiased min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white transition-colors duration-300`}>
+      <body className={`${inter.variable} ${outfit.variable} font-sans antialiased min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white transition-colors duration-300 overflow-x-clip`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -117,7 +84,7 @@ export default async function RootLayout({
           {children}
           <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
           />
         </ThemeProvider>
       </body>

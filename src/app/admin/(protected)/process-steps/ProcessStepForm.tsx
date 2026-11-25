@@ -8,6 +8,7 @@ import { createProcessStep, updateProcessStep } from './actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
+import { getErrorMessage } from '@/lib/errors'
 
 interface ProcessStepFormProps {
   initialData?: ProcessStepFormValues & { id: string }
@@ -47,8 +48,8 @@ export function ProcessStepForm({ initialData }: ProcessStepFormProps) {
         router.push('/admin/process-steps')
         router.refresh()
       }
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setIsSubmitting(false)
     }
@@ -106,6 +107,9 @@ export function ProcessStepForm({ initialData }: ProcessStepFormProps) {
               className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
               placeholder="e.g. phone-call, search, or https://..."
             />
+            {form.formState.errors.icon_url && (
+              <p className="text-sm text-red-500">{form.formState.errors.icon_url.message}</p>
+            )}
             <p className="text-xs text-gray-500">You can use a Lucide icon name or a direct image URL.</p>
           </div>
         </CardContent>

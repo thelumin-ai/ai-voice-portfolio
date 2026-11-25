@@ -1,23 +1,31 @@
 import Link from 'next/link';
 import { Github, Linkedin, Twitter } from 'lucide-react';
 import { getSiteSettings } from '@/app/admin/(protected)/settings/actions';
+import { sanitizeHref } from '@/lib/url';
 
 export default async function Footer() {
-    const { data: settings } = await getSiteSettings();
-    const twitterUrl = settings?.social_links?.twitter;
-    const linkedinUrl = settings?.social_links?.linkedin;
-    const githubUrl = settings?.social_links?.github;
-    const footerText = settings?.footer_text || `© ${new Date().getFullYear()} Abimbola Akinsanmi. All rights reserved.`;
-    
-    // Resolve consultation link from settings
-    let consultationLink = "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021";
-    if (settings?.consultation_provider === 'fiverr' && settings?.consultation_link_fiverr) {
-        consultationLink = settings.consultation_link_fiverr;
-    } else if (settings?.consultation_provider === 'calendly' && settings?.consultation_link_calendly) {
-        consultationLink = settings.consultation_link_calendly;
-    } else if (settings?.consultation_link_upwork) {
-        consultationLink = settings.consultation_link_upwork;
+    let settings: Awaited<ReturnType<typeof getSiteSettings>>['data'] | undefined;
+    try {
+        const res = await getSiteSettings();
+        settings = res?.data;
+    } catch (error) {
+        console.error('Failed to fetch settings in Footer:', error);
     }
+
+    const twitterUrl = settings?.social_links?.twitter ? sanitizeHref(settings.social_links.twitter, '') : '';
+    const linkedinUrl = settings?.social_links?.linkedin ? sanitizeHref(settings.social_links.linkedin, '') : '';
+    const githubUrl = settings?.social_links?.github ? sanitizeHref(settings.social_links.github, '') : '';
+    const footerText = settings?.footer_text || `© ${new Date().getFullYear()} Abimbola Akinsanmi. All rights reserved.`;
+
+    let rawConsult = "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021";
+    if (settings?.consultation_provider === 'fiverr' && settings?.consultation_link_fiverr) {
+        rawConsult = settings.consultation_link_fiverr;
+    } else if (settings?.consultation_provider === 'calendly' && settings?.consultation_link_calendly) {
+        rawConsult = settings.consultation_link_calendly;
+    } else if (settings?.consultation_link_upwork) {
+        rawConsult = settings.consultation_link_upwork;
+    }
+    const consultationLink = sanitizeHref(rawConsult, "/#consultation");
 
     return (
         <footer className="border-t border-black/10 dark:border-white/10 bg-gray-50 dark:bg-black py-12 transition-colors duration-300">
@@ -49,17 +57,16 @@ export default async function Footer() {
                                     <Github className="h-5 w-5" />
                                 </a>
                             )}
-                            {/* Fallback if no links to show something or just empty */}
                         </div>
                     </div>
 
                     <div>
                         <h3 className="text-sm font-semibold tracking-wider text-black dark:text-white uppercase mb-4 transition-colors duration-300">Solutions</h3>
                         <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                            <li><Link href="/#solutions" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Inbound Calling</Link></li>
-                            <li><Link href="/#solutions" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Outbound Systems</Link></li>
-                            <li><Link href="/#solutions" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Lead Qualification</Link></li>
-                            <li><Link href="/#solutions" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Appointment Booking</Link></li>
+                            <li><Link href="/use-cases/customer-support" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Inbound Calling</Link></li>
+                            <li><Link href="/use-cases/sales" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Outbound Systems</Link></li>
+                            <li><Link href="/use-cases/real-estate" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Lead Qualification</Link></li>
+                            <li><Link href="/use-cases/scheduling" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Appointment Booking</Link></li>
                         </ul>
                     </div>
 
@@ -67,7 +74,8 @@ export default async function Footer() {
                         <h3 className="text-sm font-semibold tracking-wider text-black dark:text-white uppercase mb-4 transition-colors duration-300">Company</h3>
                         <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                             <li><Link href="/#about" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">About</Link></li>
-                            <li><Link href="/#portfolio" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Portfolio</Link></li>
+                            <li><Link href="/portfolio" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Portfolio</Link></li>
+                            <li><Link href="/playground" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Voice Playground</Link></li>
                             <li><Link href="/#how-it-works" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">How it Works</Link></li>
                         </ul>
                     </div>

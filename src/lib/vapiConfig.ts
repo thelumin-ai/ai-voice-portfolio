@@ -1,0 +1,16 @@
+export const DEFAULT_VAPI_PUBLIC_KEY =
+  process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY || 'f34943b9-1b82-42e4-9d69-42bf4834b1f7'
+
+export const DEFAULT_VAPI_AGENT_ID =
+  process.env.NEXT_PUBLIC_VAPI_AGENT_DEFAULT || '087efbdc-3fcf-4329-a12e-819eb64d3882'
+
+export const VAPI_DEMO_AGENTS = {
+  realEstate:
+    process.env.NEXT_PUBLIC_VAPI_AGENT_REAL_ESTATE || DEFAULT_VAPI_AGENT_ID,
+  solar:
+    process.env.NEXT_PUBLIC_VAPI_AGENT_SOLAR || DEFAULT_VAPI_AGENT_ID,
+  support:
+    process.env.NEXT_PUBLIC_VAPI_AGENT_SUPPORT || DEFAULT_VAPI_AGENT_ID,
+  coldCaller:
+    process.env.NEXT_PUBLIC_VAPI_AGENT_COLD_CALLER || DEFAULT_VAPI_AGENT_ID,
+} as const

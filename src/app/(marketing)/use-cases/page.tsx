@@ -1,11 +1,20 @@
-import { getUseCases } from "@/app/admin/(protected)/use-cases/actions";
+import { getPublishedUseCases } from "@/app/admin/(protected)/use-cases/actions";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, type LucideIcon } from "lucide-react";
 import * as LucideIcons from "lucide-react";
+import type { UseCaseRecord } from "@/lib/types";
+
+interface UseCaseSummary extends Omit<UseCaseRecord, 'subhead'> {
+    subhead?: string;
+}
+
+const iconRegistry = LucideIcons as unknown as Record<string, LucideIcon>;
 
 export const metadata = {
     title: "AI Voice Agent Use Cases | Abimbola.AI",
     description: "Explore industry-specific AI voice agent deployments across Real Estate, Solar, Home Services, Consulting, Finance, and Customer Support.",
+    alternates: { canonical: '/use-cases' },
 };
 
 const defaultUseCases = [
@@ -155,30 +164,28 @@ const defaultUseCases = [
     },
 ];
 
-// Dynamic icon resolver - works with any Lucide icon name from the DB
-const getIcon = (iconName: string) => {
-    return (LucideIcons as any)[iconName] || LucideIcons.Briefcase;
+const getIcon = (iconName: string): LucideIcon => {
+    return iconRegistry[iconName] || LucideIcons.Briefcase;
 };
 
 export default async function UseCasesIndexPage() {
-    const { data } = await getUseCases();
-
-    // Use DB data if available, otherwise fall back to defaults
-    let useCases = defaultUseCases;
-    if (data && data.length > 0) {
-        const published = data.filter((u: any) => u.status === "published");
-        if (published.length > 0) {
-            useCases = published;
+    let useCases: UseCaseSummary[] = defaultUseCases;
+    try {
+        const { data } = await getPublishedUseCases();
+        if (data && data.length > 0) {
+            useCases = data as UseCaseSummary[];
         }
+    } catch (error) {
+        console.error("Failed to fetch use cases:", error);
     }
 
     return (
-        <div className="bg-white dark:bg-black min-h-screen pt-24 pb-16 transition-colors duration-300">
+        <div className="bg-white dark:bg-black min-h-screen pt-16 pb-16 transition-colors duration-300 overflow-x-clip">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Hero Header */}
                 <div className="max-w-3xl mb-16">
                     <div className="relative">
-                        <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-600/20 blur-[50px] rounded-full" />
+                        <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-600/20 blur-[50px] rounded-full pointer-events-none" />
                         <h1 className="text-4xl md:text-6xl font-extrabold text-black dark:text-white mb-6 leading-tight relative z-10 transition-colors duration-300">
                             Industry-Specific{" "}
                             <span className="text-gray-500">AI Deployments</span>
@@ -192,7 +199,7 @@ export default async function UseCasesIndexPage() {
 
                 {/* Use Cases Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {useCases.map((useCase: any) => {
+                    {useCases.map((useCase) => {
                         const IconComponent = getIcon(useCase.icon_name || 'Briefcase');
                         return (
                             <Link
@@ -204,18 +211,20 @@ export default async function UseCasesIndexPage() {
                                     {/* Background Image */}
                                     <div className="absolute inset-0 z-0">
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20 z-10" />
-                                        <img
+                                        <Image
                                             src={
                                                 useCase.cover_image_url ||
                                                 "https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop"
                                             }
                                             alt={useCase.name}
-                                            className="w-full h-full object-cover transform scale-100 group-hover:scale-110 transition-transform duration-700"
+                                            fill
+                                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                            className="object-cover transform scale-100 group-hover:scale-110 transition-transform duration-700"
                                         />
                                     </div>
 
                                     {/* Content */}
-                                    <div className="relative z-20 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                                    <div className="relative z-20 transform translate-y-0 md:translate-y-2 md:group-hover:translate-y-0 transition-transform duration-500">
                                         <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 border border-white/20 transition-all duration-500 group-hover:bg-blue-600 group-hover:border-blue-500/50">
                                             <IconComponent className="h-6 w-6 text-white transition-colors duration-500" />
                                         </div>
@@ -225,7 +234,7 @@ export default async function UseCasesIndexPage() {
                                         <p className="text-sm text-gray-300 mb-2 line-clamp-2">
                                             {useCase.headline}
                                         </p>
-                                        <div className="flex items-center text-sm font-medium text-gray-300 opacity-0 transform translate-y-4 group-hover:text-blue-300 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 delay-100">
+                                        <div className="flex items-center text-sm font-medium text-blue-300 opacity-100 md:opacity-0 transform md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-500 delay-100">
                                             Explore{" "}
                                             <ArrowRight className="ml-2 h-3 w-3" />
                                         </div>

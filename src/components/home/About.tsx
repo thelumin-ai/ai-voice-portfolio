@@ -2,8 +2,10 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
 import { AboutContent } from "@/app/admin/(protected)/content/defaults";
+import { sanitizeHref } from "@/lib/url";
 
 interface AboutProps {
     profileImageUrl?: string;
@@ -27,13 +29,20 @@ export default function About({ profileImageUrl, consultationLink = "https://www
     ];
     const ctaText = content?.cta_text || "Hire Me";
     const linkedinText = content?.linkedin_text || "Connect on LinkedIn";
+    const safeConsultationLink = sanitizeHref(consultationLink, "/#consultation");
+    const safeLinkedinUrl = sanitizeHref(
+        socialLinks?.linkedin || "https://www.linkedin.com/in/luminous1automation/?skipRedirect=true",
+        "https://www.linkedin.com"
+    );
+
+    const ampIdx = title.indexOf(' & ');
 
     return (
         <section className="py-24 bg-gray-50 dark:bg-black relative border-t border-black/5 dark:border-white/5 overflow-hidden transition-colors duration-300" id="about">
             <div className="absolute top-1/2 right-0 w-96 h-96 bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
 
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 max-w-[1400px]">
-                <div className="flex flex-col lg:flex-row items-center gap-16">
+                <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
                     <motion.div
                         initial={{ opacity: 0, x: -30 }}
                         whileInView={{ opacity: 1, x: 0 }}
@@ -41,25 +50,23 @@ export default function About({ profileImageUrl, consultationLink = "https://www
                         className="w-full lg:w-1/2"
                     >
                         <div className="relative">
-                            {/* Decorative elements behind image */}
-                            <div className="absolute -top-4 -left-4 w-24 h-24 border-t-2 border-l-2 border-blue-500/30 rounded-tl-xl" />
-                            <div className="absolute -bottom-4 -right-4 w-24 h-24 border-b-2 border-r-2 border-blue-500/30 rounded-br-xl" />
+                            <div className="absolute -top-4 -left-4 w-24 h-24 border-t-2 border-l-2 border-blue-500/30 rounded-tl-xl pointer-events-none" />
+                            <div className="absolute -bottom-4 -right-4 w-24 h-24 border-b-2 border-r-2 border-blue-500/30 rounded-br-xl pointer-events-none" />
 
-                            <div className="aspect-[3/4] rounded-2xl overflow-hidden relative border border-black/10 dark:border-white/10 shadow-sm dark:shadow-none bg-gray-200 dark:bg-zinc-900 transition-colors duration-300 group cursor-pointer">
-                            <img
-                                src={profileImageUrl || "https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop"}
-                                alt={`${name} - AI Engineer`}
-                                loading="lazy"
-                                className="w-full h-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-700"
-                            />
-                            {/* Gradient overlay for text readability */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
-                            {/* Overlay info */}
-                            <div className="absolute bottom-6 left-6 z-20">
+                            <div className="aspect-[3/4] rounded-2xl overflow-hidden relative border border-black/10 dark:border-white/10 shadow-sm dark:shadow-none bg-gray-200 dark:bg-zinc-900 transition-colors duration-300 group">
+                                <Image
+                                    src={profileImageUrl || "https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop"}
+                                    alt={`${name} - AI Engineer`}
+                                    fill
+                                    sizes="(max-width: 1024px) 100vw, 50vw"
+                                    className="object-cover object-top md:grayscale md:group-hover:grayscale-0 transition-all duration-700"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                                <div className="absolute bottom-6 left-6 right-6 z-20">
                                     <h3 className="text-2xl font-bold text-white">{name}</h3>
                                     <p className="text-blue-400 font-medium">{title}</p>
                                 </div>
-                          </div>
+                            </div>
                         </div>
                     </motion.div>
 
@@ -71,8 +78,8 @@ export default function About({ profileImageUrl, consultationLink = "https://www
                         className="w-full lg:w-1/2"
                     >
                         <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-black dark:text-white mb-6 transition-colors duration-300">
-                            {title.split(' & ').length > 1 ? (
-                                <>{title.split(' & ')[0]} & <span className="text-blue-600 dark:text-blue-500">{title.split(' & ')[1]}</span></>
+                            {ampIdx !== -1 ? (
+                                <>{title.slice(0, ampIdx)} &amp; <span className="text-blue-600 dark:text-blue-500">{title.slice(ampIdx + 3)}</span></>
                             ) : (
                                 title
                             )}
@@ -93,7 +100,7 @@ export default function About({ profileImageUrl, consultationLink = "https://www
 
                         <div className="flex flex-wrap gap-4 mt-8">
                             <Link
-                                href={consultationLink}
+                                href={safeConsultationLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center justify-center rounded-lg bg-black dark:bg-white px-8 py-4 text-sm font-semibold text-white dark:text-black shadow-sm hover:bg-gray-800 dark:hover:bg-gray-200 transition-all"
@@ -102,7 +109,7 @@ export default function About({ profileImageUrl, consultationLink = "https://www
                             </Link>
 
                             <Link
-                                href={socialLinks?.linkedin || "https://www.linkedin.com/in/luminous1automation/?skipRedirect=true"}
+                                href={safeLinkedinUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center justify-center rounded-lg border border-black/10 dark:border-white/20 bg-transparent px-8 py-4 text-sm font-semibold text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-all"

@@ -14,6 +14,7 @@
   /* Blue 500 */
   --color-primary-hover: #2563eb;
   /* Blue 600 */
+  --color-ring: #3b82f6;
 
   --color-background: #000000;
   --color-foreground: #ffffff;
@@ -24,7 +25,9 @@
 
 @layer base {
   html {
-    @apply text-[16px] lg:text-[19px] xl:text-[20px];
+    font-size: 16px;
+    scroll-padding-top: 5rem;
+    scroll-behavior: smooth;
   }
   body {
     @apply antialiased leading-relaxed;
@@ -39,7 +42,27 @@
   .glass-panel {
     @apply bg-white/40 dark:bg-black/40 backdrop-blur-lg border border-black/10 dark:border-white/10 rounded-2xl;
   }
+
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(113, 113, 122, 0.5) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(113, 113, 122, 0.45);
+    border-radius: 9999px;
+  }
 }
+
 /* Swiper Pagination Styles */
 .swiper-pagination-bullet {
   background: rgba(59, 130, 246, 0.3) !important;

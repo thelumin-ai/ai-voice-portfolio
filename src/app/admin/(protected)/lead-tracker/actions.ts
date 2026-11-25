@@ -1,12 +1,15 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/auth/admin'
 import { revalidatePath } from 'next/cache'
 
 export async function getLeads() {
-  const supabase = await createClient()
-  
-  const { data, error } = await supabase
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
+
+  const { data, error } = await auth.supabase
     .from('leads')
     .select('*')
     .order('created_at', { ascending: false })
@@ -20,9 +23,16 @@ export async function getLeads() {
 }
 
 export async function updateLeadStatus(id: string, status: 'new' | 'contacted' | 'closed') {
-  const supabase = await createClient()
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
 
-  const { error } = await supabase
+  if (!['new', 'contacted', 'closed'].includes(status)) {
+    return { error: 'Invalid lead status' }
+  }
+
+  const { error } = await auth.supabase
     .from('leads')
     .update({ status })
     .eq('id', id)
@@ -37,9 +47,12 @@ export async function updateLeadStatus(id: string, status: 'new' | 'contacted' |
 }
 
 export async function deleteLead(id: string) {
-  const supabase = await createClient()
-  
-  const { error } = await supabase
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
+
+  const { error } = await auth.supabase
     .from('leads')
     .delete()
     .eq('id', id)

@@ -17,6 +17,7 @@ import {
   Settings,
   FileEdit,
   Webhook,
+  X,
 } from 'lucide-react'
 import { LogoutButton } from './LogoutButton'
 
@@ -37,20 +38,36 @@ const navigation = [
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  onNavigate?: () => void
+  onClose?: () => void
+  className?: string
+}
+
+export function AdminSidebar({ onNavigate, onClose, className = '' }: AdminSidebarProps) {
   const pathname = usePathname()
 
   return (
-    <div className="w-64 bg-zinc-950 border-r border-zinc-900 flex flex-col transition-colors duration-300">
-      <div className="h-16 flex items-center px-6 border-b border-zinc-900 bg-zinc-950/50 backdrop-blur-sm">
+    <div className={`w-64 shrink-0 bg-zinc-950 border-r border-zinc-900 flex flex-col h-full transition-colors duration-300 ${className}`}>
+      <div className="h-16 flex items-center justify-between px-6 border-b border-zinc-900 bg-zinc-950/50 backdrop-blur-sm shrink-0">
         <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
-            <span className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <span className="text-xs text-white">AI</span>
-            </span>
-            Admin Panel
+          <span className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <span className="text-xs text-white">AI</span>
+          </span>
+          Admin Panel
         </h1>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close navigation menu"
+            className="lg:hidden p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
-      
+
       <nav className="flex-1 overflow-y-auto py-6 custom-scrollbar">
         <ul className="space-y-1.5 px-3">
           {navigation.map((item) => {
@@ -60,14 +77,15 @@ export function AdminSidebar() {
               <li key={item.name}>
                 <Link
                   href={item.href}
+                  onClick={onNavigate}
                   className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group ${
-                    isActive 
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' 
+                    isActive
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20'
                       : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100'
                   }`}
                 >
-                  <Icon className={`mr-3 h-5 w-5 transition-transform duration-200 ${isActive ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300 group-hover:scale-110'}`} />
-                  {item.name}
+                  <Icon className={`mr-3 h-5 w-5 shrink-0 transition-transform duration-200 ${isActive ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300 group-hover:scale-110'}`} />
+                  <span className="truncate">{item.name}</span>
                 </Link>
               </li>
             )
@@ -75,7 +93,7 @@ export function AdminSidebar() {
         </ul>
       </nav>
 
-      <div className="p-4 border-t border-zinc-900 bg-zinc-950/50">
+      <div className="p-4 border-t border-zinc-900 bg-zinc-950/50 shrink-0">
         <LogoutButton />
       </div>
     </div>

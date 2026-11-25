@@ -3,15 +3,26 @@ import Link from 'next/link'
 import {
   FolderKanban, Users, FileText, TrendingUp, Layers,
   MessageSquare, Wrench, PlayCircle, PlusCircle, ArrowUpRight,
-  Clock, CheckCircle2, AlertCircle
+  Clock
 } from 'lucide-react'
+import type { DashboardRecentBlog, DashboardRecentLead } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
+
+function getRecentCutoffIso(days: number): string {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+}
+
+const statColorClasses: Record<'blue' | 'green' | 'emerald' | 'purple', { box: string; icon: string }> = {
+  blue: { box: 'bg-blue-500/10 border-blue-500/20', icon: 'text-blue-400' },
+  green: { box: 'bg-green-500/10 border-green-500/20', icon: 'text-green-400' },
+  emerald: { box: 'bg-emerald-500/10 border-emerald-500/20', icon: 'text-emerald-400' },
+  purple: { box: 'bg-purple-500/10 border-purple-500/20', icon: 'text-purple-400' },
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  // Fetch counts from all tables in parallel
   const [
     portfolioRes,
     leadsRes,
@@ -36,14 +47,13 @@ export default async function DashboardPage() {
     supabase.from('blog_posts').select('id, title, status, created_at, slug').order('created_at', { ascending: false }).limit(5),
   ])
 
-  // Count leads from last 7 days
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const sevenDaysAgo = getRecentCutoffIso(7)
   const { count: recentLeadCount } = await supabase
     .from('leads')
     .select('*', { count: 'exact', head: true })
     .gte('created_at', sevenDaysAgo)
 
-  const stats = [
+  const stats: Array<{ label: string; value: number; icon: typeof FolderKanban; href: string; color: keyof typeof statColorClasses }> = [
     { label: 'Portfolio Projects', value: portfolioRes.count || 0, icon: FolderKanban, href: '/admin/portfolio', color: 'blue' },
     { label: 'Total Leads', value: leadsRes.count || 0, icon: Users, href: '/admin/lead-tracker', color: 'green' },
     { label: 'New Leads (7d)', value: recentLeadCount || 0, icon: TrendingUp, href: '/admin/lead-tracker', color: 'emerald' },
@@ -51,11 +61,11 @@ export default async function DashboardPage() {
   ]
 
   const modules = [
-    { label: 'Use Cases', count: useCasesRes.count || 0, icon: Layers, href: '/admin/use-cases', color: 'sky' },
-    { label: 'Services', count: servicesRes.count || 0, icon: Wrench, href: '/admin/services', color: 'amber' },
-    { label: 'Testimonials', count: testimonialsRes.count || 0, icon: MessageSquare, href: '/admin/testimonials', color: 'pink' },
-    { label: 'Tech Stack', count: techStackRes.count || 0, icon: Wrench, href: '/admin/tech-stack', color: 'orange' },
-    { label: 'Playground Apps', count: playgroundRes.count || 0, icon: PlayCircle, href: '/admin/playground', color: 'indigo' },
+    { label: 'Use Cases', count: useCasesRes.count || 0, icon: Layers, href: '/admin/use-cases' },
+    { label: 'Services', count: servicesRes.count || 0, icon: Wrench, href: '/admin/services' },
+    { label: 'Testimonials', count: testimonialsRes.count || 0, icon: MessageSquare, href: '/admin/testimonials' },
+    { label: 'Tech Stack', count: techStackRes.count || 0, icon: Wrench, href: '/admin/tech-stack' },
+    { label: 'Playground Apps', count: playgroundRes.count || 0, icon: PlayCircle, href: '/admin/playground' },
   ]
 
   const recentLeads = recentLeadsRes.data || []
@@ -66,8 +76,8 @@ export default async function DashboardPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
-          <p className="text-zinc-400 mt-1">Overview of your portfolio and business metrics.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Dashboard</h1>
+          <p className="text-zinc-400 mt-1 text-sm sm:text-base">Overview of your portfolio and business metrics.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link
@@ -86,9 +96,10 @@ export default async function DashboardPage() {
       </div>
 
       {/* Primary Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon
+          const palette = statColorClasses[stat.color]
           return (
             <Link
               key={stat.label}
@@ -96,13 +107,13 @@ export default async function DashboardPage() {
               className="group bg-zinc-950 border border-zinc-800 rounded-2xl p-6 hover:border-zinc-700 transition-all duration-200"
             >
               <div className="flex items-center justify-between mb-4">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-${stat.color}-500/10 border border-${stat.color}-500/20`}>
-                  <Icon className={`h-5 w-5 text-${stat.color}-400`} />
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${palette.box}`}>
+                  <Icon className={`h-5 w-5 ${palette.icon}`} />
                 </div>
                 <ArrowUpRight className="h-4 w-4 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
               </div>
               <p className="text-3xl font-bold text-white">{stat.value}</p>
-              <p className="text-sm text-zinc-500 mt-1">{stat.label}</p>
+              <p className="text-sm text-zinc-400 mt-1">{stat.label}</p>
             </Link>
           )
         })}
@@ -111,7 +122,7 @@ export default async function DashboardPage() {
       {/* Module Counts */}
       <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
         <h2 className="text-lg font-bold text-white mb-4">Content Modules</h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           {modules.map((mod) => {
             const Icon = mod.icon
             return (
@@ -122,7 +133,7 @@ export default async function DashboardPage() {
               >
                 <Icon className="h-5 w-5 text-zinc-500 group-hover:text-zinc-300 mb-2 transition-colors" />
                 <span className="text-2xl font-bold text-white">{mod.count}</span>
-                <span className="text-xs text-zinc-500 mt-1">{mod.label}</span>
+                <span className="text-xs text-zinc-400 mt-1">{mod.label}</span>
               </Link>
             )
           })}
@@ -132,7 +143,7 @@ export default async function DashboardPage() {
       {/* Recent Activity */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Leads */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 min-w-0">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-white">Recent Leads</h2>
             <Link href="/admin/lead-tracker" className="text-xs text-blue-400 hover:text-blue-300 transition-colors">View all →</Link>
@@ -140,23 +151,23 @@ export default async function DashboardPage() {
           {recentLeads.length === 0 ? (
             <div className="text-center py-8">
               <Users className="h-8 w-8 text-zinc-700 mx-auto mb-2" />
-              <p className="text-sm text-zinc-500">No leads yet. They'll appear here when visitors submit the contact form.</p>
+              <p className="text-sm text-zinc-500">No leads yet. They&apos;ll appear here when visitors submit the contact form.</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {recentLeads.map((lead: any) => (
-                <div key={lead.id} className="flex items-center justify-between p-3 bg-zinc-900/50 border border-zinc-800/50 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+              {recentLeads.map((lead: DashboardRecentLead) => (
+                <div key={lead.id} className="flex items-center justify-between gap-3 p-3 bg-zinc-900/50 border border-zinc-800/50 rounded-xl">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-8 h-8 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center shrink-0">
                       <span className="text-xs font-bold text-green-400">{lead.name?.[0]?.toUpperCase() || '?'}</span>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-white">{lead.name || 'Unknown'}</p>
-                      <p className="text-xs text-zinc-500">{lead.email}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-white truncate">{lead.name || 'Unknown'}</p>
+                      <p className="text-xs text-zinc-400 truncate">{lead.email}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-zinc-500 flex items-center gap-1">
+                  <div className="text-right shrink-0">
+                    <p className="text-xs text-zinc-500 flex items-center gap-1 whitespace-nowrap">
                       <Clock className="h-3 w-3" />
                       {new Date(lead.created_at).toLocaleDateString()}
                     </p>
@@ -168,7 +179,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Recent Blog Posts */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 min-w-0">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-white">Recent Blog Posts</h2>
             <Link href="/admin/blog" className="text-xs text-blue-400 hover:text-blue-300 transition-colors">View all →</Link>
@@ -180,7 +191,7 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {recentBlogs.map((post: any) => (
+              {recentBlogs.map((post: DashboardRecentBlog) => (
                 <Link
                   key={post.id}
                   href={`/admin/blog/${post.id}`}

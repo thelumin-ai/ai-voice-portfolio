@@ -8,6 +8,7 @@ import { createPlaygroundApp, updatePlaygroundApp } from './actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
+import { getErrorMessage } from '@/lib/errors'
 
 interface PlaygroundFormProps {
   initialData?: PlaygroundAppFormValues & { id: string }
@@ -48,8 +49,8 @@ export function PlaygroundForm({ initialData }: PlaygroundFormProps) {
         router.push('/admin/playground')
         router.refresh()
       }
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setIsSubmitting(false)
     }

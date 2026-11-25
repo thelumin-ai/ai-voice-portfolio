@@ -1,7 +1,7 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { requireAdmin, assertPublicWebhookUrl } from '@/lib/auth/admin'
 
 export interface Webhook {
   id: string
@@ -14,23 +14,23 @@ export interface Webhook {
 
 export async function getWebhooks(): Promise<Webhook[]> {
   try {
-    const supabase = await createClient()
-    const { data, error } = await supabase
+    const auth = await requireAdmin()
+    if (auth.error || !auth.supabase) {
+      return []
+    }
+
+    const { data, error } = await auth.supabase
       .from('site_settings')
       .select('setting_value')
       .eq('setting_key', 'webhooks')
-      .single()
+      .maybeSingle()
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        // Record not found, return empty array
-        return []
-      }
       console.error('Error fetching webhooks:', error)
       return []
     }
 
-    return (data?.setting_value as Webhook[]) || []
+    return Array.isArray(data?.setting_value) ? (data.setting_value as Webhook[]) : []
   } catch (error) {
     console.error('Error in getWebhooks:', error)
     return []
@@ -39,14 +39,32 @@ export async function getWebhooks(): Promise<Webhook[]> {
 
 export async function saveWebhooks(webhooks: Webhook[]) {
   try {
-    const supabase = await createClient()
-    const { error } = await supabase
+    const auth = await requireAdmin()
+    if (auth.error || !auth.supabase) {
+      return { error: 'Unauthorized' }
+    }
+
+    if (!Array.isArray(webhooks)) {
+      return { error: 'Invalid webhooks list' }
+    }
+
+    for (const wh of webhooks) {
+      const check = assertPublicWebhookUrl(wh.url)
+      if (!check.ok) {
+        return { error: `Invalid URL for "${wh.name || 'webhook'}": ${check.error}` }
+      }
+    }
+
+    const { error } = await auth.supabase
       .from('site_settings')
-      .upsert({
-        setting_key: 'webhooks',
-        setting_value: webhooks,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'setting_key' })
+      .upsert(
+        {
+          setting_key: 'webhooks',
+          setting_value: webhooks,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'setting_key' }
+      )
 
     if (error) {
       console.error('Error saving webhooks:', error)
@@ -55,14 +73,24 @@ export async function saveWebhooks(webhooks: Webhook[]) {
 
     revalidatePath('/admin/webhooks')
     return { success: true }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error in saveWebhooks:', error)
-    return { error: error.message || 'An unexpected error occurred' }
+    return { error: error instanceof Error ? error.message : 'An unexpected error occurred' }
   }
 }
 
 export async function testWebhook(url: string, event: string) {
   try {
+    const auth = await requireAdmin()
+    if (auth.error) {
+      return { success: false, error: 'Unauthorized' }
+    }
+
+    const urlCheck = assertPublicWebhookUrl(url)
+    if (!urlCheck.ok) {
+      return { success: false, error: urlCheck.error }
+    }
+
     const samplePayload = {
       event,
       timestamp: new Date().toISOString(),
@@ -74,67 +102,26 @@ export async function testWebhook(url: string, event: string) {
         phone: '+1234567890',
         company: 'AI Automations Inc',
         message: 'I want to automate my leads flow using Retell/Vapi and n8n.',
-        source: 'Webhook Test Button'
-      }
+        source: 'Webhook Test Button',
+      },
     }
 
-    const response = await fetch(url, {
+    const response = await fetch(urlCheck.url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'AI-Voice-Portfolio-Webhook-Manager'
+        'User-Agent': 'AI-Voice-Portfolio-Webhook-Manager',
       },
-      body: JSON.stringify(samplePayload)
+      body: JSON.stringify(samplePayload),
+      signal: AbortSignal.timeout(5000),
     })
 
     if (response.ok) {
       return { success: true, status: response.status, statusText: response.statusText }
-    } else {
-      return { success: false, status: response.status, statusText: response.statusText }
     }
-  } catch (error: any) {
-    console.error('Webhook test error:', error)
-    return { success: false, error: error.message || 'Connection failed' }
-  }
-}
-
-// Utility to fire webhooks (can be called server-side)
-export async function fireWebhooks(event: 'lead_created' | 'estimate_requested', payload: any) {
-  try {
-    const webhooks = await getWebhooks()
-    const activeWebhooks = webhooks.filter(w => w.is_active && (w.event === 'all' || w.event === event))
-
-    if (activeWebhooks.length === 0) {
-      return
-    }
-
-    const webhookPayload = {
-      event,
-      timestamp: new Date().toISOString(),
-      data: payload
-    }
-
-    // Fire all active webhooks in parallel (non-blocking)
-    const promises = activeWebhooks.map(async (webhook) => {
-      try {
-        const res = await fetch(webhook.url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': 'AI-Voice-Portfolio-Webhook-Manager'
-          },
-          body: JSON.stringify(webhookPayload)
-        })
-        if (!res.ok) {
-          console.warn(`Webhook ${webhook.name} (${webhook.url}) returned status ${res.status}`)
-        }
-      } catch (err) {
-        console.error(`Failed to fire webhook ${webhook.name} (${webhook.url}):`, err)
-      }
-    })
-
-    await Promise.allSettled(promises)
+    return { success: false, status: response.status, statusText: response.statusText }
   } catch (error) {
-    console.error('Error in fireWebhooks:', error)
+    console.error('Webhook test error:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Connection failed' }
   }
 }

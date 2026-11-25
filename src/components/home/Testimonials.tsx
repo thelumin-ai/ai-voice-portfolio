@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Star, PlayCircle, Quote } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
-import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 import "swiper/css/pagination";
+import { sanitizeHref } from "@/lib/url";
+import type { TestimonialRecord } from "@/lib/types";
 
 const defaultTestimonials = [
     {
@@ -54,15 +56,16 @@ const defaultTestimonials = [
     }
 ];
 
-function TestimonialAvatar({ imageUrl, name }: { imageUrl?: string; name: string }) {
+function TestimonialAvatar({ imageUrl, name }: { imageUrl?: string | null; name: string }) {
     const [hasError, setHasError] = useState(false);
 
     if (imageUrl && !hasError) {
         return (
-            <img 
-                src={imageUrl} 
+            <Image
+                src={imageUrl}
                 alt={name}
-                loading="lazy"
+                width={56}
+                height={56}
                 onError={() => setHasError(true)}
                 className="w-14 h-14 rounded-full object-cover border-2 border-blue-100 dark:border-blue-900/30 flex-shrink-0"
             />
@@ -83,91 +86,86 @@ function TestimonialAvatar({ imageUrl, name }: { imageUrl?: string; name: string
     );
 }
 
-export default function Testimonials({ initialTestimonials }: { initialTestimonials?: any[] }) {
-    const getPublishedTestimonials = (items?: any[]) => {
+function getSafeRating(raw: unknown): number {
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return 5;
+    return Math.min(5, Math.max(0, Math.round(n)));
+}
+
+const subscribeNoop = () => () => {};
+const subscribeResize = (callback: () => void) => {
+    window.addEventListener("resize", callback);
+    return () => window.removeEventListener("resize", callback);
+};
+
+export default function Testimonials({ initialTestimonials }: { initialTestimonials?: TestimonialRecord[] }) {
+    const getPublishedTestimonials = (items?: TestimonialRecord[]): TestimonialRecord[] => {
         if (!items || items.length === 0) return defaultTestimonials;
-        const published = items.filter((t: any) => t.status === 'published');
+        const published = items.filter((t) => t.status === 'published');
         return published.length > 0 ? published : defaultTestimonials;
     };
 
-    const [testimonials, setTestimonials] = useState<any[]>(() => getPublishedTestimonials(initialTestimonials));
+    const testimonials = getPublishedTestimonials(initialTestimonials);
+    const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
+    const isMobile = useSyncExternalStore(subscribeResize, () => window.innerWidth < 768, () => false);
 
-    useEffect(() => {
-        setTestimonials(getPublishedTestimonials(initialTestimonials));
-    }, [initialTestimonials]);
-
-    const chunkArray = (arr: any[], size: number) => {
-        const result = [];
+    const chunkArray = <T,>(arr: T[], size: number): T[][] => {
+        const result: T[][] = [];
         for (let i = 0; i < arr.length; i += size) {
             result.push(arr.slice(i, i + size));
         }
         return result;
     };
 
-    const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
-    
-    useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < 768);
-        handleResize(); // Initial check
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    const chunkSize = isMobile ? 4 : 9;
+    const chunkSize = isMobile ? 3 : 6;
     const slides = chunkArray(testimonials, chunkSize);
 
-    if (!mounted) {
+    const renderCard = (testimonial: TestimonialRecord, index: number) => {
+        const starCount = getSafeRating(testimonial.rating);
+        const videoHref = testimonial.video_url ? sanitizeHref(testimonial.video_url, '') : '';
         return (
-            <section className="py-24 bg-gray-50 dark:bg-zinc-950 relative border-t border-black/5 dark:border-white/5 transition-colors duration-300" id="testimonials">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1400px]">
-                    <div className="text-center max-w-3xl mx-auto mb-16">
-                        <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-black dark:text-white mb-6">
-                            Client <span className="text-blue-600 dark:text-blue-500">Success Stories</span>
-                        </h2>
-                        <p className="text-lg text-gray-600 dark:text-gray-400">
-                            Don't just take my word for it. Hear from the businesses that have transformed their operations with my AI voice systems.
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 auto-rows-fr">
-                        {testimonials.slice(0, 6).map((testimonial, index) => (
-                            <div
-                                key={testimonial.id || index}
-                                className="bg-white dark:bg-black border border-black/10 dark:border-white/10 rounded-3xl p-6 md:p-8 flex flex-col shadow-sm hover:shadow-lg transition-all duration-300"
-                            >
-                                <div className="flex items-center gap-4 mb-6">
-                                    <TestimonialAvatar imageUrl={testimonial.image_url} name={testimonial.client_name} />
-                                    <div>
-                                        <h3 className="font-bold text-black dark:text-white text-lg">{testimonial.client_name}</h3>
-                                        {testimonial.company && (
-                                            <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{testimonial.company}</p>
-                                        )}
-                                    </div>
-                                </div>
-                                
-                                <div className="flex text-yellow-400 mb-4">
-                                    {[...Array(testimonial.rating || 5)].map((_, i) => (
-                                        <Star key={i} className="w-4 h-4 fill-current" />
-                                    ))}
-                                </div>
-                                
-                                <div className="relative flex-grow">
-                                    <Quote className="absolute -top-2 -left-2 w-8 h-8 text-black/5 dark:text-white/5 rotate-180" />
-                                    <p className="text-gray-600 dark:text-gray-300 relative z-10 leading-relaxed text-sm md:text-base">
-                                        "{testimonial.content}"
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
+            <div
+                key={testimonial.id || index}
+                className="bg-white dark:bg-black border border-black/10 dark:border-white/10 rounded-3xl p-6 md:p-8 flex flex-col shadow-sm hover:shadow-lg transition-all duration-300"
+            >
+                <div className="flex items-center gap-4 mb-6">
+                    <TestimonialAvatar imageUrl={testimonial.image_url} name={testimonial.client_name} />
+                    <div className="min-w-0">
+                        <h3 className="font-bold text-black dark:text-white text-lg truncate">{testimonial.client_name}</h3>
+                        {testimonial.company && (
+                            <p className="text-sm text-blue-600 dark:text-blue-400 font-medium truncate">{testimonial.company}</p>
+                        )}
                     </div>
                 </div>
-            </section>
+
+                <div className="flex text-yellow-400 mb-4" aria-label={`${starCount} out of 5 stars`}>
+                    {[...Array(starCount)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-current" />
+                    ))}
+                </div>
+
+                <div className="relative flex-grow">
+                    <Quote className="absolute -top-2 -left-2 w-8 h-8 text-black/5 dark:text-white/5 rotate-180" />
+                    <p className="text-gray-600 dark:text-gray-300 relative z-10 leading-relaxed text-sm md:text-base">
+                        &ldquo;{testimonial.content}&rdquo;
+                    </p>
+                </div>
+
+                {videoHref && (
+                    <div className="mt-6 pt-6 border-t border-black/5 dark:border-white/5">
+                        <a
+                            href={videoHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                        >
+                            <PlayCircle className="w-4 h-4 mr-2" /> Watch Video Testimonial
+                        </a>
+                    </div>
+                )}
+            </div>
         );
-    }
+    };
 
     return (
         <section className="py-24 bg-gray-50 dark:bg-zinc-950 relative border-t border-black/5 dark:border-white/5 transition-colors duration-300" id="testimonials">
@@ -188,77 +186,42 @@ export default function Testimonials({ initialTestimonials }: { initialTestimoni
                         transition={{ delay: 0.1 }}
                         className="text-lg text-gray-600 dark:text-gray-400 transition-colors duration-300"
                     >
-                        Don't just take my word for it. Hear from the businesses that have transformed their operations with my AI voice systems.
+                        Don&apos;t just take my word for it. Hear from the businesses that have transformed their operations with my AI voice systems.
                     </motion.p>
                 </div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.2 }}
-                    className="relative pb-16" // padding for pagination dots
-                >
-                    <Swiper
-                        modules={[Pagination, Autoplay]}
-                        spaceBetween={30}
-                        slidesPerView={1}
-                        autoHeight={true}
-                        pagination={{ clickable: true }}
-                        autoplay={{ delay: 6000, disableOnInteraction: true }}
-                        loop={slides.length > 1}
-                        className="w-full"
+                {!mounted ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 auto-rows-fr">
+                        {testimonials.slice(0, 6).map((testimonial, index) => renderCard(testimonial, index))}
+                    </div>
+                ) : (
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.2 }}
+                        className="relative pb-16"
                     >
-                        {slides.map((slideItems, slideIndex) => (
-                            <SwiperSlide key={slideIndex}>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 auto-rows-fr">
-                                    {slideItems.map((testimonial, index) => (
-                                        <div
-                                            key={testimonial.id || index}
-                                            className="bg-white dark:bg-black border border-black/10 dark:border-white/10 rounded-3xl p-6 md:p-8 flex flex-col shadow-sm hover:shadow-lg transition-all duration-300"
-                                        >
-                                            <div className="flex items-center gap-4 mb-6">
-                                                <TestimonialAvatar imageUrl={testimonial.image_url} name={testimonial.client_name} />
-                                                <div>
-                                                    <h3 className="font-bold text-black dark:text-white text-lg">{testimonial.client_name}</h3>
-                                                    {testimonial.company && (
-                                                        <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{testimonial.company}</p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            
-                                            <div className="flex text-yellow-400 mb-4">
-                                                {[...Array(testimonial.rating || 5)].map((_, i) => (
-                                                    <Star key={i} className="w-4 h-4 fill-current" />
-                                                ))}
-                                            </div>
-                                            
-                                            <div className="relative flex-grow">
-                                                <Quote className="absolute -top-2 -left-2 w-8 h-8 text-black/5 dark:text-white/5 rotate-180" />
-                                                <p className="text-gray-600 dark:text-gray-300 relative z-10 leading-relaxed text-sm md:text-base">
-                                                    "{testimonial.content}"
-                                                </p>
-                                            </div>
-
-                                            {testimonial.video_url && (
-                                                <div className="mt-6 pt-6 border-t border-black/5 dark:border-white/5">
-                                                    <a 
-                                                        href={testimonial.video_url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                                                    >
-                                                        <PlayCircle className="w-4 h-4 mr-2" /> Watch Video Testimonial
-                                                    </a>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </SwiperSlide>
-                        ))}
-                    </Swiper>
-                </motion.div>
+                        <Swiper
+                            key={chunkSize}
+                            modules={[Pagination, Autoplay]}
+                            spaceBetween={30}
+                            slidesPerView={1}
+                            pagination={{ clickable: true }}
+                            autoplay={{ delay: 6000, disableOnInteraction: true }}
+                            loop={slides.length > 1}
+                            className="w-full"
+                        >
+                            {slides.map((slideItems, slideIndex) => (
+                                <SwiperSlide key={slideIndex}>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 auto-rows-fr">
+                                        {slideItems.map((testimonial, index) => renderCard(testimonial, index))}
+                                    </div>
+                                </SwiperSlide>
+                            ))}
+                        </Swiper>
+                    </motion.div>
+                )}
             </div>
         </section>
     );

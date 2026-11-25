@@ -1,9 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MessageSquare, Cpu, Headphones, Zap, Rocket } from "lucide-react";
+import { MessageSquare, Cpu, Headphones, Zap, Rocket, type LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getProcessSteps } from "@/app/admin/(protected)/process-steps/actions";
+import { getPublishedProcessSteps } from "@/app/admin/(protected)/process-steps/actions";
+import type { ProcessStepRecord } from "@/lib/types";
+
+interface DisplayProcessStep extends ProcessStepRecord {
+    icon: LucideIcon;
+}
 
 const steps = [
     {
@@ -34,21 +39,18 @@ const steps = [
 ];
 
 export default function HowItWorks() {
-    const [processSteps, setProcessSteps] = useState<any[]>(steps);
+    const [processSteps, setProcessSteps] = useState<DisplayProcessStep[]>(steps);
 
     useEffect(() => {
         const fetchSteps = async () => {
             try {
-                const data = await getProcessSteps();
-                if (data.data && data.data.length > 0) {
-                    const published = data.data.filter((s: any) => s.status === 'published');
-                    if (published.length > 0) {
-                        const mappedData = published.map((s: any, index: number) => ({
-                            ...s,
-                            icon: steps[index % steps.length]?.icon || Rocket
-                        }));
-                        setProcessSteps(mappedData);
-                    }
+                const { data } = await getPublishedProcessSteps();
+                if (data && data.length > 0) {
+                    const mappedData: DisplayProcessStep[] = (data as ProcessStepRecord[]).map((s, index) => ({
+                        ...s,
+                        icon: steps[index % steps.length]?.icon || Rocket
+                    }));
+                    setProcessSteps(mappedData);
                 }
             } catch (error) {
                 console.error("Failed to fetch process steps:", error);
@@ -91,7 +93,7 @@ export default function HowItWorks() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
                             transition={{ delay: index * 0.1, duration: 0.5 }}
-                            className={`relative flex items-center mb-24 last:mb-0 ${index % 2 === 0 ? "md:flex-row-reverse" : "md:flex-row"} flex-col w-full group`}
+                            className={`relative flex items-center mb-14 md:mb-24 last:mb-0 ${index % 2 === 0 ? "md:flex-row-reverse" : "md:flex-row"} flex-col w-full group`}
                         >
 
                             {/* Timeline dot (Step Number Node) */}
@@ -148,22 +150,22 @@ export default function HowItWorks() {
                             )}
 
                             {/* Content box (Card) */}
-                            <div className={`w-full md:w-[45%] pl-12 md:pl-0 ${index % 2 === 0 ? "md:pl-12" : "md:pr-12"} mb-8 md:mb-0 z-10`}>
+                            <div className={`w-full md:w-[45%] pl-12 md:pl-0 ${index % 2 === 0 ? "md:pl-12" : "md:pr-12"} z-10`}>
                                 <div className="bg-white/80 dark:bg-zinc-900/80 p-6 md:p-10 rounded-3xl relative overflow-hidden transition-all duration-300 border border-black/10 dark:border-white/10 hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500/0 via-blue-500/60 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                     <div className="flex items-center mb-6">
-                                        <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 mr-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 mr-4 shrink-0">
                                             <step.icon className="h-6 w-6" />
                                         </div>
                                         <div>
                                             <span className="text-[10px] font-black tracking-[0.2em] text-blue-600 dark:text-blue-500 uppercase">Step 0{index + 1}</span>
-                                            <h3 className="text-2xl font-bold text-black dark:text-white transition-colors duration-300">{step.title}</h3>
+                                            <h3 className="text-xl sm:text-2xl font-bold text-black dark:text-white transition-colors duration-300">{step.title}</h3>
                                         </div>
                                     </div>
                                     <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base leading-relaxed transition-colors duration-300">{step.description}</p>
                                 </div>
                             </div>
-                            
+
                             {/* Empty space for the other side */}
                             <div className="hidden md:block md:w-[45%]" />
                         </motion.div>

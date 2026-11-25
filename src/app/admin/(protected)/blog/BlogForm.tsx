@@ -9,7 +9,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
 import { UploadCloud, Bot, Loader2, Sparkles } from 'lucide-react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
+import { validateImageFile } from '@/lib/url'
+import { getErrorMessage } from '@/lib/errors'
 
 interface BlogFormProps {
   initialData?: BlogPostFormValues & { id: string }
@@ -19,6 +22,8 @@ export function BlogForm({ initialData }: BlogFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(Boolean(initialData))
   const supabase = createClient()
 
   const [showAiWriter, setShowAiWriter] = useState(false)
@@ -45,14 +50,14 @@ export function BlogForm({ initialData }: BlogFormProps) {
     },
   })
 
-  // Auto-generate slug from title if empty
+  // Auto-generate slug from title until manually edited
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const title = e.target.value
-    form.setValue('title', title)
+    form.setValue('title', title, { shouldValidate: true })
     
-    if (!form.getValues('slug') && !initialData) {
+    if (!slugManuallyEdited) {
       const generatedSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
-      form.setValue('slug', generatedSlug)
+      form.setValue('slug', generatedSlug, { shouldValidate: true })
     }
   }
 
@@ -60,21 +65,31 @@ export function BlogForm({ initialData }: BlogFormProps) {
     const file = e.target.files?.[0]
     if (!file) return
 
+    const validationError = validateImageFile(file)
+    if (validationError) {
+      setUploadError(validationError)
+      e.target.value = ''
+      return
+    }
+
+    setUploadError(null)
     try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
+      const fileExt = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'png'
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt}`
       const filePath = `blog/${fileName}`
 
-      const { error: uploadError } = await supabase.storage
+      const { error: storageError } = await supabase.storage
         .from('portfolio_media')
         .upload(filePath, file)
 
-      if (uploadError) throw uploadError
+      if (storageError) throw storageError
 
       const { data } = supabase.storage.from('portfolio_media').getPublicUrl(filePath)
-      form.setValue('cover_image_url', data.publicUrl)
-    } catch (error: any) {
-      alert(`Error uploading image: ${error.message}`)
+      form.setValue('cover_image_url', data.publicUrl, { shouldValidate: true })
+    } catch (err: unknown) {
+      setUploadError(getErrorMessage(err, 'Error uploading image'))
+    } finally {
+      e.target.value = ''
     }
   }
 
@@ -102,14 +117,17 @@ export function BlogForm({ initialData }: BlogFormProps) {
         throw new Error(data.error || 'Failed to generate')
       }
 
-      if (data.title) form.setValue('title', data.title)
-      if (data.slug) form.setValue('slug', data.slug)
-      if (data.excerpt) form.setValue('excerpt', data.excerpt)
-      if (data.content) form.setValue('content', data.content)
+      if (data.title) form.setValue('title', data.title, { shouldValidate: true })
+      if (data.slug) {
+        form.setValue('slug', data.slug, { shouldValidate: true })
+        setSlugManuallyEdited(true)
+      }
+      if (data.excerpt) form.setValue('excerpt', data.excerpt, { shouldValidate: true })
+      if (data.content) form.setValue('content', data.content, { shouldValidate: true })
       
       setShowAiWriter(false)
-    } catch (err: any) {
-      setAiError(err.message)
+    } catch (err: unknown) {
+      setAiError(getErrorMessage(err, 'Failed to generate'))
     } finally {
       setIsGenerating(false)
     }
@@ -118,6 +136,7 @@ export function BlogForm({ initialData }: BlogFormProps) {
   const handleGenerateCoverImage = async () => {
     if (!imageAiPrompt.trim()) return;
     setIsGeneratingImage(true);
+    setUploadError(null);
     try {
       const response = await fetch('/api/generate-image', {
         method: 'POST',
@@ -129,17 +148,18 @@ export function BlogForm({ initialData }: BlogFormProps) {
       
       const res = await fetch(`data:${data.mimeType};base64,${data.base64}`);
       const blob = await res.blob();
-      const file = new File([blob], `ai-cover-${Date.now()}.${data.mimeType.split('/')[1] || 'jpeg'}`, { type: data.mimeType });
+      const mimeExt = (data.mimeType?.split('/')[1] || 'jpeg').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const file = new File([blob], `ai-cover-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${mimeExt}`, { type: data.mimeType });
       
       const filePath = `covers/${file.name}`;
-      const { error: uploadError } = await supabase.storage.from('portfolio_media').upload(filePath, file);
-      if (uploadError) throw uploadError;
+      const { error: storageError } = await supabase.storage.from('portfolio_media').upload(filePath, file);
+      if (storageError) throw storageError;
 
       const { data: publicData } = supabase.storage.from('portfolio_media').getPublicUrl(filePath);
-      form.setValue('cover_image_url', publicData.publicUrl);
+      form.setValue('cover_image_url', publicData.publicUrl, { shouldValidate: true });
       setShowImageAi(false);
-    } catch (err: any) {
-      alert(`Error generating image: ${err.message}`);
+    } catch (err: unknown) {
+      setUploadError(getErrorMessage(err, 'Error generating image'));
     } finally {
       setIsGeneratingImage(false);
     }
@@ -163,8 +183,8 @@ export function BlogForm({ initialData }: BlogFormProps) {
         router.push('/admin/blog')
         router.refresh()
       }
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setIsSubmitting(false)
     }
@@ -193,7 +213,9 @@ export function BlogForm({ initialData }: BlogFormProps) {
             <div className="space-y-2">
               <label className="text-sm font-medium">URL Slug</label>
               <input
-                {...form.register('slug')}
+                {...form.register('slug', {
+                  onChange: () => setSlugManuallyEdited(true),
+                })}
                 className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-950 text-gray-500"
                 placeholder="the-future-of-voice-ai"
               />
@@ -211,10 +233,13 @@ export function BlogForm({ initialData }: BlogFormProps) {
               className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
               placeholder="A brief summary for the blog preview card..."
             />
+            {form.formState.errors.excerpt && (
+              <p className="text-sm text-red-500">{form.formState.errors.excerpt.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-wrap justify-between items-center gap-2">
               <label className="text-sm font-medium">Content (Markdown Support)</label>
               <Button type="button" variant="outline" size="sm" onClick={() => setShowAiWriter(!showAiWriter)} className="text-purple-500 border-purple-200 hover:bg-purple-50 dark:hover:bg-purple-900/20">
                 <Sparkles className="w-4 h-4 mr-2" /> AI Writer
@@ -223,9 +248,9 @@ export function BlogForm({ initialData }: BlogFormProps) {
             
             {showAiWriter && (
               <div className="p-4 bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30 rounded-lg space-y-4 mb-4">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-wrap justify-between items-center gap-3">
                   <h4 className="font-semibold text-purple-700 dark:text-purple-400 flex items-center"><Bot className="w-4 h-4 mr-2" /> Generate with AI</h4>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <select 
                       value={aiContentType} 
                       onChange={(e) => setAiContentType(e.target.value)}
@@ -280,7 +305,7 @@ export function BlogForm({ initialData }: BlogFormProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2">
           <CardContent className="p-6 space-y-4">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
               <label className="text-sm font-medium">Cover Image</label>
               <Button type="button" variant="outline" size="sm" onClick={() => setShowImageAi(!showImageAi)} className="text-purple-500 border-purple-200 hover:bg-purple-50 dark:hover:bg-purple-900/20">
                 <Sparkles className="w-4 h-4 mr-2" /> AI Generate
@@ -313,9 +338,21 @@ export function BlogForm({ initialData }: BlogFormProps) {
                 <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
               </label>
             </div>
+            {uploadError && (
+              <p className="text-sm text-red-500">{uploadError}</p>
+            )}
+            {form.formState.errors.cover_image_url && (
+              <p className="text-sm text-red-500">{form.formState.errors.cover_image_url.message}</p>
+            )}
             {form.watch('cover_image_url') && (
               <div className="relative rounded-md overflow-hidden border dark:border-zinc-800 h-48 mt-4">
-                <img src={form.watch('cover_image_url')} alt="Cover" className="w-full h-full object-cover" />
+                <Image
+                  src={form.watch('cover_image_url') || ''}
+                  alt="Cover"
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
               </div>
             )}
             <input type="hidden" {...form.register('cover_image_url')} />

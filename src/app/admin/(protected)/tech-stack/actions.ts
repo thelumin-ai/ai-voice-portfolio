@@ -1,13 +1,38 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { techStackSchema, TechStackFormValues } from '@/lib/validations/techStack'
+import { requireAdmin } from '@/lib/auth/admin'
 import { revalidatePath } from 'next/cache'
 
+export async function getPublishedTechStack() {
+  try {
+    const supabase = createPublicClient()
+    const { data, error } = await supabase
+      .from('tech_stack')
+      .select('*')
+      .eq('status', 'published')
+      .order('display_order', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching published tech stack:', error)
+      return { error: 'Failed to fetch tech stack' }
+    }
+
+    return { data }
+  } catch (error) {
+    console.error('Error fetching published tech stack:', error)
+    return { error: 'Failed to fetch tech stack' }
+  }
+}
+
 export async function getTechStack() {
-  const supabase = await createClient()
-  
-  const { data, error } = await supabase
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
+
+  const { data, error } = await auth.supabase
     .from('tech_stack')
     .select('*')
     .order('display_order', { ascending: true })
@@ -21,9 +46,12 @@ export async function getTechStack() {
 }
 
 export async function getTechItem(id: string) {
-  const supabase = await createClient()
-  
-  const { data, error } = await supabase
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
+
+  const { data, error } = await auth.supabase
     .from('tech_stack')
     .select('*')
     .eq('id', id)
@@ -38,11 +66,19 @@ export async function getTechItem(id: string) {
 }
 
 export async function createTechItem(data: TechStackFormValues) {
-  const supabase = await createClient()
-  
-  const validatedData = techStackSchema.parse(data)
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
 
-  const { error } = await supabase
+  const parsed = techStackSchema.safeParse(data)
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || 'Invalid tech stack data' }
+  }
+
+  const validatedData = parsed.data
+
+  const { error } = await auth.supabase
     .from('tech_stack')
     .insert([
       {
@@ -51,7 +87,7 @@ export async function createTechItem(data: TechStackFormValues) {
         icon_url: validatedData.icon_url,
         status: validatedData.status,
         display_order: validatedData.display_order,
-      }
+      },
     ])
 
   if (error) {
@@ -65,18 +101,26 @@ export async function createTechItem(data: TechStackFormValues) {
 }
 
 export async function updateTechItem(id: string, data: TechStackFormValues) {
-  const supabase = await createClient()
-  
-  const validatedData = techStackSchema.parse(data)
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
 
-  const { error } = await supabase
+  const parsed = techStackSchema.safeParse(data)
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || 'Invalid tech stack data' }
+  }
+
+  const validatedData = parsed.data
+
+  const { error } = await auth.supabase
     .from('tech_stack')
     .update({
-        name: validatedData.name,
-        category: validatedData.category,
-        icon_url: validatedData.icon_url,
-        status: validatedData.status,
-        display_order: validatedData.display_order,
+      name: validatedData.name,
+      category: validatedData.category,
+      icon_url: validatedData.icon_url,
+      status: validatedData.status,
+      display_order: validatedData.display_order,
     })
     .eq('id', id)
 
@@ -91,9 +135,12 @@ export async function updateTechItem(id: string, data: TechStackFormValues) {
 }
 
 export async function deleteTechItem(id: string) {
-  const supabase = await createClient()
-  
-  const { error } = await supabase
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
+
+  const { error } = await auth.supabase
     .from('tech_stack')
     .delete()
     .eq('id', id)
@@ -109,10 +156,13 @@ export async function deleteTechItem(id: string) {
 }
 
 export async function updateTechStackOrder(items: { id: string; display_order: number }[]) {
-  const supabase = await createClient()
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
 
   for (const item of items) {
-    const { error } = await supabase
+    const { error } = await auth.supabase
       .from('tech_stack')
       .update({ display_order: item.display_order })
       .eq('id', item.id)

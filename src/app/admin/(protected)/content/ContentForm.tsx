@@ -66,7 +66,7 @@ export default function ContentForm({ initialHero, initialAbout, initialProblem 
   return (
     <div className="space-y-6">
       {/* Tab Bar */}
-      <div className="flex gap-2 p-1 bg-zinc-900/50 rounded-xl border border-zinc-800">
+      <div className="flex flex-wrap gap-2 p-1 bg-zinc-900/50 rounded-xl border border-zinc-800">
         {tabs.map(tab => {
           const Icon = tab.icon
           return (

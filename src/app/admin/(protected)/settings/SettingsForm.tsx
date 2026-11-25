@@ -9,11 +9,15 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
 import { UploadCloud } from 'lucide-react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
+import { validateImageFile } from '@/lib/url'
+import { getErrorMessage } from '@/lib/errors'
 
 export function SettingsForm({ initialData }: { initialData: SettingsFormValues }) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   const form = useForm<SettingsFormValues>({
@@ -27,21 +31,31 @@ export function SettingsForm({ initialData }: { initialData: SettingsFormValues 
     const file = e.target.files?.[0]
     if (!file) return
 
+    const validationError = validateImageFile(file)
+    if (validationError) {
+      setUploadError(validationError)
+      e.target.value = ''
+      return
+    }
+
+    setUploadError(null)
     try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `profile_${Math.random()}.${fileExt}`
+      const fileExt = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'png'
+      const fileName = `avatar-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt}`
       const filePath = `profile_images/${fileName}`
 
-      const { error: uploadError } = await supabase.storage
+      const { error: storageError } = await supabase.storage
         .from('portfolio_media') // Using same bucket for simplicity
         .upload(filePath, file)
 
-      if (uploadError) throw uploadError
+      if (storageError) throw storageError
 
       const { data } = supabase.storage.from('portfolio_media').getPublicUrl(filePath)
-      form.setValue('profile_image_url', data.publicUrl)
-    } catch (error: any) {
-      alert(`Error uploading image: ${error.message}`)
+      form.setValue('profile_image_url', data.publicUrl, { shouldValidate: true })
+    } catch (err: unknown) {
+      setUploadError(getErrorMessage(err, 'Error uploading image'))
+    } finally {
+      e.target.value = ''
     }
   }
 
@@ -57,8 +71,8 @@ export function SettingsForm({ initialData }: { initialData: SettingsFormValues 
         setMessage({ type: 'success', text: 'Settings saved successfully!' })
         router.refresh()
       }
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Something went wrong' })
+    } catch (err: unknown) {
+      setMessage({ type: 'error', text: getErrorMessage(err) })
     } finally {
       setIsSubmitting(false)
     }
@@ -152,9 +166,16 @@ export function SettingsForm({ initialData }: { initialData: SettingsFormValues 
           <CardDescription>Your main profile image used on the site.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             {form.watch('profile_image_url') && (
-              <img src={form.watch('profile_image_url') as string} alt="Profile" className="w-20 h-20 object-cover rounded-full" />
+              <Image
+                src={form.watch('profile_image_url') as string}
+                alt="Profile"
+                width={80}
+                height={80}
+                unoptimized
+                className="w-20 h-20 object-cover rounded-full"
+              />
             )}
             <label className="cursor-pointer flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-md hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
               <UploadCloud className="w-5 h-5 mr-2" />
@@ -163,13 +184,19 @@ export function SettingsForm({ initialData }: { initialData: SettingsFormValues 
             </label>
             <input type="hidden" {...form.register('profile_image_url')} />
           </div>
+          {uploadError && (
+            <p className="text-sm text-red-500">{uploadError}</p>
+          )}
+          {form.formState.errors.profile_image_url && (
+            <p className="text-sm text-red-500">{form.formState.errors.profile_image_url.message}</p>
+          )}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
           <CardTitle>Consultation & Booking</CardTitle>
-          <CardDescription>Configure where users go when they click "Book Consultation".</CardDescription>
+          <CardDescription>Configure where users go when they click &quot;Book Consultation&quot;.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2 max-w-sm">
@@ -191,6 +218,9 @@ export function SettingsForm({ initialData }: { initialData: SettingsFormValues 
               className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
               placeholder="https://www.upwork.com/..."
             />
+            {form.formState.errors.consultation_link_upwork && (
+              <p className="text-sm text-red-500">{form.formState.errors.consultation_link_upwork.message}</p>
+            )}
           </div>
 
           <div className="space-y-2 max-w-2xl">
@@ -200,6 +230,9 @@ export function SettingsForm({ initialData }: { initialData: SettingsFormValues 
               className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
               placeholder="https://www.fiverr.com/..."
             />
+            {form.formState.errors.consultation_link_fiverr && (
+              <p className="text-sm text-red-500">{form.formState.errors.consultation_link_fiverr.message}</p>
+            )}
           </div>
 
           <div className="space-y-2 max-w-2xl">
@@ -209,6 +242,9 @@ export function SettingsForm({ initialData }: { initialData: SettingsFormValues 
               className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
               placeholder="https://calendly.com/..."
             />
+            {form.formState.errors.consultation_link_calendly && (
+              <p className="text-sm text-red-500">{form.formState.errors.consultation_link_calendly.message}</p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -216,7 +252,7 @@ export function SettingsForm({ initialData }: { initialData: SettingsFormValues 
       <Card>
         <CardHeader>
           <CardTitle>AI Integration Keys</CardTitle>
-          <CardDescription>API Keys for AI Blog generation tools. These are stored securely.</CardDescription>
+          <CardDescription>Used only by authenticated admin AI generators (protected by Supabase RLS). For stronger security in production, prefer setting OPENAI_API_KEY, ANTHROPIC_API_KEY, and GEMINI_API_KEY as server environment variables instead of storing them here.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 max-w-2xl">
           <div className="space-y-2">

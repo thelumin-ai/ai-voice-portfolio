@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { Lock } from 'lucide-react'
 import { login } from './actions'
 

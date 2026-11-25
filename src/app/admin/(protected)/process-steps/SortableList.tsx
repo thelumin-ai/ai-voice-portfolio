@@ -31,6 +31,7 @@ interface ProcessStepItem {
 export function SortableList({ initialItems }: { initialItems: ProcessStepItem[] }) {
   const [items, setItems] = useState(initialItems)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   useEffect(() => {
     setItems(initialItems)
@@ -45,38 +46,53 @@ export function SortableList({ initialItems }: { initialItems: ProcessStepItem[]
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
+    if (!over || active.id === over.id) return
 
-    if (over && active.id !== over.id) {
-      setItems((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id)
-        const newIndex = items.findIndex((item) => item.id === over.id)
+    const oldIndex = items.findIndex((item) => item.id === active.id)
+    const newIndex = items.findIndex((item) => item.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
 
-        const newItems = arrayMove(items, oldIndex, newIndex)
-        
-        const updatedItems = newItems.map((item, index) => ({
-          ...item,
-          display_order: index,
-        }))
+    const previousItems = items
+    const updatedItems = arrayMove(items, oldIndex, newIndex).map((item, index) => ({
+      ...item,
+      display_order: index,
+    }))
 
-        setIsUpdating(true)
-        updateProcessStepOrder(updatedItems.map(i => ({ id: i.id, display_order: i.display_order })))
-          .finally(() => setIsUpdating(false))
+    setItems(updatedItems)
+    setErrorMsg(null)
+    setIsUpdating(true)
 
-        return updatedItems
-      })
+    try {
+      const res = await updateProcessStepOrder(
+        updatedItems.map(i => ({ id: i.id, display_order: i.display_order }))
+      )
+      if (res?.error) {
+        setItems(previousItems)
+        setErrorMsg(res.error)
+      }
+    } catch {
+      setItems(previousItems)
+      setErrorMsg('Failed to update order')
+    } finally {
+      setIsUpdating(false)
     }
   }
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-10 text-gray-500 dark:text-gray-400">
-        No process steps found. Click "Add Step" to create one.
+      <div className="text-center py-10 text-gray-400">
+        No process steps found. Click &ldquo;Add Step&rdquo; to create one.
       </div>
     )
   }
 
   return (
     <div className={`space-y-2 ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}>
+      {errorMsg && (
+        <div className="mb-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          {errorMsg}
+        </div>
+      )}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}

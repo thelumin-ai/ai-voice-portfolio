@@ -6,6 +6,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, Edit, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { deletePlaygroundApp } from './actions'
 
 interface PlaygroundItem {
@@ -18,6 +19,7 @@ interface PlaygroundItem {
 }
 
 export function SortableItem({ id, item }: { id: string; item: PlaygroundItem }) {
+  const router = useRouter()
   const {
     attributes,
     listeners,
@@ -36,7 +38,12 @@ export function SortableItem({ id, item }: { id: string; item: PlaygroundItem })
 
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this app?')) {
-      await deletePlaygroundApp(id)
+      const res = await deletePlaygroundApp(id)
+      if (res?.error) {
+        alert(res.error)
+      } else {
+        router.refresh()
+      }
     }
   }
 
@@ -49,7 +56,7 @@ export function SortableItem({ id, item }: { id: string; item: PlaygroundItem })
       }`}
     >
       <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-5 flex-1">
+        <div className="flex items-center gap-4 sm:gap-5 flex-1 min-w-0 w-full">
           <div
             {...attributes}
             {...listeners}
@@ -58,7 +65,7 @@ export function SortableItem({ id, item }: { id: string; item: PlaygroundItem })
           >
             <GripVertical className="h-5 w-5" />
           </div>
-          
+
           <div className="w-12 h-12 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-center p-2 shadow-inner flex-shrink-0 relative">
             <span className="text-zinc-500 font-mono text-xs font-bold">&lt;/&gt;</span>
             <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-black ${
@@ -66,14 +73,14 @@ export function SortableItem({ id, item }: { id: string; item: PlaygroundItem })
               item.status === 'draft' ? 'bg-yellow-500' : 'bg-zinc-500'
             }`} />
           </div>
-          
-          <div>
-            <h3 className="text-lg font-bold text-white font-mono group-hover:text-green-400 transition-colors tracking-tight">{item.title}</h3>
-            <p className="text-xs font-mono text-zinc-500 mt-1 uppercase tracking-widest">{item.category}</p>
+
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg font-bold text-white font-mono group-hover:text-green-400 transition-colors tracking-tight truncate">{item.title}</h3>
+            <p className="text-xs font-mono text-zinc-500 mt-1 uppercase tracking-widest truncate">{item.category}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 w-full sm:w-auto justify-end border-t sm:border-t-0 border-zinc-800/50 pt-4 sm:pt-0">
+        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-zinc-800/50 pt-4 sm:pt-0 shrink-0">
           <span className={`px-2 py-1 text-[10px] font-mono uppercase tracking-wider rounded-md border ${
             item.status === 'published' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
             item.status === 'draft' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
@@ -81,14 +88,14 @@ export function SortableItem({ id, item }: { id: string; item: PlaygroundItem })
           }`}>
             SYS.{item.status}
           </span>
-          
+
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" asChild className="bg-zinc-900 text-zinc-400 hover:text-white hover:bg-green-600/80 border border-zinc-800 hover:border-transparent transition-all rounded-lg font-mono">
-              <Link href={`/admin/playground/${id}`}>
+              <Link href={`/admin/playground/${id}`} aria-label={`Edit ${item.title}`}>
                 <Edit className="h-4 w-4" />
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" className="bg-zinc-900 text-zinc-400 hover:text-white hover:bg-red-600/80 border border-zinc-800 hover:border-transparent transition-all rounded-lg" onClick={handleDelete}>
+            <Button type="button" variant="ghost" size="icon" aria-label={`Delete ${item.title}`} className="bg-zinc-900 text-zinc-400 hover:text-white hover:bg-red-600/80 border border-zinc-800 hover:border-transparent transition-all rounded-lg" onClick={handleDelete}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>

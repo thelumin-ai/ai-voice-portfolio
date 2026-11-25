@@ -5,6 +5,7 @@ import { seedDefaultTestimonials } from './actions'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { DatabaseBackup } from 'lucide-react'
+import { getErrorMessage } from '@/lib/errors'
 
 export function SeedButton() {
   const router = useRouter()
@@ -32,8 +33,8 @@ export function SeedButton() {
           router.refresh()
           setTimeout(() => setSuccess(false), 3000)
         }
-      } catch (err: any) {
-        setError(err.message || 'Something went wrong while seeding testimonials.')
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, 'Something went wrong while seeding testimonials.'))
       }
     })
   }

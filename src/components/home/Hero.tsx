@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Mic } from "lucide-react";
 import { HeroContent } from "@/app/admin/(protected)/content/defaults";
+import { sanitizeHref } from "@/lib/url";
 
 interface HeroProps {
     consultationLink?: string;
@@ -16,12 +17,10 @@ export default function Hero({ consultationLink = "https://www.upwork.com/servic
     const subtext = content?.subtext || "I design intelligent voice systems and omni-channel automations that instantly engage leads, qualify prospects, and scale your business automatically.";
     const ctaPrimary = content?.cta_primary || "Try a Live AI Agent";
     const ctaSecondary = content?.cta_secondary || "Book a Consultation";
-
-    // Split headline for styling - find the last line break point
-    const words = headline.split(' ');
+    const safeConsultationLink = sanitizeHref(consultationLink, "/#consultation");
 
     return (
-        <div className="relative overflow-hidden bg-black pt-24 pb-32 lg:pt-36 lg:pb-40">
+        <div className="relative overflow-hidden bg-black text-white pt-16 pb-24 lg:pt-24 lg:pb-32">
             {/* Background glow effects */}
             <div className="absolute top-0 left-1/2 w-full -translate-x-1/2 h-[500px] opacity-20 pointer-events-none">
                 <div className="absolute inset-0 bg-gradient-to-b from-blue-500/30 to-transparent blur-3xl rounded-full mix-blend-screen" />
@@ -47,7 +46,7 @@ export default function Hero({ consultationLink = "https://www.upwork.com/servic
                         {headline}
                     </h1>
 
-                    <p className="mt-6 text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto mb-10">
+                    <p className="mt-6 text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto mb-10">
                         {subtext}
                     </p>
 
@@ -65,10 +64,10 @@ export default function Hero({ consultationLink = "https://www.upwork.com/servic
                             {ctaPrimary}
                         </Link>
                         <Link
-                            href={consultationLink}
+                            href={safeConsultationLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-blue-600/10 px-8 py-3.5 text-sm font-semibold text-blue-400 ring-1 ring-inset ring-blue-500/20 hover:bg-blue-600/20 transition-all"
+                            className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-blue-600/15 px-8 py-3.5 text-sm font-semibold text-blue-400 ring-1 ring-inset ring-blue-500/30 hover:bg-blue-600/25 transition-all"
                         >
                             {ctaSecondary}
                         </Link>

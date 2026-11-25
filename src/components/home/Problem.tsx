@@ -1,10 +1,31 @@
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 import { ProblemContent } from "@/app/admin/(protected)/content/defaults";
 
 interface ProblemProps {
     content?: ProblemContent;
+}
+
+/**
+ * Safely renders description copy without dangerouslySetInnerHTML, preserving
+ * intentional <strong>...</strong> highlights while stripping any other HTML tags.
+ */
+function renderSafeHighlightedText(raw: string): React.ReactNode[] {
+    const segments = raw.split(/(<strong>[\s\S]*?<\/strong>)/gi);
+    return segments.map((part, idx) => {
+        const strongMatch = part.match(/^<strong>([\s\S]*?)<\/strong>$/i);
+        if (strongMatch) {
+            const cleanInner = strongMatch[1].replace(/<[^>]*>/g, "");
+            return (
+                <strong key={idx} className="font-bold text-black dark:text-white">
+                    {cleanInner}
+                </strong>
+            );
+        }
+        return <React.Fragment key={idx}>{part.replace(/<[^>]*>/g, "")}</React.Fragment>;
+    });
 }
 
 export default function Problem({ content }: ProblemProps) {
@@ -26,10 +47,9 @@ export default function Problem({ content }: ProblemProps) {
                         <h2 className="text-3xl md:text-4xl font-bold text-black dark:text-white mb-6 tracking-tight transition-colors duration-300">
                             {headline}
                         </h2>
-                        <p
-                            className="text-xl text-gray-600 dark:text-gray-400 leading-relaxed mb-12 transition-colors duration-300"
-                            dangerouslySetInnerHTML={{ __html: description }}
-                        />
+                        <p className="text-xl text-gray-600 dark:text-gray-400 leading-relaxed mb-12 transition-colors duration-300">
+                            {renderSafeHighlightedText(description)}
+                        </p>
                     </motion.div>
 
                     <motion.div

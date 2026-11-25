@@ -1,10 +1,22 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { useEffect, useState } from "react";
-import { getTechStack } from "@/app/admin/(protected)/tech-stack/actions";
+import { getPublishedTechStack } from "@/app/admin/(protected)/tech-stack/actions";
+import type { TechStackRecord } from "@/lib/types";
 
-const defaultCategories = [
+interface TechTool {
+    name: string;
+    icon_url?: string | null;
+}
+
+interface TechCategory {
+    name: string;
+    tools: Array<string | TechTool>;
+}
+
+const defaultCategories: TechCategory[] = [
     {
         name: "Voice & Chat Infrastructure",
         tools: ["VAPI", "Retell", "Twilio", "LiveKit", "Typebot"]
@@ -28,30 +40,27 @@ const defaultCategories = [
 ];
 
 export default function TechStack() {
-    const [groupedTech, setGroupedTech] = useState<any[]>(defaultCategories);
+    const [groupedTech, setGroupedTech] = useState<TechCategory[]>(defaultCategories);
 
     useEffect(() => {
         const fetchTech = async () => {
             try {
-                const { data } = await getTechStack();
+                const { data } = await getPublishedTechStack();
                 if (data && data.length > 0) {
-                    const published = data.filter(t => t.status === 'published');
-                    if (published.length > 0) {
-                        const grouped = published.reduce((acc: any, curr: any) => {
-                            if (!acc[curr.category]) {
-                                acc[curr.category] = { name: curr.category, tools: [] };
-                            }
-                            acc[curr.category].tools.push({ name: curr.name, icon_url: curr.icon_url });
-                            return acc;
-                        }, {});
-                        const groupedArray = Object.values(grouped);
-                        
-                        if (groupedArray.length < 3) {
-                            const combined = [...groupedArray, ...defaultCategories.slice(groupedArray.length)];
-                            setGroupedTech(combined);
-                        } else {
-                            setGroupedTech(groupedArray);
+                    const grouped = (data as TechStackRecord[]).reduce<Record<string, TechCategory>>((acc, curr) => {
+                        if (!acc[curr.category]) {
+                            acc[curr.category] = { name: curr.category, tools: [] };
                         }
+                        acc[curr.category].tools.push({ name: curr.name, icon_url: curr.icon_url });
+                        return acc;
+                    }, {});
+                    const groupedArray = Object.values(grouped);
+
+                    if (groupedArray.length < 3) {
+                        const combined = [...groupedArray, ...defaultCategories.slice(groupedArray.length)];
+                        setGroupedTech(combined);
+                    } else {
+                        setGroupedTech(groupedArray);
                     }
                 }
             } catch (error) {
@@ -97,13 +106,20 @@ export default function TechStack() {
                             <div className="glass-panel p-8 group border border-black/5 dark:border-white/5 hover:border-blue-500/30 transition-all bg-gray-50 dark:bg-black/40 shadow-sm dark:shadow-none duration-500 h-full">
                                 <h3 className="text-xl font-bold text-black dark:text-white mb-6 border-b border-black/5 dark:border-white/5 pb-6 transition-colors duration-300 tracking-tight">{category.name}</h3>
                                 <ul className="space-y-4">
-                                    {category.tools.map((tool: any, i: number) => {
+                                    {category.tools.map((tool, i) => {
                                         const toolName = typeof tool === 'string' ? tool : tool.name;
                                         const toolIcon = typeof tool === 'string' ? null : tool.icon_url;
                                         return (
                                             <li key={toolName + i} className="flex items-center text-gray-600 dark:text-gray-300 font-medium transition-colors duration-300 group/item">
                                                 {toolIcon ? (
-                                                    <img src={toolIcon} alt={toolName} className="w-5 h-5 mr-4 object-contain group-hover/item:scale-110 transition-transform" />
+                                                    <Image
+                                                        src={toolIcon}
+                                                        alt={toolName}
+                                                        width={20}
+                                                        height={20}
+                                                        unoptimized
+                                                        className="w-5 h-5 mr-4 object-contain group-hover/item:scale-110 transition-transform"
+                                                    />
                                                 ) : (
                                                     <div className="w-2 h-2 rounded-full bg-blue-500/50 mr-4 group-hover/item:bg-blue-500 transition-colors" />
                                                 )}

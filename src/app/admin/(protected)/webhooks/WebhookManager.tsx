@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { Webhook, saveWebhooks, testWebhook } from './actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -13,27 +13,29 @@ interface WebhookManagerProps {
 export default function WebhookManager({ initialWebhooks }: WebhookManagerProps) {
   const [webhooks, setWebhooks] = useState<Webhook[]>(initialWebhooks)
   const [isPending, startTransition] = useTransition()
-  
-  // Form states for new webhook
+
   const [isAdding, setIsAdding] = useState(false)
   const [name, setName] = useState('')
   const [url, setUrl] = useState('')
   const [event, setEvent] = useState<'all' | 'lead_created' | 'estimate_requested'>('all')
-  
-  // Test results state
+
   const [testingId, setTestingId] = useState<string | null>(null)
   const [testResult, setTestResult] = useState<{ [id: string]: { success: boolean; status?: number; error?: string } }>({})
-
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  useEffect(() => {
+    setWebhooks(initialWebhooks)
+  }, [initialWebhooks])
 
   const handleAddWebhook = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name || !url) return
+    if (!name.trim() || !url.trim()) return
 
+    const previousWebhooks = webhooks
     const newWebhook: Webhook = {
       id: crypto.randomUUID(),
-      name,
-      url,
+      name: name.trim(),
+      url: url.trim(),
       event,
       is_active: true,
       created_at: new Date().toISOString()
@@ -42,29 +44,32 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
     const updatedWebhooks = [...webhooks, newWebhook]
     setWebhooks(updatedWebhooks)
 
-    // Reset form
-    setName('')
-    setUrl('')
-    setEvent('all')
-    setIsAdding(false)
-
     startTransition(async () => {
       const res = await saveWebhooks(updatedWebhooks)
       if (res.error) {
+        setWebhooks(previousWebhooks)
         setMessage({ type: 'error', text: res.error })
       } else {
+        setName('')
+        setUrl('')
+        setEvent('all')
+        setIsAdding(false)
         setMessage({ type: 'success', text: 'Webhook added successfully!' })
       }
     })
   }
 
   const handleDeleteWebhook = (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this webhook?')) return
+
+    const previousWebhooks = webhooks
     const updatedWebhooks = webhooks.filter(w => w.id !== id)
     setWebhooks(updatedWebhooks)
 
     startTransition(async () => {
       const res = await saveWebhooks(updatedWebhooks)
       if (res.error) {
+        setWebhooks(previousWebhooks)
         setMessage({ type: 'error', text: res.error })
       } else {
         setMessage({ type: 'success', text: 'Webhook deleted successfully!' })
@@ -73,17 +78,16 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
   }
 
   const handleToggleWebhook = (id: string) => {
-    const updatedWebhooks = webhooks.map(w => {
-      if (w.id === id) {
-        return { ...w, is_active: !w.is_active }
-      }
-      return w
-    })
+    const previousWebhooks = webhooks
+    const updatedWebhooks = webhooks.map(w =>
+      w.id === id ? { ...w, is_active: !w.is_active } : w
+    )
     setWebhooks(updatedWebhooks)
 
     startTransition(async () => {
       const res = await saveWebhooks(updatedWebhooks)
       if (res.error) {
+        setWebhooks(previousWebhooks)
         setMessage({ type: 'error', text: res.error })
       }
     })
@@ -91,8 +95,12 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
 
   const handleTestWebhook = async (id: string, testUrl: string, testEvent: string) => {
     setTestingId(id)
-    setTestResult(prev => ({ ...prev, [id]: null as any }))
-    
+    setTestResult(prev => {
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
+
     try {
       const res = await testWebhook(testUrl, testEvent)
       setTestResult(prev => ({
@@ -103,12 +111,12 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
           error: res.error
         }
       }))
-    } catch (err: any) {
+    } catch (err: unknown) {
       setTestResult(prev => ({
         ...prev,
         [id]: {
           success: false,
-          error: err.message || 'Network error'
+          error: err instanceof Error ? err.message : 'Network error'
         }
       }))
     } finally {
@@ -119,13 +127,13 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
   return (
     <div className="space-y-6">
       {message && (
-        <div className={`p-4 rounded-xl flex items-center justify-between border ${
-          message.type === 'success' 
-            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+        <div className={`p-4 rounded-xl flex items-center justify-between gap-4 border ${
+          message.type === 'success'
+            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
             : 'bg-red-500/10 border-red-500/20 text-red-400'
         }`}>
           <span>{message.text}</span>
-          <button onClick={() => setMessage(null)} className="text-sm font-semibold hover:opacity-80">Dismiss</button>
+          <button type="button" onClick={() => setMessage(null)} className="text-sm font-semibold hover:opacity-80 shrink-0">Dismiss</button>
         </div>
       )}
 
@@ -134,7 +142,7 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
         <div className="md:col-span-2 bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
           <h2 className="text-xl font-bold text-white mb-2">Outbound Webhooks</h2>
           <p className="text-sm text-zinc-400 leading-relaxed">
-            Send real-time HTTP POST JSON payloads to external services (like n8n, Make.com, Zapier, or a custom API) when specific events trigger on your website. 
+            Send real-time HTTP POST JSON payloads to external services (like n8n, Make.com, Zapier, or a custom API) when specific events trigger on your website.
           </p>
         </div>
         <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 flex flex-col justify-between">
@@ -157,8 +165,9 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
             <form onSubmit={handleAddWebhook} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-zinc-300">Webhook Name</label>
+                  <label htmlFor="webhook-name" className="text-sm font-semibold text-zinc-300">Webhook Name</label>
                   <input
+                    id="webhook-name"
                     type="text"
                     required
                     value={name}
@@ -168,10 +177,11 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-zinc-300">Trigger Event</label>
+                  <label htmlFor="webhook-event" className="text-sm font-semibold text-zinc-300">Trigger Event</label>
                   <select
+                    id="webhook-event"
                     value={event}
-                    onChange={e => setEvent(e.target.value as any)}
+                    onChange={e => setEvent(e.target.value as Webhook['event'])}
                     className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-800 text-white rounded-xl text-sm focus:outline-none focus:border-blue-500"
                   >
                     <option value="all">All Events</option>
@@ -182,31 +192,33 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-zinc-300">Target Webhook URL</label>
+                <label htmlFor="webhook-url" className="text-sm font-semibold text-zinc-300">Target Webhook URL</label>
                 <input
+                  id="webhook-url"
                   type="url"
                   required
                   value={url}
                   onChange={e => setUrl(e.target.value)}
-                  placeholder="https://hooks.zapier.com/hooks/catch/... or http://n8n.yourdomain/webhook/..."
+                  placeholder="https://hooks.zapier.com/hooks/catch/..."
                   className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-800 text-white rounded-xl text-sm focus:outline-none focus:border-blue-500 placeholder-zinc-500"
                 />
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setIsAdding(false)}
                   className="border-zinc-800 hover:bg-zinc-900 text-zinc-300 hover:text-white"
                 >
                   Cancel
                 </Button>
-                <Button 
+                <Button
                   type="submit"
+                  disabled={isPending}
                   className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20"
                 >
-                  Create Webhook
+                  {isPending ? 'Saving...' : 'Create Webhook'}
                 </Button>
               </div>
             </form>
@@ -214,7 +226,8 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
         </Card>
       ) : (
         <div className="flex justify-end">
-          <Button 
+          <Button
+            type="button"
             onClick={() => setIsAdding(true)}
             className="bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-2 shadow-lg shadow-blue-600/20"
           >
@@ -233,15 +246,15 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
           </div>
         ) : (
           webhooks.map((webhook) => (
-            <Card key={webhook.id} className={`bg-zinc-950 border-zinc-800 hover:border-zinc-700 transition-all ${!webhook.is_active && 'opacity-60'}`}>
+            <Card key={webhook.id} className={`bg-zinc-950 border-zinc-800 hover:border-zinc-700 transition-all ${!webhook.is_active ? 'opacity-60' : ''}`}>
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-3">
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-3">
                       <h3 className="text-lg font-bold text-white">{webhook.name}</h3>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                        webhook.event === 'all' 
-                          ? 'bg-zinc-800 text-zinc-300' 
+                        webhook.event === 'all'
+                          ? 'bg-zinc-800 text-zinc-300'
                           : webhook.event === 'lead_created'
                           ? 'bg-green-500/10 text-green-400 border border-green-500/20'
                           : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
@@ -253,11 +266,12 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
                     <p className="text-[10px] text-zinc-600">Created: {new Date(webhook.created_at).toLocaleString()}</p>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3">
-                    {/* Toggle Active status */}
+                  <div className="flex flex-wrap items-center gap-3 shrink-0">
                     <button
+                      type="button"
                       onClick={() => handleToggleWebhook(webhook.id)}
                       className="text-zinc-400 hover:text-white transition-colors"
+                      aria-label={webhook.is_active ? 'Disable webhook' : 'Enable webhook'}
                       title={webhook.is_active ? 'Disable webhook' : 'Enable webhook'}
                     >
                       {webhook.is_active ? (
@@ -267,8 +281,8 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
                       )}
                     </button>
 
-                    {/* Test Button */}
                     <Button
+                      type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => handleTestWebhook(webhook.id, webhook.url, webhook.event)}
@@ -288,11 +302,12 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
                       )}
                     </Button>
 
-                    {/* Delete Button */}
                     <Button
+                      type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => handleDeleteWebhook(webhook.id)}
+                      aria-label={`Delete ${webhook.name}`}
                       className="border-zinc-800 hover:bg-red-950/20 text-zinc-300 hover:text-red-400 hover:border-red-900/30"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -300,11 +315,10 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
                   </div>
                 </div>
 
-                {/* Display Test Result if any */}
                 {testResult[webhook.id] && (
                   <div className={`mt-4 p-3 rounded-xl border flex items-center gap-3 text-sm ${
-                    testResult[webhook.id].success 
-                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                    testResult[webhook.id].success
+                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
                       : 'bg-red-500/10 border-red-500/20 text-red-400'
                   }`}>
                     {testResult[webhook.id].success ? (
@@ -314,10 +328,9 @@ export default function WebhookManager({ initialWebhooks }: WebhookManagerProps)
                     )}
                     <div>
                       <p className="font-semibold">
-                        {testResult[webhook.id].success 
-                          ? `Test Succeeded! (Status: ${testResult[webhook.id].status})` 
-                          : 'Test Failed'
-                        }
+                        {testResult[webhook.id].success
+                          ? `Test Succeeded! (Status: ${testResult[webhook.id].status})`
+                          : 'Test Failed'}
                       </p>
                       {testResult[webhook.id].error && (
                         <p className="text-xs opacity-80 font-mono mt-0.5">{testResult[webhook.id].error}</p>

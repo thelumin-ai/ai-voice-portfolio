@@ -1,13 +1,38 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { playgroundAppSchema, PlaygroundAppFormValues } from '@/lib/validations/playground'
+import { requireAdmin } from '@/lib/auth/admin'
 import { revalidatePath } from 'next/cache'
 
+export async function getPublishedPlaygroundApps() {
+  try {
+    const supabase = createPublicClient()
+    const { data, error } = await supabase
+      .from('playground_apps')
+      .select('*')
+      .eq('status', 'published')
+      .order('display_order', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching published playground apps:', error)
+      return { error: 'Failed to fetch playground apps' }
+    }
+
+    return { data }
+  } catch (error) {
+    console.error('Error fetching published playground apps:', error)
+    return { error: 'Failed to fetch playground apps' }
+  }
+}
+
 export async function getPlaygroundApps() {
-  const supabase = await createClient()
-  
-  const { data, error } = await supabase
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
+
+  const { data, error } = await auth.supabase
     .from('playground_apps')
     .select('*')
     .order('display_order', { ascending: true })
@@ -21,9 +46,12 @@ export async function getPlaygroundApps() {
 }
 
 export async function getPlaygroundApp(id: string) {
-  const supabase = await createClient()
-  
-  const { data, error } = await supabase
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
+
+  const { data, error } = await auth.supabase
     .from('playground_apps')
     .select('*')
     .eq('id', id)
@@ -38,11 +66,19 @@ export async function getPlaygroundApp(id: string) {
 }
 
 export async function createPlaygroundApp(data: PlaygroundAppFormValues) {
-  const supabase = await createClient()
-  
-  const validatedData = playgroundAppSchema.parse(data)
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
 
-  const { error } = await supabase
+  const parsed = playgroundAppSchema.safeParse(data)
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || 'Invalid playground app data' }
+  }
+
+  const validatedData = parsed.data
+
+  const { error } = await auth.supabase
     .from('playground_apps')
     .insert([
       {
@@ -52,7 +88,7 @@ export async function createPlaygroundApp(data: PlaygroundAppFormValues) {
         embed_url: validatedData.embed_url,
         status: validatedData.status,
         display_order: validatedData.display_order,
-      }
+      },
     ])
 
   if (error) {
@@ -66,19 +102,27 @@ export async function createPlaygroundApp(data: PlaygroundAppFormValues) {
 }
 
 export async function updatePlaygroundApp(id: string, data: PlaygroundAppFormValues) {
-  const supabase = await createClient()
-  
-  const validatedData = playgroundAppSchema.parse(data)
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
 
-  const { error } = await supabase
+  const parsed = playgroundAppSchema.safeParse(data)
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || 'Invalid playground app data' }
+  }
+
+  const validatedData = parsed.data
+
+  const { error } = await auth.supabase
     .from('playground_apps')
     .update({
-        title: validatedData.title,
-        description: validatedData.description,
-        category: validatedData.category,
-        embed_url: validatedData.embed_url,
-        status: validatedData.status,
-        display_order: validatedData.display_order,
+      title: validatedData.title,
+      description: validatedData.description,
+      category: validatedData.category,
+      embed_url: validatedData.embed_url,
+      status: validatedData.status,
+      display_order: validatedData.display_order,
     })
     .eq('id', id)
 
@@ -93,9 +137,12 @@ export async function updatePlaygroundApp(id: string, data: PlaygroundAppFormVal
 }
 
 export async function deletePlaygroundApp(id: string) {
-  const supabase = await createClient()
-  
-  const { error } = await supabase
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
+
+  const { error } = await auth.supabase
     .from('playground_apps')
     .delete()
     .eq('id', id)
@@ -111,10 +158,13 @@ export async function deletePlaygroundApp(id: string) {
 }
 
 export async function updatePlaygroundOrder(items: { id: string; display_order: number }[]) {
-  const supabase = await createClient()
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
 
   for (const item of items) {
-    const { error } = await supabase
+    const { error } = await auth.supabase
       .from('playground_apps')
       .update({ display_order: item.display_order })
       .eq('id', item.id)

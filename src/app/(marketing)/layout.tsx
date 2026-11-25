@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import dynamic from 'next/dynamic';
 import { getSiteSettings } from "../admin/(protected)/settings/actions";
+import type { SiteSettingsRecord } from "@/lib/types";
 
 const FloatingChatbot = dynamic(() => import("@/components/FloatingChatbot"));
 
@@ -10,10 +11,10 @@ interface MarketingLayoutProps {
 }
 
 export default async function MarketingLayout({ children }: MarketingLayoutProps) {
-  let settings: any = null;
+  let settings: SiteSettingsRecord | null = null;
   try {
     const res = await getSiteSettings();
-    settings = res?.data;
+    settings = (res?.data as SiteSettingsRecord | undefined) ?? null;
   } catch (error) {
     console.error("Failed to load site settings for marketing layout:", error);
   }

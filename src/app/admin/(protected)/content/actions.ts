@@ -1,18 +1,21 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { createPublicClient } from '@/lib/supabase/public'
+import { requireAdmin } from '@/lib/auth/admin'
 import { revalidatePath } from 'next/cache'
-import { 
-  HeroContent, AboutContent, ProblemContent,
-  defaultHeroContent, defaultAboutContent, defaultProblemContent 
+import {
+  HeroContent,
+  AboutContent,
+  ProblemContent,
+  defaultHeroContent,
+  defaultAboutContent,
+  defaultProblemContent,
 } from './defaults'
 
-// ---------- Getters ----------
 export async function getContentSettings() {
   try {
     const supabase = createPublicClient()
-    
+
     const { data, error } = await supabase
       .from('site_settings')
       .select('setting_key, setting_value')
@@ -27,7 +30,7 @@ export async function getContentSettings() {
     let about = defaultAboutContent
     let problem = defaultProblemContent
 
-    data?.forEach(row => {
+    data?.forEach((row) => {
       if (row.setting_key === 'hero_content' && row.setting_value) {
         hero = { ...defaultHeroContent, ...row.setting_value }
       }
@@ -46,17 +49,22 @@ export async function getContentSettings() {
   }
 }
 
-// ---------- Updaters ----------
 export async function updateHeroContent(content: HeroContent) {
-  const supabase = await createClient()
-  
-  const { error } = await supabase
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
+
+  const { error } = await auth.supabase
     .from('site_settings')
-    .upsert({
-      setting_key: 'hero_content',
-      setting_value: content,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'setting_key' })
+    .upsert(
+      {
+        setting_key: 'hero_content',
+        setting_value: content,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'setting_key' }
+    )
 
   if (error) {
     console.error('Error updating hero content:', error)
@@ -68,15 +76,21 @@ export async function updateHeroContent(content: HeroContent) {
 }
 
 export async function updateAboutContent(content: AboutContent) {
-  const supabase = await createClient()
-  
-  const { error } = await supabase
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
+
+  const { error } = await auth.supabase
     .from('site_settings')
-    .upsert({
-      setting_key: 'about_content',
-      setting_value: content,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'setting_key' })
+    .upsert(
+      {
+        setting_key: 'about_content',
+        setting_value: content,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'setting_key' }
+    )
 
   if (error) {
     console.error('Error updating about content:', error)
@@ -88,15 +102,21 @@ export async function updateAboutContent(content: AboutContent) {
 }
 
 export async function updateProblemContent(content: ProblemContent) {
-  const supabase = await createClient()
-  
-  const { error } = await supabase
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
+
+  const { error } = await auth.supabase
     .from('site_settings')
-    .upsert({
-      setting_key: 'problem_content',
-      setting_value: content,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'setting_key' })
+    .upsert(
+      {
+        setting_key: 'problem_content',
+        setting_value: content,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'setting_key' }
+    )
 
   if (error) {
     console.error('Error updating problem content:', error)

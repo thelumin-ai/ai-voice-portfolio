@@ -4,14 +4,30 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import * as LucideIcons from "lucide-react";
-import { ArrowRight } from "lucide-react";
-import { getServices } from "@/app/admin/(protected)/services/actions";
+import { ArrowRight, type LucideIcon } from "lucide-react";
+import { getPublishedServices } from "@/app/admin/(protected)/services/actions";
+import { sanitizeHref } from "@/lib/url";
+import type { ServiceRecord } from "@/lib/types";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-const defaultSolutions = [
+interface SolutionItem extends Pick<ServiceRecord, "id" | "title" | "description" | "icon_name" | "link"> {
+    href?: string;
+}
+
+const iconRegistry = LucideIcons as unknown as Record<string, LucideIcon>;
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+    const result: T[][] = [];
+    for (let i = 0; i < arr.length; i += size) {
+        result.push(arr.slice(i, i + size));
+    }
+    return result;
+}
+
+const defaultSolutions: SolutionItem[] = [
     {
         title: "Inbound Customer Support AI",
         description: "Deploy 24/7 voice agents that handle Tier-1 support, check order statuses via API, and intelligently route complex issues to human agents.",
@@ -57,17 +73,14 @@ const defaultSolutions = [
 ];
 
 export default function Solutions() {
-    const [solutions, setSolutions] = useState<any[]>(defaultSolutions);
+    const [solutions, setSolutions] = useState<SolutionItem[]>(defaultSolutions);
 
     useEffect(() => {
         const fetchServices = async () => {
             try {
-                const { data } = await getServices();
+                const { data } = await getPublishedServices();
                 if (data && data.length > 0) {
-                    const published = data.filter((s: any) => s.status === 'published');
-                    if (published.length > 0) {
-                        setSolutions(published);
-                    }
+                    setSolutions(data as SolutionItem[]);
                 }
             } catch (error) {
                 console.error("Failed to fetch services:", error);
@@ -76,20 +89,12 @@ export default function Solutions() {
         fetchServices();
     }, []);
 
-    const getIcon = (iconName: string) => {
-        return (LucideIcons as any)[iconName] || LucideIcons.Cpu;
-    };
-
-    const chunkArray = (arr: any[], size: number) => {
-        const result = [];
-        for (let i = 0; i < arr.length; i += size) {
-            result.push(arr.slice(i, i + size));
-        }
-        return result;
+    const getIcon = (iconName?: string | null): LucideIcon => {
+        return (iconName && iconRegistry[iconName]) || LucideIcons.Cpu;
     };
 
     const [isMobile, setIsMobile] = useState(false);
-    
+
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
         handleResize();
@@ -131,6 +136,7 @@ export default function Solutions() {
                     className="relative pb-16"
                 >
                     <Swiper
+                        key={chunkSize}
                         modules={[Pagination]}
                         spaceBetween={30}
                         slidesPerView={1}
@@ -142,27 +148,28 @@ export default function Solutions() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 auto-rows-fr">
                                     {slideItems.map((solution, index) => {
                                         const Icon = getIcon(solution.icon_name);
+                                        const href = sanitizeHref(solution.href || solution.link, '/use-cases');
                                         return (
                                             <div
                                                 key={solution.id || index}
                                                 className="bg-white dark:bg-black border border-black/10 dark:border-white/10 rounded-3xl p-6 md:p-8 flex flex-col group hover:border-blue-500/50 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
                                             >
                                                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-full pointer-events-none transition-transform group-hover:scale-150 duration-500" />
-                                                
+
                                                 <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
                                                     <Icon className="h-7 w-7" />
                                                 </div>
-                                                
+
                                                 <h3 className="text-xl font-bold text-black dark:text-white mb-4 transition-colors duration-300">
                                                     {solution.title}
                                                 </h3>
-                                                
+
                                                 <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base leading-relaxed mb-8 flex-grow transition-colors duration-300">
                                                     {solution.description}
                                                 </p>
-                                                
-                                                <Link 
-                                                    href={solution.href || "#"} 
+
+                                                <Link
+                                                    href={href}
                                                     className="inline-flex items-center text-sm font-bold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors mt-auto"
                                                 >
                                                     Learn more <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />

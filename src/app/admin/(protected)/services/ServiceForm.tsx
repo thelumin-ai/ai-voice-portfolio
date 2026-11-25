@@ -8,6 +8,7 @@ import { createService, updateService } from './actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
+import { getErrorMessage } from '@/lib/errors'
 
 interface ServiceFormProps {
   initialData?: ServiceFormValues & { id: string }
@@ -32,14 +33,11 @@ export function ServiceForm({ initialData }: ServiceFormProps) {
   const onSubmit = async (values: ServiceFormValues) => {
     setIsSubmitting(true)
     setError(null)
-    
+
     try {
-      let result
-      if (initialData?.id) {
-        result = await updateService(initialData.id, values)
-      } else {
-        result = await createService(values)
-      }
+      const result = initialData?.id
+        ? await updateService(initialData.id, values)
+        : await createService(values)
 
       if (result.error) {
         setError(result.error)
@@ -47,8 +45,8 @@ export function ServiceForm({ initialData }: ServiceFormProps) {
         router.push('/admin/services')
         router.refresh()
       }
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setIsSubmitting(false)
     }
@@ -56,7 +54,7 @@ export function ServiceForm({ initialData }: ServiceFormProps) {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-20">
-      {error && <div className="p-4 bg-red-100 text-red-800 rounded-md">{error}</div>}
+      {error && <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-md">{error}</div>}
 
       <Card>
         <CardContent className="p-6 space-y-4">
@@ -93,7 +91,7 @@ export function ServiceForm({ initialData }: ServiceFormProps) {
                 className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
                 placeholder="e.g. PhoneIncoming, UserCheck, Zap"
               />
-              <p className="text-xs text-gray-500">Find icon names at <a href="https://lucide.dev/icons" target="_blank" className="text-blue-500 hover:underline">lucide.dev</a></p>
+              <p className="text-xs text-gray-500">Find icon names at <a href="https://lucide.dev/icons" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">lucide.dev</a></p>
               {form.formState.errors.icon_name && (
                 <p className="text-sm text-red-500">{form.formState.errors.icon_name.message}</p>
               )}

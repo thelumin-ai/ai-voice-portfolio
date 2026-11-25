@@ -2,22 +2,35 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import * as LucideIcons from "lucide-react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, type LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getUseCases } from "@/app/admin/(protected)/use-cases/actions";
+import { getPublishedUseCases } from "@/app/admin/(protected)/use-cases/actions";
+import type { UseCaseRecord } from "@/lib/types";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-const defaultUseCases = [
+const iconRegistry = LucideIcons as unknown as Record<string, LucideIcon>;
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+    const result: T[][] = [];
+    for (let i = 0; i < arr.length; i += size) {
+        result.push(arr.slice(i, i + size));
+    }
+    return result;
+}
+
+const defaultUseCases: UseCaseRecord[] = [
     {
         name: "Real Estate",
         icon_name: "Home",
         industry_slug: "real-estate",
         cover_image_url: "https://images.unsplash.com/photo-1560184897-ae75f418493e?q=80&w=1000&auto=format&fit=crop",
         headline: "Speed-to-Lead AI Calling",
+        subhead: "AI voice agents for real estate.",
         problem: "Leads go cold in minutes. AI agents call instantly, qualify prospects, and book showings on autopilot.",
         results: [{ stat: "300%", label: "Increase in connect rate" }]
     },
@@ -27,6 +40,7 @@ const defaultUseCases = [
         industry_slug: "solar",
         cover_image_url: "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?q=80&w=1000&auto=format&fit=crop",
         headline: "High-Volume Pre-Qualification",
+        subhead: "AI voice agents for solar sales.",
         problem: "Sales reps waste hours dialing un-qualified homeowners or renters.",
         results: [{ stat: "12hrs", label: "Saved per rep weekly" }]
     },
@@ -36,23 +50,21 @@ const defaultUseCases = [
         industry_slug: "home-services",
         cover_image_url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=1000&auto=format&fit=crop",
         headline: "24/7 Booking & Dispatch",
+        subhead: "AI voice agents for home services.",
         problem: "Missed calls mean missed revenue. Customers call competitors when you don't answer.",
         results: [{ stat: "40%", label: "More bookings captured" }]
     }
 ];
 
 export default function UseCases() {
-    const [useCases, setUseCases] = useState<any[]>(defaultUseCases);
+    const [useCases, setUseCases] = useState<UseCaseRecord[]>(defaultUseCases);
 
     useEffect(() => {
         const fetchCases = async () => {
             try {
-                const { data } = await getUseCases();
+                const { data } = await getPublishedUseCases();
                 if (data && data.length > 0) {
-                    const published = data.filter((u: any) => u.status === 'published');
-                    if (published.length > 0) {
-                        setUseCases(published);
-                    }
+                    setUseCases(data as UseCaseRecord[]);
                 }
             } catch (error) {
                 console.error("Failed to fetch use cases:", error);
@@ -61,20 +73,12 @@ export default function UseCases() {
         fetchCases();
     }, []);
 
-    const getIcon = (iconName: string) => {
-        return (LucideIcons as any)[iconName] || LucideIcons.Briefcase;
-    };
-
-    const chunkArray = (arr: any[], size: number) => {
-        const result = [];
-        for (let i = 0; i < arr.length; i += size) {
-            result.push(arr.slice(i, i + size));
-        }
-        return result;
+    const getIcon = (iconName?: string | null): LucideIcon => {
+        return (iconName && iconRegistry[iconName]) || LucideIcons.Briefcase;
     };
 
     const [isMobile, setIsMobile] = useState(false);
-    
+
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
         handleResize();
@@ -127,6 +131,7 @@ export default function UseCases() {
                     className="relative pb-16"
                 >
                     <Swiper
+                        key={chunkSize}
                         modules={[Pagination]}
                         spaceBetween={30}
                         slidesPerView={1}
@@ -143,24 +148,25 @@ export default function UseCases() {
                                                 <div className="relative overflow-hidden rounded-2xl border border-black/10 dark:border-white/10 h-full min-h-[300px] md:min-h-[400px] flex flex-col justify-end p-6 md:p-8 shadow-sm dark:shadow-none hover:shadow-2xl dark:hover:shadow-none transition-all duration-500">
                                                     {/* Background Image */}
                                                     <div className="absolute inset-0 z-0">
-                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent z-10" />
-                                                        <img
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent z-10" />
+                                                        <Image
                                                             src={useCase.cover_image_url || 'https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop'}
                                                             alt={useCase.name}
-                                                            loading="lazy"
-                                                            className="w-full h-full object-cover transform scale-100 group-hover:scale-110 transition-transform duration-700"
+                                                            fill
+                                                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                                            className="object-cover transform scale-100 group-hover:scale-110 transition-transform duration-700"
                                                         />
                                                     </div>
 
-                                                    <div className="relative z-20 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                                                    <div className="relative z-20 transform translate-y-0 md:translate-y-4 md:group-hover:translate-y-0 transition-transform duration-500">
                                                         <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 border border-white/20 group-hover:bg-blue-600 group-hover:border-blue-500/50 transition-all duration-500">
                                                             <Icon className="h-6 w-6 text-white" />
                                                         </div>
                                                         <h3 className="text-xl md:text-2xl font-bold text-white mb-2">{useCase.name}</h3>
-                                                        <p className="text-gray-300 text-sm mb-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500 line-clamp-2">
+                                                        <p className="text-gray-300 text-sm mb-4 md:mb-6 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-500 line-clamp-2">
                                                             {useCase.headline}
                                                         </p>
-                                                        <div className="flex items-center text-xs font-bold text-blue-400 opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100">
+                                                        <div className="flex items-center text-xs font-bold text-blue-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 delay-100">
                                                             EXPLORE AGENTS <ArrowRight className="ml-2 h-3 w-3" />
                                                         </div>
                                                     </div>

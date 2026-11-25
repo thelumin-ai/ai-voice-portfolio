@@ -1,25 +1,37 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { createPublicClient } from '@/lib/supabase/public'
 import { settingsSchema, SettingsFormValues } from '@/lib/validations/settings'
+import { requireAdmin } from '@/lib/auth/admin'
+import { deleteStorageFileByUrl } from '@/lib/storage'
 import { revalidatePath } from 'next/cache'
 import { cache } from 'react'
 
-export const getSiteSettings = cache(async (): Promise<{ data?: SettingsFormValues; error?: string }> => {
-  const supabase = createPublicClient()
-  
-  const { data, error } = await supabase
-    .from('site_settings')
-    .select('setting_key, setting_value')
+const PUBLIC_SETTING_KEYS = [
+  'contact_email',
+  'footer_text',
+  'social_links',
+  'profile_image_url',
+  'consultation_provider',
+  'consultation_link_upwork',
+  'consultation_link_fiverr',
+  'consultation_link_calendly',
+] as const
 
-  if (error) {
-    console.error('Error fetching site settings:', error)
-    return { error: 'Failed to fetch site settings' }
-  }
+const ALL_SETTING_KEYS = [
+  ...PUBLIC_SETTING_KEYS,
+  'openai_api_key',
+  'anthropic_api_key',
+  'gemini_api_key',
+] as const
 
-  // Transform KV pairs into a single object matching the schema
-  const settingsObj: any = {
+function buildSettingsObject(
+  rows: Array<{ setting_key: string; setting_value: unknown }> | null,
+  includeSecrets: boolean
+): SettingsFormValues {
+  const settingsObj: SettingsFormValues = {
+    contact_email: '',
+    footer_text: '',
     social_links: { twitter: '', linkedin: '', github: '' },
     profile_image_url: '',
     consultation_provider: 'upwork',
@@ -28,37 +40,107 @@ export const getSiteSettings = cache(async (): Promise<{ data?: SettingsFormValu
     consultation_link_calendly: '',
     openai_api_key: '',
     anthropic_api_key: '',
-    gemini_api_key: ''
+    gemini_api_key: '',
   }
 
-  data?.forEach(row => {
-    if (row.setting_key === 'contact_email') settingsObj.contact_email = row.setting_value
-    if (row.setting_key === 'footer_text') settingsObj.footer_text = row.setting_value
-    if (row.setting_key === 'social_links') settingsObj.social_links = { ...settingsObj.social_links, ...row.setting_value }
-    if (row.setting_key === 'profile_image_url') settingsObj.profile_image_url = row.setting_value
-    if (row.setting_key === 'consultation_provider') settingsObj.consultation_provider = row.setting_value || 'upwork'
-    if (row.setting_key === 'consultation_link_upwork') settingsObj.consultation_link_upwork = row.setting_value
-    if (row.setting_key === 'consultation_link_fiverr') settingsObj.consultation_link_fiverr = row.setting_value
-    if (row.setting_key === 'consultation_link_calendly') settingsObj.consultation_link_calendly = row.setting_value
-    if (row.setting_key === 'openai_api_key') settingsObj.openai_api_key = row.setting_value
-    if (row.setting_key === 'anthropic_api_key') settingsObj.anthropic_api_key = row.setting_value
-    if (row.setting_key === 'gemini_api_key') settingsObj.gemini_api_key = row.setting_value
+  rows?.forEach((row) => {
+    const val = row.setting_value
+    if (row.setting_key === 'contact_email') settingsObj.contact_email = String(val || '')
+    if (row.setting_key === 'footer_text') settingsObj.footer_text = String(val || '')
+    if (row.setting_key === 'social_links' && val && typeof val === 'object') {
+      settingsObj.social_links = { ...settingsObj.social_links, ...(val as Record<string, string>) }
+    }
+    if (row.setting_key === 'profile_image_url') settingsObj.profile_image_url = String(val || '')
+    if (row.setting_key === 'consultation_provider') {
+      const p = String(val || 'upwork')
+      settingsObj.consultation_provider = p === 'fiverr' || p === 'calendly' ? p : 'upwork'
+    }
+    if (row.setting_key === 'consultation_link_upwork') settingsObj.consultation_link_upwork = String(val || '')
+    if (row.setting_key === 'consultation_link_fiverr') settingsObj.consultation_link_fiverr = String(val || '')
+    if (row.setting_key === 'consultation_link_calendly') settingsObj.consultation_link_calendly = String(val || '')
+    if (includeSecrets) {
+      if (row.setting_key === 'openai_api_key') settingsObj.openai_api_key = String(val || '')
+      if (row.setting_key === 'anthropic_api_key') settingsObj.anthropic_api_key = String(val || '')
+      if (row.setting_key === 'gemini_api_key') settingsObj.gemini_api_key = String(val || '')
+    }
   })
 
-  return { data: settingsObj }
+  return settingsObj
+}
+
+/**
+ * Public-safe site settings loader. Never fetches or exposes private AI API keys or webhooks.
+ */
+export const getSiteSettings = cache(async (): Promise<{ data?: SettingsFormValues; error?: string }> => {
+  try {
+    const supabase = createPublicClient()
+    const { data, error } = await supabase
+      .from('site_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', [...PUBLIC_SETTING_KEYS])
+
+    if (error) {
+      console.error('Error fetching site settings:', error)
+      return { error: 'Failed to fetch site settings' }
+    }
+
+    return { data: buildSettingsObject(data, false) }
+  } catch (err) {
+    console.error('Error fetching site settings:', err)
+    return { error: 'Failed to fetch site settings' }
+  }
 })
 
+/**
+ * Admin-only settings loader including private AI provider keys.
+ */
+export async function getAdminSiteSettings(): Promise<{ data?: SettingsFormValues; error?: string }> {
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
+
+  const { data, error } = await auth.supabase
+    .from('site_settings')
+    .select('setting_key, setting_value')
+    .in('setting_key', [...ALL_SETTING_KEYS])
+
+  if (error) {
+    console.error('Error fetching admin site settings:', error)
+    return { error: 'Failed to fetch site settings' }
+  }
+
+  return { data: buildSettingsObject(data, true) }
+}
+
 export async function updateSiteSettings(data: SettingsFormValues) {
-  const supabase = await createClient()
-  
-  const validatedData = settingsSchema.parse(data)
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
+
+  const parsed = settingsSchema.safeParse(data)
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || 'Invalid settings data' }
+  }
+
+  const validatedData = parsed.data
+
+  const { data: existingProfileRow } = await auth.supabase
+    .from('site_settings')
+    .select('setting_value')
+    .eq('setting_key', 'profile_image_url')
+    .maybeSingle()
+  const previousProfileUrl = existingProfileRow?.setting_value
+    ? String(existingProfileRow.setting_value)
+    : ''
 
   const updates = [
     { setting_key: 'contact_email', setting_value: validatedData.contact_email || '' },
     { setting_key: 'footer_text', setting_value: validatedData.footer_text || '' },
     { setting_key: 'social_links', setting_value: validatedData.social_links },
     { setting_key: 'profile_image_url', setting_value: validatedData.profile_image_url || '' },
-    { setting_key: 'consultation_provider', setting_value: validatedData.consultation_provider },
+    { setting_key: 'consultation_provider', setting_value: validatedData.consultation_provider || 'upwork' },
     { setting_key: 'consultation_link_upwork', setting_value: validatedData.consultation_link_upwork || '' },
     { setting_key: 'consultation_link_fiverr', setting_value: validatedData.consultation_link_fiverr || '' },
     { setting_key: 'consultation_link_calendly', setting_value: validatedData.consultation_link_calendly || '' },
@@ -68,13 +150,16 @@ export async function updateSiteSettings(data: SettingsFormValues) {
   ]
 
   for (const update of updates) {
-    const { error } = await supabase
+    const { error } = await auth.supabase
       .from('site_settings')
-      .upsert({
-        setting_key: update.setting_key,
-        setting_value: update.setting_value,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'setting_key' })
+      .upsert(
+        {
+          setting_key: update.setting_key,
+          setting_value: update.setting_value,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'setting_key' }
+      )
 
     if (error) {
       console.error(`Error updating setting ${update.setting_key}:`, error)
@@ -82,7 +167,11 @@ export async function updateSiteSettings(data: SettingsFormValues) {
     }
   }
 
+  if (previousProfileUrl && previousProfileUrl !== (validatedData.profile_image_url || '')) {
+    await deleteStorageFileByUrl(auth.supabase, previousProfileUrl)
+  }
+
   revalidatePath('/admin/settings')
-  revalidatePath('/', 'layout') // Revalidate everything since settings affect header/footer
+  revalidatePath('/', 'layout')
   return { success: true }
 }

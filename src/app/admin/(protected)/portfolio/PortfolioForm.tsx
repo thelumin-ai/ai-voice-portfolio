@@ -1,28 +1,63 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { portfolioSchema, PortfolioFormValues } from '@/lib/validations/portfolio'
 import { createPortfolioProject, updatePortfolioProject } from './actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { TipTapEditor } from './TipTapEditor'
 import { useRouter } from 'next/navigation'
 import { Plus, Trash2, UploadCloud, Bot, Loader2, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { validateImageFile } from '@/lib/url'
+import { getErrorMessage } from '@/lib/errors'
+import type { PortfolioProject } from '@/lib/types'
+
+const TipTapEditor = dynamic(
+  () => import('./TipTapEditor').then((mod) => mod.TipTapEditor),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-[250px] border border-gray-300 dark:border-zinc-700 rounded-md bg-gray-50 dark:bg-zinc-900/50 animate-pulse" />
+    ),
+  }
+)
+
+type PortfolioFormInput = z.input<typeof portfolioSchema>
 
 interface PortfolioFormProps {
-  initialData?: any
+  initialData?: Partial<PortfolioProject> & { id?: string }
 }
 
 export function PortfolioForm({ initialData }: PortfolioFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [coverUploadError, setCoverUploadError] = useState<string | null>(null)
+  const [mediaUploadError, setMediaUploadError] = useState<string | null>(null)
   const supabase = createClient()
 
-  const form = useForm<any>({
+  const normalizedProjectType =
+    initialData?.project_type === 'webrtc' ||
+    initialData?.project_type === 'audio' ||
+    initialData?.project_type === 'video' ||
+    initialData?.project_type === 'iframe'
+      ? initialData.project_type
+      : 'webrtc'
+
+  const normalizedPlatform =
+    initialData?.voice_platform === 'retell' ? 'retell' : 'vapi'
+
+  const normalizedStatus =
+    initialData?.status === 'draft' || initialData?.status === 'archived'
+      ? initialData.status
+      : 'published'
+
+  const form = useForm<PortfolioFormInput, unknown, PortfolioFormValues>({
     resolver: zodResolver(portfolioSchema),
     defaultValues: {
       id: initialData?.id,
@@ -30,28 +65,23 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
       industry_tag: initialData?.industry_tag || '',
       short_description: initialData?.short_description || '',
       case_study_body: initialData?.case_study_body || '',
-      metrics: initialData?.metrics || [],
-      integrations: initialData?.integrations || [],
-      media_files: initialData?.media_files || [],
-      project_type: initialData?.project_type || 'webrtc',
+      metrics: Array.isArray(initialData?.metrics) ? initialData.metrics : [],
+      integrations: Array.isArray(initialData?.integrations) ? initialData.integrations : [],
+      media_files: Array.isArray(initialData?.media_files) ? initialData.media_files : [],
+      project_type: normalizedProjectType,
       media_url: initialData?.media_url || '',
       api_key: initialData?.api_key || '',
       cover_image_url: initialData?.cover_image_url || '',
-      status: initialData?.status || 'published',
-      is_featured: !!initialData?.is_featured,
-      display_order: initialData?.display_order || 0,
-      voice_platform: initialData?.voice_platform || 'vapi',
+      status: normalizedStatus,
+      is_featured: Boolean(initialData?.is_featured),
+      display_order: initialData?.display_order ?? 0,
+      voice_platform: normalizedPlatform,
     },
   })
 
   const { fields: metricFields, append: appendMetric, remove: removeMetric } = useFieldArray({
     control: form.control,
     name: "metrics",
-  })
-
-  const { fields: integrationFields, append: appendIntegration, remove: removeIntegration } = useFieldArray({
-    control: form.control,
-    name: "integrations" as never, 
   })
 
   const { fields: mediaFields, append: appendMedia, remove: removeMedia } = useFieldArray({
@@ -68,6 +98,7 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
   const handleGenerateCoverImage = async () => {
     if (!imageAiPrompt.trim()) return;
     setIsGeneratingImage(true);
+    setCoverUploadError(null);
     try {
       const response = await fetch('/api/generate-image', {
         method: 'POST',
@@ -79,17 +110,18 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
       
       const res = await fetch(`data:${data.mimeType};base64,${data.base64}`);
       const blob = await res.blob();
-      const file = new File([blob], `ai-cover-${Date.now()}.${data.mimeType.split('/')[1] || 'jpeg'}`, { type: data.mimeType });
+      const mimeExt = (data.mimeType?.split('/')[1] || 'jpeg').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const file = new File([blob], `ai-cover-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${mimeExt}`, { type: data.mimeType });
       
       const filePath = `covers/${file.name}`;
       const { error: uploadError } = await supabase.storage.from('portfolio_media').upload(filePath, file);
       if (uploadError) throw uploadError;
 
       const { data: publicData } = supabase.storage.from('portfolio_media').getPublicUrl(filePath);
-      form.setValue('cover_image_url', publicData.publicUrl);
+      form.setValue('cover_image_url', publicData.publicUrl, { shouldValidate: true });
       setShowImageAi(false);
-    } catch (err: any) {
-      alert(`Error generating image: ${err.message}`);
+    } catch (err: unknown) {
+      setCoverUploadError(getErrorMessage(err, 'Error generating cover image'));
     } finally {
       setIsGeneratingImage(false);
     }
@@ -100,11 +132,12 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
     if (!files || files.length === 0) return
 
     setUploadingMedia(true)
+    setMediaUploadError(null)
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
-        const fileExt = file.name.split('.').pop()
-        const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`
+        const fileExt = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin'
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt}`
         const filePath = `portfolio_files/${fileName}`
 
         const { error: uploadError } = await supabase.storage
@@ -133,8 +166,8 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
           form.setValue('media_url', data.publicUrl)
         }
       }
-    } catch (error: any) {
-      alert(`Error uploading media: ${error.message}`)
+    } catch (err: unknown) {
+      setMediaUploadError(`Error uploading media: ${getErrorMessage(err)}`)
     } finally {
       setUploadingMedia(false)
       if (e.target) e.target.value = ''
@@ -145,9 +178,17 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
     const file = e.target.files?.[0]
     if (!file) return
 
+    const validationError = validateImageFile(file)
+    if (validationError) {
+      setCoverUploadError(validationError)
+      e.target.value = ''
+      return
+    }
+
+    setCoverUploadError(null)
     try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random()}.${fileExt}`
+      const fileExt = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'png'
+      const fileName = `cover-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt}`
       const filePath = `covers/${fileName}`
 
       const { error: uploadError } = await supabase.storage
@@ -157,9 +198,11 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
       if (uploadError) throw uploadError
 
       const { data } = supabase.storage.from('portfolio_media').getPublicUrl(filePath)
-      form.setValue('cover_image_url', data.publicUrl)
-    } catch (error: any) {
-      alert(`Error uploading image: ${error.message}`)
+      form.setValue('cover_image_url', data.publicUrl, { shouldValidate: true })
+    } catch (err: unknown) {
+      setCoverUploadError(getErrorMessage(err, 'Error uploading image'))
+    } finally {
+      e.target.value = ''
     }
   }
 
@@ -181,8 +224,8 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
         router.push('/admin/portfolio')
         router.refresh()
       }
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setIsSubmitting(false)
     }
@@ -215,7 +258,7 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
               </label>
               <CategorySelect
                 value={form.watch('industry_tag')}
-                onChange={(val) => form.setValue('industry_tag', val)}
+                onChange={(val) => form.setValue('industry_tag', val, { shouldValidate: true })}
               />
               {form.formState.errors.industry_tag && (
                 <p className="text-sm text-red-500">{String(form.formState.errors.industry_tag?.message || '')}</p>
@@ -315,8 +358,8 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
                           if (uploadError) throw uploadError
                           const { data } = supabase.storage.from('portfolio_media').getPublicUrl(filePath)
                           form.setValue('media_url', data.publicUrl)
-                        } catch (err: any) {
-                          alert(`Upload failed: ${err.message}`)
+                        } catch (err: unknown) {
+                          setError(`Upload failed: ${getErrorMessage(err)}`)
                         }
                       }} 
                     />
@@ -354,7 +397,7 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
                   className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
                   placeholder="Leave blank to use default key"
                 />
-                <p className="text-[10px] text-gray-500 italic">If this agent is on a client's account, provide their Public API Key here.</p>
+                <p className="text-[10px] text-gray-500 italic">If this agent is on a client&apos;s account, provide their Public API Key here.</p>
               </div>
             )}
 
@@ -439,17 +482,19 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
           {form.watch('cover_image_url') ? (
             <div className="rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-950/40 p-4 space-y-4">
               <div className="relative aspect-[16/9] max-w-md mx-auto rounded-lg overflow-hidden border border-zinc-800 shadow-inner bg-zinc-900">
-                <img
-                  src={form.watch('cover_image_url')}
+                <Image
+                  src={form.watch('cover_image_url') || ''}
                   alt="Portfolio Cover Preview"
-                  className="w-full h-full object-cover"
+                  fill
+                  unoptimized
+                  className="object-cover"
                 />
               </div>
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-xs">
-                <span className="text-zinc-500 truncate max-w-sm" title={form.watch('cover_image_url')}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-xs">
+                <span className="text-zinc-500 min-w-0 flex-1 truncate" title={form.watch('cover_image_url')}>
                   {form.watch('cover_image_url')}
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <label className="cursor-pointer flex items-center justify-center px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors font-medium">
                     <UploadCloud className="w-3.5 h-3.5 mr-1.5" />
                     <span>Replace Image</span>
@@ -460,7 +505,7 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
                     variant="destructive"
                     size="sm"
                     className="h-8 text-xs"
-                    onClick={() => form.setValue('cover_image_url', '')}
+                    onClick={() => form.setValue('cover_image_url', '', { shouldValidate: true })}
                   >
                     <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove
                   </Button>
@@ -475,7 +520,7 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
               <h4 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-1">
                 Upload Portfolio Graphic / Image <span className="text-red-500">*</span>
               </h4>
-              <p className="text-xs text-zinc-500 mb-4">PNG, JPG, WebP, or SVG (Required)</p>
+              <p className="text-xs text-zinc-500 mb-4">PNG, JPG, WebP, GIF, or AVIF (Max 5 MB, Required)</p>
               <div className="flex justify-center gap-3">
                 <label className="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow-sm">
                   <UploadCloud className="w-4 h-4 mr-2" />
@@ -486,6 +531,9 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
             </div>
           )}
 
+          {coverUploadError && (
+            <p className="text-sm text-red-500 font-medium">{coverUploadError}</p>
+          )}
           {form.formState.errors.cover_image_url && (
             <p className="text-sm text-red-500 font-medium">
               {String(form.formState.errors.cover_image_url?.message || 'Portfolio image is required')}
@@ -497,7 +545,7 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
 
       <Card>
         <CardContent className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <label className="text-sm font-medium">Additional Media Files (Images, Video, Audio, JSON)</label>
             <label className="cursor-pointer flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50">
               <UploadCloud className="w-4 h-4 mr-2" />
@@ -505,31 +553,43 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
               <input type="file" className="hidden" multiple accept="image/*,video/*,audio/*,.json" onChange={handleMediaUpload} disabled={uploadingMedia} />
             </label>
           </div>
+          {mediaUploadError && (
+            <p className="text-sm text-red-500">{mediaUploadError}</p>
+          )}
           
           <div className="space-y-3">
             {mediaFields.map((field, index) => (
-              <div key={field.id} className="flex gap-4 items-center p-3 border rounded-md dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/50">
-                <div className="flex-1 flex gap-4 items-center">
+              <div key={field.id} className="flex flex-wrap sm:flex-nowrap gap-4 items-center p-3 border rounded-md dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/50">
+                <div className="flex-1 min-w-0 flex gap-4 items-center">
                   {form.watch(`media_files.${index}.type`) === 'image' && (
-                    <img src={form.watch(`media_files.${index}.url`)} alt="preview" className="w-12 h-12 object-cover rounded" />
+                    <Image
+                      src={form.watch(`media_files.${index}.url`) || ''}
+                      alt="preview"
+                      width={48}
+                      height={48}
+                      unoptimized
+                      className="w-12 h-12 object-cover rounded shrink-0"
+                    />
                   )}
-                  {form.watch(`media_files.${index}.type`) === 'video' && <div className="w-12 h-12 flex items-center justify-center bg-gray-200 dark:bg-zinc-700 rounded text-xs font-bold">VID</div>}
-                  {form.watch(`media_files.${index}.type`) === 'audio' && <div className="w-12 h-12 flex items-center justify-center bg-gray-200 dark:bg-zinc-700 rounded text-xs font-bold">AUD</div>}
-                  {form.watch(`media_files.${index}.type`) === 'json' && <div className="w-12 h-12 flex items-center justify-center bg-gray-200 dark:bg-zinc-700 rounded text-xs font-bold">JSON</div>}
+                  {form.watch(`media_files.${index}.type`) === 'video' && <div className="w-12 h-12 shrink-0 flex items-center justify-center bg-gray-200 dark:bg-zinc-700 rounded text-xs font-bold">VID</div>}
+                  {form.watch(`media_files.${index}.type`) === 'audio' && <div className="w-12 h-12 shrink-0 flex items-center justify-center bg-gray-200 dark:bg-zinc-700 rounded text-xs font-bold">AUD</div>}
+                  {form.watch(`media_files.${index}.type`) === 'json' && <div className="w-12 h-12 shrink-0 flex items-center justify-center bg-gray-200 dark:bg-zinc-700 rounded text-xs font-bold">JSON</div>}
                   
-                  <div className="flex-1 space-y-2">
+                  <div className="flex-1 min-w-0 space-y-2">
                     <input
                       {...form.register(`media_files.${index}.name`)}
                       placeholder="File name or description"
                       className="w-full text-sm px-2 py-1 border rounded bg-white dark:bg-zinc-900 dark:border-zinc-600"
                     />
-                    <div className="text-xs text-gray-500 truncate w-64 md:w-96" title={form.watch(`media_files.${index}.url`)}>
-                      {form.watch(`media_files.${index}.url`)}
+                    <div className="flex min-w-0">
+                      <div className="text-xs text-gray-500 min-w-0 flex-1 truncate" title={form.watch(`media_files.${index}.url`)}>
+                        {form.watch(`media_files.${index}.url`)}
+                      </div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 shrink-0">
                   <select
                     {...form.register(`media_files.${index}.type`)}
                     className="text-xs px-2 py-1 border rounded dark:bg-zinc-900 dark:border-zinc-700"
@@ -576,12 +636,12 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
                 <input
                   {...form.register(`metrics.${index}.label`)}
                   placeholder="Label (e.g. Conversion Rate)"
-                  className="flex-1 px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+                  className="min-w-0 flex-1 px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
                 />
                 <input
                   {...form.register(`metrics.${index}.value`)}
                   placeholder="Value (e.g. 34%)"
-                  className="flex-1 px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+                  className="min-w-0 flex-1 px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
                 />
                 <Button type="button" variant="destructive" size="icon" onClick={() => removeMetric(index)}>
                   <Trash2 className="w-4 h-4" />
@@ -610,7 +670,7 @@ export function PortfolioForm({ initialData }: PortfolioFormProps) {
                     form.setValue('integrations', current)
                   }}
                   placeholder="e.g. Follow Up Boss"
-                  className="flex-1 px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+                  className="min-w-0 flex-1 px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
                 />
                 <Button type="button" variant="destructive" size="icon" onClick={() => {
                   const current = [...form.getValues('integrations')]
@@ -657,15 +717,10 @@ function CategorySelect({ value, onChange }: { value: string; onChange: (val: st
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState('');
 
-  const allCategories = [...DEFAULT_CATEGORIES, ...customCategories];
-  const isCustomValue = value && !allCategories.includes(value) && value !== '__other__';
-
-  // If the initial value from DB is a custom category not in our list, add it
-  useEffect(() => {
-    if (value && !DEFAULT_CATEGORIES.includes(value) && value !== '__other__' && !customCategories.includes(value)) {
-      setCustomCategories(prev => [...prev, value]);
-    }
-  }, []);
+  const allCategories =
+    value && !DEFAULT_CATEGORIES.includes(value) && value !== '__other__' && !customCategories.includes(value)
+      ? [...DEFAULT_CATEGORIES, ...customCategories, value]
+      : [...DEFAULT_CATEGORIES, ...customCategories];
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = e.target.value;
