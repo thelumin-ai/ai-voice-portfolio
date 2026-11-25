@@ -85,6 +85,9 @@ test('settingsSchema blocks javascript URLs in social or consultation links', ()
   assert.equal(
     settingsSchema.safeParse({
       contact_email: 'team@example.com',
+      admin_brand_name: 'Lumin AI Console',
+      admin_brand_subtitle: 'Operations HQ',
+      admin_logo_url: 'https://example.com/logo.png',
       social_links: {
         twitter: 'https://x.com/example',
         linkedin: '',
@@ -93,6 +96,18 @@ test('settingsSchema blocks javascript URLs in social or consultation links', ()
       consultation_link_upwork: 'https://www.upwork.com/services/test',
     }).success,
     true
+  )
+
+  assert.equal(
+    settingsSchema.safeParse({
+      admin_logo_url: 'javascript:alert(1)',
+      social_links: {
+        twitter: '',
+        linkedin: '',
+        github: '',
+      },
+    }).success,
+    false
   )
 
   assert.equal(

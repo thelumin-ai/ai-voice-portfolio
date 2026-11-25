@@ -4,40 +4,57 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AdminConfirmDialog } from '@/components/admin/AdminStates'
+import { useAdminToast } from '@/components/admin/AdminToast'
 import { deleteService } from './actions'
 
 export function DeleteServiceButton({ id, title }: { id: string; title: string }) {
   const router = useRouter()
+  const toast = useAdminToast()
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
   const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete "${title}"?`)) return
     setIsDeleting(true)
     try {
       const res = await deleteService(id)
       if (res?.error) {
-        alert(res.error)
+        toast.error(res.error)
       } else {
+        toast.success(`Deleted "${title}"`)
+        setConfirmOpen(false)
         router.refresh()
       }
     } catch {
-      alert('Failed to delete service')
+      toast.error('Failed to delete service')
     } finally {
       setIsDeleting(false)
     }
   }
 
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      disabled={isDeleting}
-      onClick={handleDelete}
-      aria-label={`Delete ${title}`}
-      className="text-red-400 hover:text-red-300 hover:bg-red-950/30 border border-transparent hover:border-red-900/50 transition-all"
-    >
-      <Trash2 className="w-4 h-4" />
-    </Button>
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        disabled={isDeleting}
+        onClick={() => setConfirmOpen(true)}
+        aria-label={`Delete ${title}`}
+        className="text-adm-danger-text hover:bg-adm-danger-bg hover:border-adm-danger-border"
+      >
+        <Trash2 className="w-4 h-4" />
+      </Button>
+
+      <AdminConfirmDialog
+        open={confirmOpen}
+        title="Delete service?"
+        description={`This will permanently remove "${title}" from your services list.`}
+        confirmLabel="Delete"
+        loading={isDeleting}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
+    </>
   )
 }

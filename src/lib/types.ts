@@ -113,9 +113,18 @@ export interface ProcessStepRecord {
   display_order?: number
 }
 
+export interface AdminBranding {
+  brandName: string
+  brandSubtitle: string
+  logoUrl: string
+}
+
 export interface SiteSettingsRecord {
   contact_email?: string
   footer_text?: string
+  admin_brand_name?: string
+  admin_brand_subtitle?: string
+  admin_logo_url?: string
   social_links?: {
     twitter?: string
     linkedin?: string

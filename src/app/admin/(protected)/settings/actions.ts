@@ -10,6 +10,9 @@ import { cache } from 'react'
 const PUBLIC_SETTING_KEYS = [
   'contact_email',
   'footer_text',
+  'admin_brand_name',
+  'admin_brand_subtitle',
+  'admin_logo_url',
   'social_links',
   'profile_image_url',
   'consultation_provider',
@@ -32,6 +35,9 @@ function buildSettingsObject(
   const settingsObj: SettingsFormValues = {
     contact_email: '',
     footer_text: '',
+    admin_brand_name: '',
+    admin_brand_subtitle: '',
+    admin_logo_url: '',
     social_links: { twitter: '', linkedin: '', github: '' },
     profile_image_url: '',
     consultation_provider: 'upwork',
@@ -47,6 +53,9 @@ function buildSettingsObject(
     const val = row.setting_value
     if (row.setting_key === 'contact_email') settingsObj.contact_email = String(val || '')
     if (row.setting_key === 'footer_text') settingsObj.footer_text = String(val || '')
+    if (row.setting_key === 'admin_brand_name') settingsObj.admin_brand_name = String(val || '')
+    if (row.setting_key === 'admin_brand_subtitle') settingsObj.admin_brand_subtitle = String(val || '')
+    if (row.setting_key === 'admin_logo_url') settingsObj.admin_logo_url = String(val || '')
     if (row.setting_key === 'social_links' && val && typeof val === 'object') {
       settingsObj.social_links = { ...settingsObj.social_links, ...(val as Record<string, string>) }
     }
@@ -107,7 +116,7 @@ export async function getAdminSiteSettings(): Promise<{ data?: SettingsFormValue
 
   if (error) {
     console.error('Error fetching admin site settings:', error)
-    return { error: 'Failed to fetch site settings' }
+    return { error: error.message || 'Failed to fetch site settings' }
   }
 
   return { data: buildSettingsObject(data, true) }
@@ -126,18 +135,24 @@ export async function updateSiteSettings(data: SettingsFormValues) {
 
   const validatedData = parsed.data
 
-  const { data: existingProfileRow } = await auth.supabase
+  const { data: existingImageRows } = await auth.supabase
     .from('site_settings')
-    .select('setting_value')
-    .eq('setting_key', 'profile_image_url')
-    .maybeSingle()
-  const previousProfileUrl = existingProfileRow?.setting_value
-    ? String(existingProfileRow.setting_value)
-    : ''
+    .select('setting_key, setting_value')
+    .in('setting_key', ['profile_image_url', 'admin_logo_url'])
+
+  const previousImages = new Map<string, string>()
+  existingImageRows?.forEach((row) => {
+    if (row.setting_value) {
+      previousImages.set(row.setting_key, String(row.setting_value))
+    }
+  })
 
   const updates = [
     { setting_key: 'contact_email', setting_value: validatedData.contact_email || '' },
     { setting_key: 'footer_text', setting_value: validatedData.footer_text || '' },
+    { setting_key: 'admin_brand_name', setting_value: validatedData.admin_brand_name || '' },
+    { setting_key: 'admin_brand_subtitle', setting_value: validatedData.admin_brand_subtitle || '' },
+    { setting_key: 'admin_logo_url', setting_value: validatedData.admin_logo_url || '' },
     { setting_key: 'social_links', setting_value: validatedData.social_links },
     { setting_key: 'profile_image_url', setting_value: validatedData.profile_image_url || '' },
     { setting_key: 'consultation_provider', setting_value: validatedData.consultation_provider || 'upwork' },
@@ -163,15 +178,23 @@ export async function updateSiteSettings(data: SettingsFormValues) {
 
     if (error) {
       console.error(`Error updating setting ${update.setting_key}:`, error)
-      return { error: `Failed to update ${update.setting_key}` }
+      return { error: `Failed to update ${update.setting_key}: ${error.message}` }
     }
   }
 
+  const previousProfileUrl = previousImages.get('profile_image_url') || ''
   if (previousProfileUrl && previousProfileUrl !== (validatedData.profile_image_url || '')) {
     await deleteStorageFileByUrl(auth.supabase, previousProfileUrl)
   }
 
+  const previousLogoUrl = previousImages.get('admin_logo_url') || ''
+  if (previousLogoUrl && previousLogoUrl !== (validatedData.admin_logo_url || '')) {
+    await deleteStorageFileByUrl(auth.supabase, previousLogoUrl)
+  }
+
   revalidatePath('/admin/settings')
+  revalidatePath('/admin', 'layout')
+  revalidatePath('/admin/login')
   revalidatePath('/', 'layout')
   return { success: true }
 }

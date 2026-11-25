@@ -1,18 +1,15 @@
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { ServiceForm } from '../ServiceForm'
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 
 export default function NewServicePage() {
   return (
-    <div className="max-w-3xl mx-auto">
-      <Link href="/admin/services" className="inline-flex items-center text-sm text-gray-400 hover:text-white mb-6">
-        <ArrowLeft className="w-4 h-4 mr-2" /> Back to Services
-      </Link>
-
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Add New Service</h1>
-        <p className="text-gray-400">Create a new service card for the homepage.</p>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <AdminPageHeader
+        title="Add Service"
+        description="Create a new service card for the public homepage."
+        backHref="/admin/services"
+        backLabel="Back to Services"
+      />
 
       <ServiceForm />
     </div>

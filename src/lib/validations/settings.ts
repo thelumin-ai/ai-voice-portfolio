@@ -4,6 +4,19 @@ import { optionalHttpUrlSchema } from './url.ts'
 export const settingsSchema = z.object({
   contact_email: z.string().email('Invalid email address').optional().or(z.literal('')),
   footer_text: z.string().optional(),
+  admin_brand_name: z
+    .string()
+    .trim()
+    .max(60, 'Brand name must be 60 characters or fewer')
+    .optional()
+    .or(z.literal('')),
+  admin_brand_subtitle: z
+    .string()
+    .trim()
+    .max(80, 'Subtitle must be 80 characters or fewer')
+    .optional()
+    .or(z.literal('')),
+  admin_logo_url: optionalHttpUrlSchema,
   social_links: z.object({
     twitter: optionalHttpUrlSchema,
     linkedin: optionalHttpUrlSchema,

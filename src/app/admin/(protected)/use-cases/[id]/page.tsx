@@ -1,11 +1,12 @@
+import { notFound } from 'next/navigation'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { UseCaseForm } from '../UseCaseForm'
 import { getUseCase } from '../actions'
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
-import { notFound } from 'next/navigation'
+
+export const dynamic = 'force-dynamic'
 
 export default async function EditUseCasePage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = await params;
+  const resolvedParams = await params
   const { data: usecase, error } = await getUseCase(resolvedParams.id)
 
   if (error || !usecase) {
@@ -13,15 +14,13 @@ export default async function EditUseCasePage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <Link href="/admin/use-cases" className="inline-flex items-center text-sm text-gray-400 hover:text-white mb-6">
-        <ArrowLeft className="w-4 h-4 mr-2" /> Back to Use Cases
-      </Link>
-
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Edit Use Case</h1>
-        <p className="text-gray-400">Update the industry use case details.</p>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <AdminPageHeader
+        title="Edit Use Case"
+        description={`Updating "${usecase.name || 'Use Case'}"`}
+        backHref="/admin/use-cases"
+        backLabel="Back to Use Cases"
+      />
 
       <UseCaseForm initialData={usecase} />
     </div>

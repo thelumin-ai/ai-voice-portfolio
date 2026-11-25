@@ -38,12 +38,12 @@ export async function getPublicPortfolioProjects() {
 }
 
 /**
- * Admin-only portfolio loader (includes drafts, archived items, and config fields).
+ * Admin-only portfolio loader (includes error info alongside rows).
  */
-export async function getPortfolioProjects() {
+export async function getAdminPortfolioProjects() {
   const auth = await requireAdmin()
   if (auth.error || !auth.supabase) {
-    return []
+    return { data: [], error: 'Unauthorized' }
   }
 
   const { data, error } = await auth.supabase
@@ -53,10 +53,18 @@ export async function getPortfolioProjects() {
 
   if (error) {
     console.error('Error fetching portfolio projects:', error)
-    return []
+    return { data: [], error: error.message || 'Failed to fetch portfolio projects' }
   }
 
-  return data || []
+  return { data: data || [] }
+}
+
+/**
+ * Admin-only portfolio loader (includes drafts, archived items, and config fields).
+ */
+export async function getPortfolioProjects() {
+  const { data } = await getAdminPortfolioProjects()
+  return data
 }
 
 export async function getPortfolioProject(id: string) {

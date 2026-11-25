@@ -39,7 +39,7 @@ export async function getProcessSteps() {
 
   if (error) {
     console.error('Error fetching process steps:', error)
-    return { error: 'Failed to fetch process steps' }
+    return { error: error.message || 'Failed to fetch process steps' }
   }
 
   return { data }
@@ -59,7 +59,7 @@ export async function getProcessStep(id: string) {
 
   if (error) {
     console.error('Error fetching process step:', error)
-    return { error: 'Failed to fetch process step' }
+    return { error: error.message || 'Failed to fetch process step' }
   }
 
   return { data }
@@ -169,7 +169,7 @@ export async function updateProcessStepOrder(items: { id: string; display_order:
 
     if (error) {
       console.error('Error updating order:', error)
-      return { error: 'Failed to update order' }
+      return { error: error.message || 'Failed to update order' }
     }
   }
 

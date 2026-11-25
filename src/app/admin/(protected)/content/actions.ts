@@ -49,6 +49,56 @@ export async function getContentSettings() {
   }
 }
 
+export async function getAdminContentSettings(): Promise<{
+  hero: HeroContent
+  about: AboutContent
+  problem: ProblemContent
+  error?: string
+}> {
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return {
+      hero: defaultHeroContent,
+      about: defaultAboutContent,
+      problem: defaultProblemContent,
+      error: 'Unauthorized',
+    }
+  }
+
+  const { data, error } = await auth.supabase
+    .from('site_settings')
+    .select('setting_key, setting_value')
+    .in('setting_key', ['hero_content', 'about_content', 'problem_content'])
+
+  if (error) {
+    console.error('Error fetching admin content settings:', error)
+    return {
+      hero: defaultHeroContent,
+      about: defaultAboutContent,
+      problem: defaultProblemContent,
+      error: error.message || 'Failed to fetch content settings',
+    }
+  }
+
+  let hero = defaultHeroContent
+  let about = defaultAboutContent
+  let problem = defaultProblemContent
+
+  data?.forEach((row) => {
+    if (row.setting_key === 'hero_content' && row.setting_value) {
+      hero = { ...defaultHeroContent, ...row.setting_value }
+    }
+    if (row.setting_key === 'about_content' && row.setting_value) {
+      about = { ...defaultAboutContent, ...row.setting_value }
+    }
+    if (row.setting_key === 'problem_content' && row.setting_value) {
+      problem = { ...defaultProblemContent, ...row.setting_value }
+    }
+  })
+
+  return { hero, about, problem }
+}
+
 export async function updateHeroContent(content: HeroContent) {
   const auth = await requireAdmin()
   if (auth.error || !auth.supabase) {

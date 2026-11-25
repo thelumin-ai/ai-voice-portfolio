@@ -3,87 +3,67 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useRouter } from 'next/navigation'
 import { techStackSchema, TechStackFormValues } from '@/lib/validations/techStack'
-import { createTechItem, updateTechItem } from './actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { useRouter } from 'next/navigation'
-import { UploadCloud } from 'lucide-react'
-import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
+import { AdminImageUpload } from '@/components/admin/AdminImageUpload'
+import { useAdminToast } from '@/components/admin/AdminToast'
 import { getErrorMessage } from '@/lib/errors'
+import { createTechItem, updateTechItem } from './actions'
+
+const PRESET_CATEGORIES = [
+  'Voice & Chat Infrastructure',
+  'Automation engines',
+  'Voice & Text generation',
+  'Core intelligence',
+  'Integrations',
+]
 
 interface TechStackFormProps {
-  initialData?: TechStackFormValues & { id: string }
+  initialData?: Partial<TechStackFormValues> & { id?: string }
 }
 
 export function TechStackForm({ initialData }: TechStackFormProps) {
   const router = useRouter()
+  const toast = useAdminToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
-  const PRESET_CATEGORIES = [
-    "Voice & Chat Infrastructure",
-    "Automation engines",
-    "Voice & Text generation",
-    "Core intelligence",
-    "Integrations"
-  ];
-  
-  const initialCategoryIsPreset = !initialData?.category || PRESET_CATEGORIES.includes(initialData.category);
-  const [isOtherCategory, setIsOtherCategory] = useState(!initialCategoryIsPreset);
-  
-  const supabase = createClient()
+
+  const initialCategory = initialData?.category ?? ''
+  const initialCategoryIsPreset = !initialCategory || PRESET_CATEGORIES.includes(initialCategory)
+  const [isOtherCategory, setIsOtherCategory] = useState(!initialCategoryIsPreset)
+
+  const normalizedStatus =
+    initialData?.status === 'draft' || initialData?.status === 'archived'
+      ? initialData.status
+      : 'published'
 
   const form = useForm<TechStackFormValues>({
     resolver: zodResolver(techStackSchema),
-    defaultValues: initialData || {
-      name: '',
-      category: '',
-      icon_url: '',
-      status: 'published',
-      display_order: 0,
+    defaultValues: {
+      id: initialData?.id,
+      name: initialData?.name ?? '',
+      category: initialCategory,
+      icon_url: initialData?.icon_url ?? '',
+      status: normalizedStatus,
+      display_order: typeof initialData?.display_order === 'number' ? initialData.display_order : 0,
     },
   })
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setError(null)
-    try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
-      const filePath = `icons/${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('portfolio_media')
-        .upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      const { data } = supabase.storage.from('portfolio_media').getPublicUrl(filePath)
-      form.setValue('icon_url', data.publicUrl)
-    } catch (err: unknown) {
-      setError(`Error uploading image: ${getErrorMessage(err)}`)
-    }
-  }
 
   const onSubmit = async (values: TechStackFormValues) => {
     setIsSubmitting(true)
     setError(null)
-    
+
     try {
-      let result
-      if (initialData?.id) {
-        result = await updateTechItem(initialData.id, values)
-      } else {
-        result = await createTechItem(values)
-      }
+      const result = initialData?.id
+        ? await updateTechItem(initialData.id, values)
+        : await createTechItem(values)
 
       if (result.error) {
         setError(result.error)
       } else {
+        toast.success(initialData?.id ? 'Tool updated' : 'Tool added')
         router.push('/admin/tech-stack')
         router.refresh()
       }
@@ -95,114 +75,122 @@ export function TechStackForm({ initialData }: TechStackFormProps) {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-20">
-      {error && <div className="p-4 bg-red-100 text-red-800 rounded-md">{error}</div>}
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-16">
+      {error && (
+        <div
+          role="alert"
+          className="rounded-xl border border-adm-danger-border bg-adm-danger-bg p-4 text-sm text-adm-danger-text"
+        >
+          {error}
+        </div>
+      )}
 
       <Card>
-        <CardContent className="p-6 space-y-4">
+        <CardContent className="p-6 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Tool Name</label>
+            <div className="space-y-1.5">
+              <label htmlFor="tech-name" className="adm-label">
+                Tool Name <span className="text-adm-danger-text">*</span>
+              </label>
               <input
+                id="tech-name"
                 {...form.register('name')}
-                className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
-                placeholder="e.g. Next.js"
+                className="adm-input"
+                placeholder="e.g. Vapi.ai, n8n, Retell AI"
               />
               {form.formState.errors.name && (
-                <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
+                <p className="adm-error">{form.formState.errors.name.message}</p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Category</label>
+            <div className="space-y-1.5">
+              <label htmlFor="tech-category" className="adm-label">
+                Category <span className="text-adm-danger-text">*</span>
+              </label>
               {!isOtherCategory ? (
-                  <select
-                    className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
-                    value={form.watch('category') || ''}
-                    onChange={(e) => {
-                        if (e.target.value === 'Other') {
-                            setIsOtherCategory(true)
-                            form.setValue('category', '')
-                        } else {
-                            form.setValue('category', e.target.value)
-                        }
+                <select
+                  id="tech-category"
+                  className="adm-input"
+                  value={form.watch('category') || ''}
+                  onChange={(e) => {
+                    if (e.target.value === 'Other') {
+                      setIsOtherCategory(true)
+                      form.setValue('category', '', { shouldValidate: true })
+                    } else {
+                      form.setValue('category', e.target.value, { shouldValidate: true })
+                    }
+                  }}
+                >
+                  <option value="" disabled>
+                    Select a category
+                  </option>
+                  {PRESET_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                  <option value="Other">Other (Custom)</option>
+                </select>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    id="tech-category"
+                    {...form.register('category')}
+                    className="adm-input flex-1"
+                    placeholder="Type custom category..."
+                    autoFocus
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsOtherCategory(false)
+                      form.setValue('category', PRESET_CATEGORIES[0], { shouldValidate: true })
                     }}
                   >
-                    <option value="" disabled>Select a category</option>
-                    {PRESET_CATEGORIES.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                    <option value="Other">Other (Custom)</option>
-                  </select>
-              ) : (
-                  <div className="flex gap-2">
-                      <input
-                        {...form.register('category')}
-                        className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
-                        placeholder="Type custom category..."
-                        autoFocus
-                      />
-                      <Button type="button" variant="outline" onClick={() => {
-                          setIsOtherCategory(false);
-                          form.setValue('category', PRESET_CATEGORIES[0]);
-                      }}>
-                          Back
-                      </Button>
-                  </div>
+                    Presets
+                  </Button>
+                </div>
               )}
               {form.formState.errors.category && (
-                <p className="text-sm text-red-500">{form.formState.errors.category.message}</p>
+                <p className="adm-error">{form.formState.errors.category.message}</p>
               )}
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Status</label>
-            <select
-              {...form.register('status')}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
-            >
+          <div className="space-y-1.5 max-w-xs">
+            <label htmlFor="tech-status" className="adm-label">
+              Status
+            </label>
+            <select id="tech-status" {...form.register('status')} className="adm-input">
               <option value="published">Published</option>
               <option value="draft">Draft</option>
               <option value="archived">Archived</option>
             </select>
           </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardContent className="p-6 space-y-4">
-          <label className="text-sm font-medium">Tool Icon (SVG/PNG)</label>
-          <div className="flex items-center gap-4">
-            {form.watch('icon_url') && (
-              <div className="p-4 bg-white dark:bg-zinc-800 rounded-md border dark:border-zinc-700">
-                <Image
-                  src={form.watch('icon_url') || ''}
-                  alt="Icon"
-                  width={48}
-                  height={48}
-                  unoptimized
-                  className="w-12 h-12 object-contain"
-                />
-              </div>
-            )}
-            <label className="cursor-pointer flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-md hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
-              <UploadCloud className="w-5 h-5 mr-2" />
-              <span>Upload Icon</span>
-              <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-            </label>
-            <input type="hidden" {...form.register('icon_url')} />
+          <div className="pt-2 border-t border-adm-border">
+            <AdminImageUpload
+              label="Tool Logo / Icon (Optional)"
+              hint="Upload a PNG/WebP icon (max 5 MB) or paste an image URL."
+              folder="icons"
+              prefix="icon"
+              aspect="square"
+              allowManualUrl
+              value={form.watch('icon_url') || ''}
+              onChange={(url) => form.setValue('icon_url', url, { shouldValidate: true })}
+              error={form.formState.errors.icon_url?.message}
+            />
           </div>
-          {form.formState.errors.icon_url && (
-            <p className="text-sm text-red-500">{form.formState.errors.icon_url.message}</p>
-          )}
         </CardContent>
       </Card>
 
-      <div className="flex justify-end gap-4">
-        <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+      <div className="flex justify-end gap-3">
+        <Button type="button" variant="outline" onClick={() => router.back()}>
+          Cancel
+        </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : initialData ? 'Update Tool' : 'Add Tool'}
+          {isSubmitting ? 'Saving...' : initialData?.id ? 'Update Tool' : 'Add Tool'}
         </Button>
       </div>
     </form>

@@ -16,7 +16,7 @@ export async function getLeads() {
 
   if (error) {
     console.error('Error fetching leads:', error)
-    return { error: 'Failed to fetch leads' }
+    return { error: error.message || 'Failed to fetch leads' }
   }
 
   return { data }

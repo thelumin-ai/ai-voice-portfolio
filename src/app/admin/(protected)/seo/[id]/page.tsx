@@ -1,6 +1,9 @@
+import { notFound } from 'next/navigation'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { getSeoSetting } from '../actions'
 import { SeoForm } from '../SeoForm'
-import { notFound } from 'next/navigation'
+
+export const dynamic = 'force-dynamic'
 
 export default async function EditSeoPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params
@@ -11,11 +14,14 @@ export default async function EditSeoPage({ params }: { params: Promise<{ id: st
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Route SEO</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Update meta tags for {setting.page_path}</p>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <AdminPageHeader
+        title="Edit Route SEO"
+        description={`Updating meta tags for "${setting.page_path || '/'}"`}
+        backHref="/admin/seo"
+        backLabel="Back to SEO & Meta"
+      />
+
       <SeoForm initialData={setting} />
     </div>
   )

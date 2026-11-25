@@ -3,6 +3,7 @@
 import { createPublicClient } from '@/lib/supabase/public'
 import { seoSchema, SeoFormValues } from '@/lib/validations/seo'
 import { requireAdmin } from '@/lib/auth/admin'
+import { deleteStorageFileByUrl } from '@/lib/storage'
 import { revalidatePath } from 'next/cache'
 import { cache } from 'react'
 
@@ -27,6 +28,25 @@ export const getSeoSettings = cache(async () => {
   }
 })
 
+export async function getAdminSeoSettings() {
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
+
+  const { data, error } = await auth.supabase
+    .from('seo_settings')
+    .select('*')
+    .order('page_path', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching admin SEO settings:', error)
+    return { error: error.message || 'Failed to fetch SEO settings' }
+  }
+
+  return { data }
+}
+
 export async function getSeoSetting(id: string) {
   const auth = await requireAdmin()
   if (auth.error || !auth.supabase) {
@@ -41,7 +61,7 @@ export async function getSeoSetting(id: string) {
 
   if (error) {
     console.error('Error fetching SEO setting:', error)
-    return { error: 'Failed to fetch SEO setting' }
+    return { error: error.message || 'Failed to fetch SEO setting' }
   }
 
   return { data }
@@ -97,7 +117,7 @@ export async function updateSeoSetting(id: string, data: SeoFormValues) {
 
   const { data: current } = await auth.supabase
     .from('seo_settings')
-    .select('page_path')
+    .select('page_path, og_image_url')
     .eq('id', id)
     .maybeSingle()
 
@@ -118,6 +138,10 @@ export async function updateSeoSetting(id: string, data: SeoFormValues) {
     return { error: error.message }
   }
 
+  if (current?.og_image_url && current.og_image_url !== (validatedData.og_image_url || '')) {
+    await deleteStorageFileByUrl(auth.supabase, current.og_image_url)
+  }
+
   revalidatePath('/admin/seo')
   revalidatePath(validatedData.page_path)
   if (current?.page_path && current.page_path !== validatedData.page_path) {
@@ -134,7 +158,7 @@ export async function deleteSeoSetting(id: string) {
 
   const { data: current } = await auth.supabase
     .from('seo_settings')
-    .select('page_path')
+    .select('page_path, og_image_url')
     .eq('id', id)
     .maybeSingle()
 
@@ -146,6 +170,10 @@ export async function deleteSeoSetting(id: string) {
   if (error) {
     console.error('Error deleting SEO setting:', error)
     return { error: error.message }
+  }
+
+  if (current?.og_image_url) {
+    await deleteStorageFileByUrl(auth.supabase, current.og_image_url)
   }
 
   revalidatePath('/admin/seo')

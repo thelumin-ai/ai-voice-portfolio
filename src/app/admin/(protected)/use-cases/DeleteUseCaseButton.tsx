@@ -4,40 +4,57 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AdminConfirmDialog } from '@/components/admin/AdminStates'
+import { useAdminToast } from '@/components/admin/AdminToast'
 import { deleteUseCase } from './actions'
 
 export function DeleteUseCaseButton({ id, name }: { id: string; name: string }) {
   const router = useRouter()
+  const toast = useAdminToast()
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
   const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete use case "${name}"?`)) return
     setIsDeleting(true)
     try {
       const res = await deleteUseCase(id)
       if (res?.error) {
-        alert(res.error)
+        toast.error(res.error)
       } else {
+        toast.success(`Deleted "${name}"`)
+        setConfirmOpen(false)
         router.refresh()
       }
     } catch {
-      alert('Failed to delete use case')
+      toast.error('Failed to delete use case')
     } finally {
       setIsDeleting(false)
     }
   }
 
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      disabled={isDeleting}
-      onClick={handleDelete}
-      aria-label={`Delete ${name}`}
-      className="text-red-400 hover:text-red-300 hover:bg-red-950/30 border border-zinc-800 hover:border-red-900/50 transition-all rounded-lg"
-    >
-      <Trash2 className="w-4 h-4" />
-    </Button>
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        disabled={isDeleting}
+        onClick={() => setConfirmOpen(true)}
+        aria-label={`Delete ${name}`}
+        className="text-adm-danger-text hover:bg-adm-danger-bg hover:border-adm-danger-border"
+      >
+        <Trash2 className="w-4 h-4" />
+      </Button>
+
+      <AdminConfirmDialog
+        open={confirmOpen}
+        title="Delete use case?"
+        description={`This will permanently remove "${name}" from your industry use cases.`}
+        confirmLabel="Delete"
+        loading={isDeleting}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
+    </>
   )
 }

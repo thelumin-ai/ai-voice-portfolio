@@ -1,25 +1,39 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, Edit, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { GripVertical, Edit, PlayCircle, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { AdminConfirmDialog, AdminStatusBadge } from '@/components/admin/AdminStates'
+import { useAdminToast } from '@/components/admin/AdminToast'
 import { deletePlaygroundApp } from './actions'
 
-interface PlaygroundItem {
+export interface PlaygroundItem {
   id: string
-  title: string
-  description: string
-  category: string
-  status: string
-  display_order: number
+  title?: string | null
+  description?: string | null
+  category?: string | null
+  status?: string | null
+  display_order?: number | null
 }
 
-export function SortableItem({ id, item }: { id: string; item: PlaygroundItem }) {
+export function SortableItem({
+  id,
+  item,
+  reorderDisabled = false,
+}: {
+  id: string
+  item: PlaygroundItem
+  reorderDisabled?: boolean
+}) {
   const router = useRouter()
+  const toast = useAdminToast()
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
   const {
     attributes,
     listeners,
@@ -27,80 +41,111 @@ export function SortableItem({ id, item }: { id: string; item: PlaygroundItem })
     transform,
     transition,
     isDragging,
-  } = useSortable({ id })
+  } = useSortable({ id, disabled: reorderDisabled })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 10 : 1,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.6 : 1,
   }
 
+  const displayTitle = item.title?.trim() || 'Untitled Demo'
+
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this app?')) {
+    setIsDeleting(true)
+    try {
       const res = await deletePlaygroundApp(id)
       if (res?.error) {
-        alert(res.error)
+        toast.error(res.error)
       } else {
+        toast.success(`Deleted "${displayTitle}"`)
+        setConfirmOpen(false)
         router.refresh()
       }
+    } catch {
+      toast.error('Failed to delete playground app')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`group relative p-5 bg-black border border-zinc-800 rounded-xl shadow-sm transition-all duration-300 overflow-hidden ${
-        isDragging ? 'shadow-2xl shadow-green-500/10 ring-1 ring-green-500/50 z-50 scale-[1.02]' : 'hover:border-zinc-700 hover:bg-zinc-950 hover:shadow-lg hover:shadow-black'
-      }`}
-    >
-      <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4 sm:gap-5 flex-1 min-w-0 w-full">
-          <div
-            {...attributes}
-            {...listeners}
-            className="cursor-grab p-2 rounded-lg text-zinc-600 hover:text-white hover:bg-zinc-800 transition-all flex-shrink-0"
-            title="Drag to reorder"
-          >
-            <GripVertical className="h-5 w-5" />
+    <>
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`group rounded-xl border border-adm-border bg-adm-surface-2/40 p-4 transition-all ${
+          isDragging
+            ? 'ring-2 ring-adm-accent shadow-xl bg-adm-surface'
+            : 'hover:border-adm-accent/40 hover:bg-adm-surface-2/80'
+        }`}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 min-w-0 flex-1">
+            <button
+              type="button"
+              disabled={reorderDisabled}
+              className={`p-2 rounded-lg shrink-0 transition-colors ${
+                reorderDisabled
+                  ? 'text-adm-subtle opacity-40 cursor-not-allowed'
+                  : 'cursor-grab text-adm-muted hover:text-adm-text hover:bg-adm-surface active:cursor-grabbing'
+              }`}
+              {...(reorderDisabled ? {} : attributes)}
+              {...(reorderDisabled ? {} : listeners)}
+              aria-label={`Drag to reorder ${displayTitle}`}
+              title={reorderDisabled ? 'Clear filters to reorder' : 'Drag to reorder'}
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
+
+            <div className="w-10 h-10 rounded-lg border border-adm-border bg-adm-accent-soft text-adm-accent flex items-center justify-center shrink-0">
+              <PlayCircle className="h-5 w-5" />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm sm:text-base font-semibold text-adm-text truncate">
+                {displayTitle}
+              </h3>
+              <p className="text-xs font-medium text-adm-muted uppercase tracking-wide truncate mt-0.5">
+                {item.category || 'General'}
+              </p>
+            </div>
           </div>
 
-          <div className="w-12 h-12 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-center p-2 shadow-inner flex-shrink-0 relative">
-            <span className="text-zinc-500 font-mono text-xs font-bold">&lt;/&gt;</span>
-            <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-black ${
-              item.status === 'published' ? 'bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]' :
-              item.status === 'draft' ? 'bg-yellow-500' : 'bg-zinc-500'
-            }`} />
-          </div>
+          <div className="flex items-center justify-between sm:justify-end gap-3 border-t sm:border-t-0 border-adm-border pt-3 sm:pt-0 shrink-0">
+            <AdminStatusBadge status={item.status} />
 
-          <div className="min-w-0 flex-1">
-            <h3 className="text-lg font-bold text-white font-mono group-hover:text-green-400 transition-colors tracking-tight truncate">{item.title}</h3>
-            <p className="text-xs font-mono text-zinc-500 mt-1 uppercase tracking-widest truncate">{item.category}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-zinc-800/50 pt-4 sm:pt-0 shrink-0">
-          <span className={`px-2 py-1 text-[10px] font-mono uppercase tracking-wider rounded-md border ${
-            item.status === 'published' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-            item.status === 'draft' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-            'bg-zinc-800 text-zinc-400 border-zinc-700'
-          }`}>
-            SYS.{item.status}
-          </span>
-
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild className="bg-zinc-900 text-zinc-400 hover:text-white hover:bg-green-600/80 border border-zinc-800 hover:border-transparent transition-all rounded-lg font-mono">
-              <Link href={`/admin/playground/${id}`} aria-label={`Edit ${item.title}`}>
-                <Edit className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button type="button" variant="ghost" size="icon" aria-label={`Delete ${item.title}`} className="bg-zinc-900 text-zinc-400 hover:text-white hover:bg-red-600/80 border border-zinc-800 hover:border-transparent transition-all rounded-lg" onClick={handleDelete}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <Button variant="outline" size="icon" asChild>
+                <Link href={`/admin/playground/${id}`} aria-label={`Edit ${displayTitle}`}>
+                  <Edit className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label={`Delete ${displayTitle}`}
+                onClick={() => setConfirmOpen(true)}
+                className="text-adm-danger-text hover:bg-adm-danger-bg hover:border-adm-danger-border"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <AdminConfirmDialog
+        open={confirmOpen}
+        title="Delete playground app?"
+        description={`This will permanently remove "${displayTitle}" from the public playground.`}
+        confirmLabel="Delete"
+        loading={isDeleting}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
+    </>
   )
 }

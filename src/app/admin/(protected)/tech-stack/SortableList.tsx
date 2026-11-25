@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -16,26 +16,32 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { SortableItem } from './SortableItem'
+import Link from 'next/link'
+import { PlusCircle, Search, Wrench } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { AdminEmptyState } from '@/components/admin/AdminStates'
+import { useAdminToast } from '@/components/admin/AdminToast'
+import { SortableItem, type TechItem } from './SortableItem'
 import { updateTechStackOrder } from './actions'
 
-interface TechItem {
-  id: string
-  name: string
-  category: string
-  icon_url: string
-  status: string
-  display_order: number
-}
-
-export function SortableList({ initialItems }: { initialItems: TechItem[] }) {
+export function SortableList({
+  initialItems,
+  hasFetchError = false,
+}: {
+  initialItems: TechItem[]
+  hasFetchError?: boolean
+}) {
   const [items, setItems] = useState(initialItems)
+  const [prevInitial, setPrevInitial] = useState(initialItems)
   const [isUpdating, setIsUpdating] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft' | 'archived'>('all')
+  const toast = useAdminToast()
 
-  useEffect(() => {
+  if (prevInitial !== initialItems) {
+    setPrevInitial(initialItems)
     setItems(initialItems)
-  }, [initialItems])
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -44,7 +50,20 @@ export function SortableList({ initialItems }: { initialItems: TechItem[] }) {
     })
   )
 
+  const query = searchQuery.trim().toLowerCase()
+  const isFiltered = query.length > 0 || statusFilter !== 'all'
+  const filteredItems = items.filter((item) => {
+    const normalizedStatus = (item.status || 'draft').toLowerCase()
+    if (statusFilter !== 'all' && normalizedStatus !== statusFilter) return false
+    if (!query) return true
+    return (
+      (item.name || '').toLowerCase().includes(query) ||
+      (item.category || '').toLowerCase().includes(query)
+    )
+  })
+
   async function handleDragEnd(event: DragEndEvent) {
+    if (isFiltered) return
     const { active, over } = event
     if (!over || active.id === over.id) return
 
@@ -59,54 +78,113 @@ export function SortableList({ initialItems }: { initialItems: TechItem[] }) {
     }))
 
     setItems(updatedItems)
-    setErrorMsg(null)
     setIsUpdating(true)
 
     try {
       const res = await updateTechStackOrder(
-        updatedItems.map(i => ({ id: i.id, display_order: i.display_order }))
+        updatedItems.map((i) => ({ id: i.id, display_order: i.display_order }))
       )
       if (res?.error) {
         setItems(previousItems)
-        setErrorMsg(res.error)
+        toast.error(res.error)
+      } else {
+        toast.success('Tech stack order updated')
       }
     } catch {
       setItems(previousItems)
-      setErrorMsg('Failed to update order')
+      toast.error('Failed to update order')
     } finally {
       setIsUpdating(false)
     }
   }
 
   if (items.length === 0) {
+    if (hasFetchError) {
+      return (
+        <p className="py-6 text-center text-sm text-adm-muted">
+          Fix the error above and click Retry to load your tech stack.
+        </p>
+      )
+    }
     return (
-      <div className="text-center py-10 text-gray-400">
-        No tech stack tools found. Click &ldquo;Add Tech Item&rdquo; to create one.
-      </div>
+      <AdminEmptyState
+        icon={Wrench}
+        title="No tech stack items yet"
+        description="Add platforms, APIs, and voice engines you build with."
+        action={
+          <Button asChild size="sm">
+            <Link href="/admin/tech-stack/new">
+              <PlusCircle className="w-4 h-4 mr-2" />
+              Add Tool
+            </Link>
+          </Button>
+        }
+      />
     )
   }
 
   return (
-    <div className={`space-y-2 ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}>
-      {errorMsg && (
-        <div className="mb-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-          {errorMsg}
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+          <div className="relative flex-1 min-w-0">
+            <Search className="w-4 h-4 text-adm-subtle absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search tools by name or category..."
+              className="adm-input pl-9"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value as 'all' | 'published' | 'draft' | 'archived')
+            }
+            aria-label="Filter tech stack by status"
+            className="adm-input sm:w-48 shrink-0"
+          >
+            <option value="all">All Statuses ({items.length})</option>
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+        {isFiltered && (
+          <p className="text-xs text-adm-warn-text">
+            Clear search and status filters to drag-and-drop reorder tools.
+          </p>
+        )}
+      </div>
+
+      {filteredItems.length === 0 ? (
+        <div className="rounded-xl border border-adm-border bg-adm-surface-2/40 p-8 text-center text-sm text-adm-muted">
+          No tech stack tools match your current filter.
+        </div>
+      ) : (
+        <div className={`space-y-3 ${isUpdating ? 'opacity-60 pointer-events-none' : ''}`}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={filteredItems.map((item) => item.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {filteredItems.map((item) => (
+                <SortableItem
+                  key={item.id}
+                  id={item.id}
+                  item={item}
+                  reorderDisabled={isFiltered}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
         </div>
       )}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={items.map((item) => item.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {items.map((item) => (
-            <SortableItem key={item.id} id={item.id} item={item} />
-          ))}
-        </SortableContext>
-      </DndContext>
     </div>
   )
 }

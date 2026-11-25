@@ -19,7 +19,7 @@ export async function getBlogPosts() {
 
   if (error) {
     console.error('Error fetching blog posts:', error)
-    return { error: 'Failed to fetch blog posts' }
+    return { error: error.message || 'Failed to fetch blog posts' }
   }
 
   return { data }
@@ -39,7 +39,7 @@ export async function getBlogPost(id: string) {
 
   if (error) {
     console.error('Error fetching blog post:', error)
-    return { error: 'Failed to fetch blog post' }
+    return { error: error.message || 'Failed to fetch blog post' }
   }
 
   return { data }

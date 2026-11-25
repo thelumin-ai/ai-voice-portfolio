@@ -1,92 +1,132 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { deleteBlogPost } from './actions'
-import { Trash2, Edit, ExternalLink, Search, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { useState } from 'react'
 import Link from 'next/link'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Edit,
+  ExternalLink,
+  PenSquare,
+  Search,
+  Trash2,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  AdminConfirmDialog,
+  AdminEmptyState,
+  AdminStatusBadge,
+} from '@/components/admin/AdminStates'
+import { useAdminToast } from '@/components/admin/AdminToast'
+import { deleteBlogPost } from './actions'
 
 interface BlogPost {
   id: string
-  title: string
-  slug: string
-  status: string
-  created_at: string
-  published_at: string | null
+  title?: string | null
+  slug?: string | null
+  status?: string | null
+  created_at?: string | null
+  published_at?: string | null
 }
 
 const PAGE_SIZE = 10
 
-export function BlogList({ initialPosts }: { initialPosts: BlogPost[] }) {
+function formatDate(raw: string | null | undefined): string {
+  if (!raw) return '—'
+  const date = new Date(raw)
+  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString()
+}
+
+export function BlogList({
+  initialPosts,
+  hasFetchError = false,
+}: {
+  initialPosts: BlogPost[]
+  hasFetchError?: boolean
+}) {
   const [posts, setPosts] = useState(initialPosts)
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [actionError, setActionError] = useState<string | null>(null)
+  const [prevInitial, setPrevInitial] = useState(initialPosts)
+  const [deleteTarget, setDeleteTarget] = useState<BlogPost | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft' | 'archived'>('all')
   const [page, setPage] = useState(1)
+  const toast = useAdminToast()
 
-  useEffect(() => {
+  if (prevInitial !== initialPosts) {
+    setPrevInitial(initialPosts)
     setPosts(initialPosts)
-  }, [initialPosts])
+  }
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this blog post?')) {
-      setIsUpdating(true)
-      setActionError(null)
-      const result = await deleteBlogPost(id)
-
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return
+    setIsDeleting(true)
+    try {
+      const result = await deleteBlogPost(deleteTarget.id)
       if (result.success) {
-        setPosts((prev) => prev.filter(post => post.id !== id))
+        setPosts((prev) => prev.filter((post) => post.id !== deleteTarget.id))
+        toast.success(`Deleted "${deleteTarget.title || 'post'}"`)
+        setDeleteTarget(null)
       } else {
-        setActionError(result.error || 'Failed to delete blog post')
+        toast.error(result.error || 'Failed to delete blog post')
       }
-      setIsUpdating(false)
+    } catch {
+      toast.error('Failed to delete blog post')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
   if (posts.length === 0) {
-    return (
-      <div className="p-12 text-center flex flex-col items-center justify-center bg-zinc-900/40 rounded-2xl border border-zinc-800/50 backdrop-blur-sm">
-        <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
-          <Edit className="w-8 h-8 text-zinc-500" />
+    if (hasFetchError) {
+      return (
+        <div className="adm-surface adm-card-pad text-center text-sm text-adm-muted">
+          Fix the error above and click Retry to load blog posts.
         </div>
-        <h3 className="text-lg font-medium text-zinc-200 mb-2">No Blog Posts Found</h3>
-        <p className="text-zinc-500 max-w-sm mx-auto">Click &ldquo;Write Post&rdquo; to create your first article.</p>
+      )
+    }
+    return (
+      <div className="adm-surface adm-card-pad">
+        <AdminEmptyState
+          icon={Edit}
+          title="No blog posts yet"
+          description="Create your first article or generate one with the built-in AI Writer."
+          action={
+            <Button asChild size="sm">
+              <Link href="/admin/blog/new">
+                <PenSquare className="w-4 h-4 mr-2" />
+                Write Post
+              </Link>
+            </Button>
+          }
+        />
       </div>
     )
   }
 
   const query = searchQuery.trim().toLowerCase()
   const filteredPosts = posts.filter((post) => {
-    if (statusFilter !== 'all' && post.status !== statusFilter) return false
+    const normalizedStatus = (post.status || 'draft').toLowerCase()
+    if (statusFilter !== 'all' && normalizedStatus !== statusFilter) return false
     if (!query) return true
-    return post.title.toLowerCase().includes(query) || post.slug.toLowerCase().includes(query)
+    return (
+      (post.title || '').toLowerCase().includes(query) ||
+      (post.slug || '').toLowerCase().includes(query)
+    )
   })
 
   const totalPages = Math.max(1, Math.ceil(filteredPosts.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
-  const paginatedPosts = filteredPosts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const paginatedPosts = filteredPosts.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  )
 
   return (
     <div className="space-y-4">
-      {actionError && (
-        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between gap-3">
-          <span>{actionError}</span>
-          <button
-            type="button"
-            onClick={() => setActionError(null)}
-            className="p-1 hover:text-white transition-colors shrink-0"
-            aria-label="Dismiss error"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* Search & Status Filter */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between bg-zinc-900/40 p-3 rounded-xl border border-zinc-800/50">
+      <div className="adm-surface p-3 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         <div className="relative flex-1 min-w-0">
-          <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-adm-subtle absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="search"
             value={searchQuery}
@@ -95,7 +135,7 @@ export function BlogList({ initialPosts }: { initialPosts: BlogPost[] }) {
               setPage(1)
             }}
             placeholder="Search posts by title or slug..."
-            className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
+            className="adm-input pl-9"
           />
         </div>
         <select
@@ -105,7 +145,7 @@ export function BlogList({ initialPosts }: { initialPosts: BlogPost[] }) {
             setPage(1)
           }}
           aria-label="Filter blog posts by status"
-          className="px-3 py-2 text-sm rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-200 focus:outline-none focus:border-blue-500 shrink-0"
+          className="adm-input sm:w-48 shrink-0"
         >
           <option value="all">All Statuses ({posts.length})</option>
           <option value="published">Published</option>
@@ -115,61 +155,85 @@ export function BlogList({ initialPosts }: { initialPosts: BlogPost[] }) {
       </div>
 
       {filteredPosts.length === 0 ? (
-        <div className="p-10 text-center bg-zinc-900/30 rounded-2xl border border-zinc-800/50 text-zinc-400 text-sm">
+        <div className="adm-surface p-8 text-center text-sm text-adm-muted">
           No blog posts match your current filter.
         </div>
       ) : (
-        <div className={`bg-zinc-900/40 rounded-2xl border border-zinc-800/50 overflow-hidden backdrop-blur-sm ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div className="adm-surface overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[540px]">
               <thead>
-                <tr className="border-b border-zinc-800/50 bg-zinc-900/50">
-                  <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Title</th>
-                  <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider hidden sm:table-cell">Date</th>
-                  <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Status</th>
-                  <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider text-right">Actions</th>
+                <tr className="border-b border-adm-border bg-adm-surface-2/60">
+                  <th className="py-3.5 px-5 text-xs font-semibold text-adm-muted uppercase tracking-wider">
+                    Title
+                  </th>
+                  <th className="py-3.5 px-5 text-xs font-semibold text-adm-muted uppercase tracking-wider hidden sm:table-cell">
+                    Created
+                  </th>
+                  <th className="py-3.5 px-5 text-xs font-semibold text-adm-muted uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="py-3.5 px-5 text-xs font-semibold text-adm-muted uppercase tracking-wider text-right">
+                    Actions
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/50">
-                {paginatedPosts.map(post => (
-                  <tr key={post.id} className="hover:bg-zinc-800/30 transition-colors group">
-                    <td className="py-4 px-6">
-                      <span className="font-semibold text-zinc-200 group-hover:text-white transition-colors block">{post.title}</span>
-                      <span className="text-xs text-zinc-500 font-mono mt-1 block">/blog/{post.slug}</span>
-                    </td>
-                    <td className="py-4 px-6 text-sm text-zinc-400 hidden sm:table-cell whitespace-nowrap">
-                      {new Date(post.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className={`px-2.5 py-1 text-xs font-medium rounded-md border inline-block ${
-                        post.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                        post.status === 'draft' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                        'bg-zinc-800 text-zinc-400 border-zinc-700'
-                      }`}>
-                        {post.status}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {post.status === 'published' && (
-                          <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-white hover:bg-zinc-800" asChild>
-                            <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer" aria-label={`View ${post.title}`}>
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          </Button>
+              <tbody className="divide-y divide-adm-border">
+                {paginatedPosts.map((post) => {
+                  const titleLabel = post.title || 'Untitled Post'
+                  const slugLabel = post.slug || ''
+                  return (
+                    <tr key={post.id} className="hover:bg-adm-surface-2/40 transition-colors">
+                      <td className="py-3.5 px-5">
+                        <span className="font-semibold text-adm-text block truncate max-w-md">
+                          {titleLabel}
+                        </span>
+                        {slugLabel && (
+                          <span className="text-xs text-adm-subtle font-mono mt-0.5 block truncate max-w-md">
+                            /blog/{slugLabel}
+                          </span>
                         )}
-                        <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-white hover:bg-zinc-800" asChild>
-                          <Link href={`/admin/blog/${post.id}`} aria-label={`Edit ${post.title}`}>
-                            <Edit className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-950/30" onClick={() => handleDelete(post.id)} aria-label={`Delete ${post.title}`}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="py-3.5 px-5 text-sm text-adm-muted hidden sm:table-cell whitespace-nowrap">
+                        {formatDate(post.created_at)}
+                      </td>
+                      <td className="py-3.5 px-5">
+                        <AdminStatusBadge status={post.status} />
+                      </td>
+                      <td className="py-3.5 px-5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {post.status === 'published' && slugLabel && (
+                            <Button variant="outline" size="icon" asChild>
+                              <a
+                                href={`/blog/${slugLabel}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={`View ${titleLabel}`}
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          )}
+                          <Button variant="outline" size="icon" asChild>
+                            <Link href={`/admin/blog/${post.id}`} aria-label={`Edit ${titleLabel}`}>
+                              <Edit className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            aria-label={`Delete ${titleLabel}`}
+                            onClick={() => setDeleteTarget(post)}
+                            className="text-adm-danger-text hover:bg-adm-danger-bg hover:border-adm-danger-border"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -177,9 +241,10 @@ export function BlogList({ initialPosts }: { initialPosts: BlogPost[] }) {
       )}
 
       {totalPages > 1 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-zinc-400">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-adm-muted">
           <span>
-            Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredPosts.length)} of {filteredPosts.length}
+            Showing {(currentPage - 1) * PAGE_SIZE + 1}–
+            {Math.min(currentPage * PAGE_SIZE, filteredPosts.length)} of {filteredPosts.length}
           </span>
           <div className="flex items-center gap-2">
             <Button
@@ -188,9 +253,9 @@ export function BlogList({ initialPosts }: { initialPosts: BlogPost[] }) {
               size="sm"
               disabled={currentPage <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="border-zinc-800 text-zinc-300 hover:bg-zinc-800"
             >
-              <ChevronLeft className="w-4 h-4 mr-1" /> Prev
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Prev
             </Button>
             <span className="font-mono px-2">
               Page {currentPage} / {totalPages}
@@ -201,13 +266,23 @@ export function BlogList({ initialPosts }: { initialPosts: BlogPost[] }) {
               size="sm"
               disabled={currentPage >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="border-zinc-800 text-zinc-300 hover:bg-zinc-800"
             >
-              Next <ChevronRight className="w-4 h-4 ml-1" />
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
         </div>
       )}
+
+      <AdminConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Delete blog post?"
+        description={`This will permanently remove "${deleteTarget?.title || 'this post'}" from your blog.`}
+        confirmLabel="Delete"
+        loading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

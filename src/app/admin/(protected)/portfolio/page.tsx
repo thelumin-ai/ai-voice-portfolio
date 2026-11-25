@@ -1,27 +1,35 @@
-import { getPortfolioProjects } from './actions'
-import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { PlusCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
+import { AdminErrorBanner } from '@/components/admin/AdminStates'
+import { getAdminPortfolioProjects } from './actions'
 import { SortableList } from './SortableList'
 
+export const dynamic = 'force-dynamic'
+
 export default async function PortfolioAdminPage() {
-  const projects = await getPortfolioProjects()
+  const { data: projects, error } = await getAdminPortfolioProjects()
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/50 p-6 rounded-2xl border border-zinc-800/50 backdrop-blur-sm">
-        <div>
-          <h1 className="text-2xl font-black text-white tracking-tight mb-1">Portfolio Projects</h1>
-          <p className="text-sm text-zinc-400">Manage and reorder your past work and case studies.</p>
-        </div>
-        <Link href="/admin/portfolio/new" className="self-start sm:self-auto">
-          <Button className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20"><PlusCircle className="w-4 h-4 mr-2" /> Add Project</Button>
-        </Link>
-      </div>
+      <AdminPageHeader
+        title="Portfolio Projects"
+        description="Manage, preview, and reorder your AI voice deployments and case studies."
+        actions={
+          <Button asChild>
+            <Link href="/admin/portfolio/new">
+              <PlusCircle className="w-4 h-4 mr-2" />
+              Add Project
+            </Link>
+          </Button>
+        }
+      />
 
-      <div className="bg-zinc-900/40 rounded-2xl border border-zinc-800/50 overflow-hidden backdrop-blur-sm p-4 sm:p-6">
-        <h3 className="text-lg font-medium text-zinc-200 mb-6 border-b border-zinc-800/50 pb-4">Manage Projects</h3>
-        <SortableList initialItems={projects} />
+      {error && <AdminErrorBanner title="Failed to load portfolio projects" message={error} />}
+
+      <div className="adm-surface adm-card-pad">
+        <SortableList initialItems={projects || []} hasFetchError={Boolean(error)} />
       </div>
     </div>
   )

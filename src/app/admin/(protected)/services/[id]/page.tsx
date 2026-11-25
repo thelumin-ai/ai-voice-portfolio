@@ -1,11 +1,12 @@
+import { notFound } from 'next/navigation'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { ServiceForm } from '../ServiceForm'
 import { getService } from '../actions'
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
-import { notFound } from 'next/navigation'
+
+export const dynamic = 'force-dynamic'
 
 export default async function EditServicePage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = await params;
+  const resolvedParams = await params
   const { data: service, error } = await getService(resolvedParams.id)
 
   if (error || !service) {
@@ -13,15 +14,13 @@ export default async function EditServicePage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <Link href="/admin/services" className="inline-flex items-center text-sm text-gray-400 hover:text-white mb-6">
-        <ArrowLeft className="w-4 h-4 mr-2" /> Back to Services
-      </Link>
-
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Edit Service</h1>
-        <p className="text-gray-400">Update the service details.</p>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <AdminPageHeader
+        title="Edit Service"
+        description={`Updating "${service.title || 'Service'}"`}
+        backHref="/admin/services"
+        backLabel="Back to Services"
+      />
 
       <ServiceForm initialData={service} />
     </div>

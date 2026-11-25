@@ -1,6 +1,9 @@
+import { notFound } from 'next/navigation'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { getTestimonial } from '../actions'
 import { TestimonialForm } from '../TestimonialForm'
-import { notFound } from 'next/navigation'
+
+export const dynamic = 'force-dynamic'
 
 export default async function EditTestimonialPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params
@@ -11,11 +14,14 @@ export default async function EditTestimonialPage({ params }: { params: Promise<
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Testimonial</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Update existing client testimonial.</p>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <AdminPageHeader
+        title="Edit Testimonial"
+        description={`Updating review from "${testimonial.client_name || 'Client'}"`}
+        backHref="/admin/testimonials"
+        backLabel="Back to Testimonials"
+      />
+
       <TestimonialForm initialData={testimonial} />
     </div>
   )

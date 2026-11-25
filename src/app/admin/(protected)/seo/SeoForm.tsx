@@ -3,75 +3,50 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useRouter } from 'next/navigation'
 import { seoSchema, SeoFormValues } from '@/lib/validations/seo'
-import { createSeoSetting, updateSeoSetting } from './actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { useRouter } from 'next/navigation'
-import { UploadCloud } from 'lucide-react'
-import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
+import { AdminImageUpload } from '@/components/admin/AdminImageUpload'
+import { useAdminToast } from '@/components/admin/AdminToast'
 import { getErrorMessage } from '@/lib/errors'
+import { createSeoSetting, updateSeoSetting } from './actions'
 
 interface SeoFormProps {
-  initialData?: SeoFormValues & { id: string }
+  initialData?: Partial<SeoFormValues> & { id?: string }
 }
 
 export function SeoForm({ initialData }: SeoFormProps) {
   const router = useRouter()
+  const toast = useAdminToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const supabase = createClient()
 
   const form = useForm<SeoFormValues>({
     resolver: zodResolver(seoSchema),
-    defaultValues: initialData || {
-      page_path: '/',
-      title: '',
-      description: '',
-      keywords: '',
-      og_image_url: '',
+    defaultValues: {
+      id: initialData?.id,
+      page_path: initialData?.page_path ?? '/',
+      title: initialData?.title ?? '',
+      description: initialData?.description ?? '',
+      keywords: initialData?.keywords ?? '',
+      og_image_url: initialData?.og_image_url ?? '',
     },
   })
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setError(null)
-    try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
-      const filePath = `seo/${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('portfolio_media')
-        .upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      const { data } = supabase.storage.from('portfolio_media').getPublicUrl(filePath)
-      form.setValue('og_image_url', data.publicUrl)
-    } catch (err: unknown) {
-      setError(`Error uploading image: ${getErrorMessage(err)}`)
-    }
-  }
 
   const onSubmit = async (values: SeoFormValues) => {
     setIsSubmitting(true)
     setError(null)
-    
+
     try {
-      let result
-      if (initialData?.id) {
-        result = await updateSeoSetting(initialData.id, values)
-      } else {
-        result = await createSeoSetting(values)
-      }
+      const result = initialData?.id
+        ? await updateSeoSetting(initialData.id, values)
+        : await createSeoSetting(values)
 
       if (result.error) {
         setError(result.error)
       } else {
+        toast.success(initialData?.id ? 'SEO route updated' : 'SEO route created')
         router.push('/admin/seo')
         router.refresh()
       }
@@ -83,85 +58,98 @@ export function SeoForm({ initialData }: SeoFormProps) {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-20">
-      {error && <div className="p-4 bg-red-100 text-red-800 rounded-md">{error}</div>}
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-16">
+      {error && (
+        <div
+          role="alert"
+          className="rounded-xl border border-adm-danger-border bg-adm-danger-bg p-4 text-sm text-adm-danger-text"
+        >
+          {error}
+        </div>
+      )}
 
       <Card>
-        <CardContent className="p-6 space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Page Path (Route)</label>
+        <CardContent className="p-6 space-y-5">
+          <div className="space-y-1.5">
+            <label htmlFor="seo-path" className="adm-label">
+              Page Path (Route) <span className="text-adm-danger-text">*</span>
+            </label>
             <input
+              id="seo-path"
               {...form.register('page_path')}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700 font-mono"
-              placeholder="e.g. /, /about, /portfolio"
+              className="adm-input font-mono"
+              placeholder="e.g. /, /playground, /blog"
             />
             {form.formState.errors.page_path && (
-              <p className="text-sm text-red-500">{form.formState.errors.page_path.message}</p>
+              <p className="adm-error">{form.formState.errors.page_path.message}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Meta Title</label>
+          <div className="space-y-1.5">
+            <label htmlFor="seo-title" className="adm-label">
+              Meta Title <span className="text-adm-danger-text">*</span>
+            </label>
             <input
+              id="seo-title"
               {...form.register('title')}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
-              placeholder="e.g. AI Voice Portfolio | Home"
+              className="adm-input"
+              placeholder="e.g. Abimbola | AI Voice Agent & Automation Architect"
             />
             {form.formState.errors.title && (
-              <p className="text-sm text-red-500">{form.formState.errors.title.message}</p>
+              <p className="adm-error">{form.formState.errors.title.message}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Meta Description</label>
+          <div className="space-y-1.5">
+            <label htmlFor="seo-description" className="adm-label">
+              Meta Description <span className="text-adm-danger-text">*</span>
+            </label>
             <textarea
+              id="seo-description"
               {...form.register('description')}
               rows={3}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              className="adm-input"
+              placeholder="Concise search engine snippet (140–160 characters recommended)."
             />
             {form.formState.errors.description && (
-              <p className="text-sm text-red-500">{form.formState.errors.description.message}</p>
+              <p className="adm-error">{form.formState.errors.description.message}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Keywords (comma separated)</label>
+          <div className="space-y-1.5">
+            <label htmlFor="seo-keywords" className="adm-label">
+              Keywords (comma separated)
+            </label>
             <input
+              id="seo-keywords"
               {...form.register('keywords')}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
-              placeholder="e.g. AI voice, elevenlabs, automation"
+              className="adm-input"
+              placeholder="e.g. AI voice agents, Vapi, Retell AI, automation"
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">OpenGraph Image (Optional)</label>
-            <div className="flex items-center gap-4">
-              {form.watch('og_image_url') && (
-                <div className="relative w-32 h-20 rounded-md overflow-hidden border dark:border-zinc-700">
-                  <Image
-                    src={form.watch('og_image_url') || ''}
-                    alt="OG Image"
-                    fill
-                    unoptimized
-                    className="object-cover"
-                  />
-                </div>
-              )}
-              <label className="cursor-pointer flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-md hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
-                <UploadCloud className="w-5 h-5 mr-2" />
-                <span>Upload OG Image</span>
-                <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-              </label>
-              <input type="hidden" {...form.register('og_image_url')} />
-            </div>
+          <div className="pt-2 border-t border-adm-border">
+            <AdminImageUpload
+              label="OpenGraph Preview Image (Optional)"
+              hint="Recommended 1200x630 JPG/PNG/WebP for social link previews."
+              folder="seo"
+              prefix="og"
+              aspect="video"
+              allowManualUrl
+              value={form.watch('og_image_url') || ''}
+              onChange={(url) => form.setValue('og_image_url', url, { shouldValidate: true })}
+              error={form.formState.errors.og_image_url?.message}
+            />
           </div>
         </CardContent>
       </Card>
 
-      <div className="flex justify-end gap-4">
-        <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+      <div className="flex justify-end gap-3">
+        <Button type="button" variant="outline" onClick={() => router.back()}>
+          Cancel
+        </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : initialData ? 'Update SEO' : 'Create SEO Route'}
+          {isSubmitting ? 'Saving...' : initialData?.id ? 'Update SEO' : 'Create SEO Route'}
         </Button>
       </div>
     </form>

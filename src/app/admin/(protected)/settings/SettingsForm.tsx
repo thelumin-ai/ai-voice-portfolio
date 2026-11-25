@@ -3,207 +3,271 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { settingsSchema, SettingsFormValues } from '@/lib/validations/settings'
-import { updateSiteSettings } from './actions'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
-import { UploadCloud } from 'lucide-react'
-import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
-import { validateImageFile } from '@/lib/url'
+import { Save } from 'lucide-react'
+import { settingsSchema, SettingsFormValues } from '@/lib/validations/settings'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { AdminImageUpload } from '@/components/admin/AdminImageUpload'
+import { useAdminToast } from '@/components/admin/AdminToast'
 import { getErrorMessage } from '@/lib/errors'
+import { updateSiteSettings } from './actions'
 
 export function SettingsForm({ initialData }: { initialData: SettingsFormValues }) {
   const router = useRouter()
+  const toast = useAdminToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
-    defaultValues: initialData,
+    defaultValues: {
+      contact_email: initialData.contact_email ?? '',
+      footer_text: initialData.footer_text ?? '',
+      admin_brand_name: initialData.admin_brand_name ?? '',
+      admin_brand_subtitle: initialData.admin_brand_subtitle ?? '',
+      admin_logo_url: initialData.admin_logo_url ?? '',
+      social_links: {
+        twitter: initialData.social_links?.twitter ?? '',
+        linkedin: initialData.social_links?.linkedin ?? '',
+        github: initialData.social_links?.github ?? '',
+      },
+      profile_image_url: initialData.profile_image_url ?? '',
+      consultation_provider: initialData.consultation_provider ?? 'upwork',
+      consultation_link_upwork: initialData.consultation_link_upwork ?? '',
+      consultation_link_fiverr: initialData.consultation_link_fiverr ?? '',
+      consultation_link_calendly: initialData.consultation_link_calendly ?? '',
+      openai_api_key: initialData.openai_api_key ?? '',
+      anthropic_api_key: initialData.anthropic_api_key ?? '',
+      gemini_api_key: initialData.gemini_api_key ?? '',
+    },
   })
-
-  const supabase = createClient()
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const validationError = validateImageFile(file)
-    if (validationError) {
-      setUploadError(validationError)
-      e.target.value = ''
-      return
-    }
-
-    setUploadError(null)
-    try {
-      const fileExt = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'png'
-      const fileName = `avatar-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt}`
-      const filePath = `profile_images/${fileName}`
-
-      const { error: storageError } = await supabase.storage
-        .from('portfolio_media') // Using same bucket for simplicity
-        .upload(filePath, file)
-
-      if (storageError) throw storageError
-
-      const { data } = supabase.storage.from('portfolio_media').getPublicUrl(filePath)
-      form.setValue('profile_image_url', data.publicUrl, { shouldValidate: true })
-    } catch (err: unknown) {
-      setUploadError(getErrorMessage(err, 'Error uploading image'))
-    } finally {
-      e.target.value = ''
-    }
-  }
 
   const onSubmit = async (values: SettingsFormValues) => {
     setIsSubmitting(true)
-    setMessage(null)
-    
+    setError(null)
+
     try {
       const result = await updateSiteSettings(values)
       if (result.error) {
-        setMessage({ type: 'error', text: result.error })
+        setError(result.error)
+        toast.error(result.error)
       } else {
-        setMessage({ type: 'success', text: 'Settings saved successfully!' })
+        toast.success('Settings & admin branding saved')
         router.refresh()
       }
     } catch (err: unknown) {
-      setMessage({ type: 'error', text: getErrorMessage(err) })
+      const msg = getErrorMessage(err)
+      setError(msg)
+      toast.error(msg)
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-20">
-      {message && (
-        <div className={`p-4 rounded-md ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-          {message.text}
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-16">
+      {error && (
+        <div
+          role="alert"
+          className="rounded-xl border border-adm-danger-border bg-adm-danger-bg p-4 text-sm text-adm-danger-text"
+        >
+          {error}
         </div>
       )}
 
+      {/* Admin Branding */}
+      <Card id="admin-branding">
+        <CardHeader>
+          <CardTitle>Admin Panel Branding</CardTitle>
+          <CardDescription>
+            Customize the admin workspace title, subtitle, and logo shown in the sidebar and login screen.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label htmlFor="set-brand-name" className="adm-label">
+                Admin Brand Name
+              </label>
+              <input
+                id="set-brand-name"
+                {...form.register('admin_brand_name')}
+                className="adm-input"
+                placeholder="Admin Panel"
+              />
+              {form.formState.errors.admin_brand_name && (
+                <p className="adm-error">{form.formState.errors.admin_brand_name.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="set-brand-subtitle" className="adm-label">
+                Console Subtitle
+              </label>
+              <input
+                id="set-brand-subtitle"
+                {...form.register('admin_brand_subtitle')}
+                className="adm-input"
+                placeholder="Dashboard Console"
+              />
+              {form.formState.errors.admin_brand_subtitle && (
+                <p className="adm-error">{form.formState.errors.admin_brand_subtitle.message}</p>
+              )}
+            </div>
+          </div>
+
+          <AdminImageUpload
+            label="Admin Logo (Optional)"
+            hint="Square PNG, WebP, JPG, GIF, or AVIF logo displayed in the admin header and sign-in card."
+            folder="branding"
+            prefix="logo"
+            aspect="square"
+            allowManualUrl
+            value={form.watch('admin_logo_url') || ''}
+            onChange={(url) =>
+              form.setValue('admin_logo_url', url, { shouldValidate: true })
+            }
+            error={form.formState.errors.admin_logo_url?.message}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Global Information */}
       <Card>
         <CardHeader>
           <CardTitle>Global Information</CardTitle>
-          <CardDescription>Basic contact and branding info used across the site.</CardDescription>
+          <CardDescription>Basic contact details and footer text shown across the public site.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Contact Email</label>
+          <div className="space-y-1.5 max-w-md">
+            <label htmlFor="set-email" className="adm-label">
+              Contact Email
+            </label>
             <input
+              id="set-email"
               {...form.register('contact_email')}
               type="email"
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700 max-w-md"
+              className="adm-input"
               placeholder="hello@agency.com"
             />
             {form.formState.errors.contact_email && (
-              <p className="text-sm text-red-500">{form.formState.errors.contact_email.message}</p>
+              <p className="adm-error">{form.formState.errors.contact_email.message}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Footer Copyright Text</label>
+          <div className="space-y-1.5">
+            <label htmlFor="set-footer" className="adm-label">
+              Footer Copyright Text
+            </label>
             <input
+              id="set-footer"
               {...form.register('footer_text')}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
-              placeholder="© 2026 AI Agency. All rights reserved."
+              className="adm-input"
+              placeholder="© 2026 AI Voice Portfolio. All rights reserved."
             />
           </div>
         </CardContent>
       </Card>
 
+      {/* Social Media Links */}
       <Card>
         <CardHeader>
           <CardTitle>Social Media Links</CardTitle>
-          <CardDescription>URLs to your social profiles. Leave blank to hide the icon.</CardDescription>
+          <CardDescription>URLs to your public profiles. Leave blank to hide an icon.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 max-w-2xl">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">X (Twitter) URL</label>
+          <div className="space-y-1.5">
+            <label htmlFor="set-twitter" className="adm-label">
+              X (Twitter) URL
+            </label>
             <input
+              id="set-twitter"
               {...form.register('social_links.twitter')}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
-              placeholder="https://twitter.com/yourhandle"
+              className="adm-input"
+              placeholder="https://x.com/yourhandle"
             />
             {form.formState.errors.social_links?.twitter && (
-              <p className="text-sm text-red-500">{form.formState.errors.social_links.twitter.message}</p>
+              <p className="adm-error">{form.formState.errors.social_links.twitter.message}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">LinkedIn URL</label>
+          <div className="space-y-1.5">
+            <label htmlFor="set-linkedin" className="adm-label">
+              LinkedIn URL
+            </label>
             <input
+              id="set-linkedin"
               {...form.register('social_links.linkedin')}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              className="adm-input"
               placeholder="https://linkedin.com/in/yourprofile"
             />
             {form.formState.errors.social_links?.linkedin && (
-              <p className="text-sm text-red-500">{form.formState.errors.social_links.linkedin.message}</p>
+              <p className="adm-error">{form.formState.errors.social_links.linkedin.message}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">GitHub URL</label>
+          <div className="space-y-1.5">
+            <label htmlFor="set-github" className="adm-label">
+              GitHub URL
+            </label>
             <input
+              id="set-github"
               {...form.register('social_links.github')}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              className="adm-input"
               placeholder="https://github.com/yourusername"
             />
             {form.formState.errors.social_links?.github && (
-              <p className="text-sm text-red-500">{form.formState.errors.social_links.github.message}</p>
+              <p className="adm-error">{form.formState.errors.social_links.github.message}</p>
             )}
           </div>
         </CardContent>
       </Card>
 
+      {/* Profile Image */}
       <Card>
         <CardHeader>
-          <CardTitle>Profile Image</CardTitle>
-          <CardDescription>Your main profile image used on the site.</CardDescription>
+          <CardTitle>Public Profile Photo</CardTitle>
+          <CardDescription>Displayed in the homepage About section.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap items-center gap-4">
-            {form.watch('profile_image_url') && (
-              <Image
-                src={form.watch('profile_image_url') as string}
-                alt="Profile"
-                width={80}
-                height={80}
-                unoptimized
-                className="w-20 h-20 object-cover rounded-full"
-              />
-            )}
-            <label className="cursor-pointer flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-md hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
-              <UploadCloud className="w-5 h-5 mr-2" />
-              <span>Upload Image</span>
-              <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+        <CardContent>
+          <AdminImageUpload
+            folder="profile_images"
+            prefix="avatar"
+            aspect="avatar"
+            allowManualUrl
+            value={form.watch('profile_image_url') || ''}
+            onChange={(url) =>
+              form.setValue('profile_image_url', url, { shouldValidate: true })
+            }
+            error={form.formState.errors.profile_image_url?.message}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Consultation & Booking */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Consultation &amp; Booking</CardTitle>
+          <CardDescription>
+            Choose where visitors are routed when clicking &ldquo;Book Consultation&rdquo;.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 max-w-2xl">
+          <div className="space-y-1.5 max-w-sm">
+            <label htmlFor="set-provider" className="adm-label">
+              Active Provider
             </label>
-            <input type="hidden" {...form.register('profile_image_url')} />
-          </div>
-          {uploadError && (
-            <p className="text-sm text-red-500">{uploadError}</p>
-          )}
-          {form.formState.errors.profile_image_url && (
-            <p className="text-sm text-red-500">{form.formState.errors.profile_image_url.message}</p>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Consultation & Booking</CardTitle>
-          <CardDescription>Configure where users go when they click &quot;Book Consultation&quot;.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2 max-w-sm">
-            <label className="text-sm font-medium">Active Provider</label>
             <select
+              id="set-provider"
               {...form.register('consultation_provider')}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              className="adm-input"
             >
               <option value="upwork">Upwork</option>
               <option value="fiverr">Fiverr</option>
@@ -211,74 +275,101 @@ export function SettingsForm({ initialData }: { initialData: SettingsFormValues 
             </select>
           </div>
 
-          <div className="space-y-2 max-w-2xl">
-            <label className="text-sm font-medium">Upwork Service Link</label>
+          <div className="space-y-1.5">
+            <label htmlFor="set-upwork" className="adm-label">
+              Upwork Service Link
+            </label>
             <input
+              id="set-upwork"
               {...form.register('consultation_link_upwork')}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              className="adm-input"
               placeholder="https://www.upwork.com/..."
             />
             {form.formState.errors.consultation_link_upwork && (
-              <p className="text-sm text-red-500">{form.formState.errors.consultation_link_upwork.message}</p>
+              <p className="adm-error">
+                {form.formState.errors.consultation_link_upwork.message}
+              </p>
             )}
           </div>
 
-          <div className="space-y-2 max-w-2xl">
-            <label className="text-sm font-medium">Fiverr Gig Link</label>
+          <div className="space-y-1.5">
+            <label htmlFor="set-fiverr" className="adm-label">
+              Fiverr Gig Link
+            </label>
             <input
+              id="set-fiverr"
               {...form.register('consultation_link_fiverr')}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              className="adm-input"
               placeholder="https://www.fiverr.com/..."
             />
             {form.formState.errors.consultation_link_fiverr && (
-              <p className="text-sm text-red-500">{form.formState.errors.consultation_link_fiverr.message}</p>
+              <p className="adm-error">
+                {form.formState.errors.consultation_link_fiverr.message}
+              </p>
             )}
           </div>
 
-          <div className="space-y-2 max-w-2xl">
-            <label className="text-sm font-medium">Calendly Booking Link</label>
+          <div className="space-y-1.5">
+            <label htmlFor="set-calendly" className="adm-label">
+              Calendly Booking Link
+            </label>
             <input
+              id="set-calendly"
               {...form.register('consultation_link_calendly')}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              className="adm-input"
               placeholder="https://calendly.com/..."
             />
             {form.formState.errors.consultation_link_calendly && (
-              <p className="text-sm text-red-500">{form.formState.errors.consultation_link_calendly.message}</p>
+              <p className="adm-error">
+                {form.formState.errors.consultation_link_calendly.message}
+              </p>
             )}
           </div>
         </CardContent>
       </Card>
 
+      {/* AI Keys */}
       <Card>
         <CardHeader>
           <CardTitle>AI Integration Keys</CardTitle>
-          <CardDescription>Used only by authenticated admin AI generators (protected by Supabase RLS). For stronger security in production, prefer setting OPENAI_API_KEY, ANTHROPIC_API_KEY, and GEMINI_API_KEY as server environment variables instead of storing them here.</CardDescription>
+          <CardDescription>
+            Used by authenticated admin AI writers and image generators. For stronger production security, prefer configuring OPENAI_API_KEY, ANTHROPIC_API_KEY, and GEMINI_API_KEY as server environment variables.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 max-w-2xl">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">OpenAI API Key</label>
+          <div className="space-y-1.5">
+            <label htmlFor="set-openai" className="adm-label">
+              OpenAI API Key
+            </label>
             <input
+              id="set-openai"
               {...form.register('openai_api_key')}
               type="password"
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              className="adm-input"
               placeholder="sk-..."
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Anthropic API Key (Claude)</label>
+          <div className="space-y-1.5">
+            <label htmlFor="set-anthropic" className="adm-label">
+              Anthropic API Key (Claude)
+            </label>
             <input
+              id="set-anthropic"
               {...form.register('anthropic_api_key')}
               type="password"
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              className="adm-input"
               placeholder="sk-ant-..."
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Gemini API Key</label>
+          <div className="space-y-1.5">
+            <label htmlFor="set-gemini" className="adm-label">
+              Gemini API Key
+            </label>
             <input
+              id="set-gemini"
               {...form.register('gemini_api_key')}
               type="password"
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+              className="adm-input"
               placeholder="AIzaSy..."
             />
           </div>
@@ -287,6 +378,7 @@ export function SettingsForm({ initialData }: { initialData: SettingsFormValues 
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isSubmitting}>
+          <Save className="w-4 h-4 mr-2" />
           {isSubmitting ? 'Saving Changes...' : 'Save Settings'}
         </Button>
       </div>

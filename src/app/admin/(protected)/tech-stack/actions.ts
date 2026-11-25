@@ -3,6 +3,7 @@
 import { createPublicClient } from '@/lib/supabase/public'
 import { techStackSchema, TechStackFormValues } from '@/lib/validations/techStack'
 import { requireAdmin } from '@/lib/auth/admin'
+import { deleteStorageFileByUrl } from '@/lib/storage'
 import { revalidatePath } from 'next/cache'
 
 export async function getPublishedTechStack() {
@@ -39,7 +40,7 @@ export async function getTechStack() {
 
   if (error) {
     console.error('Error fetching tech stack:', error)
-    return { error: 'Failed to fetch tech stack' }
+    return { error: error.message || 'Failed to fetch tech stack' }
   }
 
   return { data }
@@ -59,7 +60,7 @@ export async function getTechItem(id: string) {
 
   if (error) {
     console.error('Error fetching tech item:', error)
-    return { error: 'Failed to fetch tech item' }
+    return { error: error.message || 'Failed to fetch tech item' }
   }
 
   return { data }
@@ -113,6 +114,12 @@ export async function updateTechItem(id: string, data: TechStackFormValues) {
 
   const validatedData = parsed.data
 
+  const { data: current } = await auth.supabase
+    .from('tech_stack')
+    .select('icon_url')
+    .eq('id', id)
+    .maybeSingle()
+
   const { error } = await auth.supabase
     .from('tech_stack')
     .update({
@@ -129,6 +136,10 @@ export async function updateTechItem(id: string, data: TechStackFormValues) {
     return { error: error.message }
   }
 
+  if (current?.icon_url && current.icon_url !== (validatedData.icon_url || '')) {
+    await deleteStorageFileByUrl(auth.supabase, current.icon_url)
+  }
+
   revalidatePath('/admin/tech-stack')
   revalidatePath('/')
   return { success: true }
@@ -140,6 +151,12 @@ export async function deleteTechItem(id: string) {
     return { error: 'Unauthorized' }
   }
 
+  const { data: current } = await auth.supabase
+    .from('tech_stack')
+    .select('icon_url')
+    .eq('id', id)
+    .maybeSingle()
+
   const { error } = await auth.supabase
     .from('tech_stack')
     .delete()
@@ -148,6 +165,10 @@ export async function deleteTechItem(id: string) {
   if (error) {
     console.error('Error deleting tech item:', error)
     return { error: error.message }
+  }
+
+  if (current?.icon_url) {
+    await deleteStorageFileByUrl(auth.supabase, current.icon_url)
   }
 
   revalidatePath('/admin/tech-stack')
@@ -169,7 +190,7 @@ export async function updateTechStackOrder(items: { id: string; display_order: n
 
     if (error) {
       console.error('Error updating order:', error)
-      return { error: 'Failed to update order' }
+      return { error: error.message || 'Failed to update order' }
     }
   }
 

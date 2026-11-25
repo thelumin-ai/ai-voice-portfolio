@@ -1,9 +1,16 @@
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
+import { AdminErrorBanner } from '@/components/admin/AdminStates'
 import { getAdminSiteSettings } from './actions'
 import { SettingsForm } from './SettingsForm'
+
+export const dynamic = 'force-dynamic'
 
 const fallbackSettings = {
   contact_email: '',
   footer_text: '',
+  admin_brand_name: '',
+  admin_brand_subtitle: '',
+  admin_logo_url: '',
   social_links: { twitter: '', linkedin: '', github: '' },
   profile_image_url: '',
   consultation_provider: 'upwork' as const,
@@ -19,16 +26,17 @@ export default async function SettingsAdminPage() {
   const { data: settings, error } = await getAdminSiteSettings()
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">General Settings</h1>
-        <p className="text-zinc-400 mt-1">Manage global configuration for your website.</p>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <AdminPageHeader
+        title="General Settings"
+        description="Configure admin branding, contact details, social profiles, booking links, and AI API keys."
+      />
 
       {error && (
-        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm">
-          Could not load saved settings from Supabase ({error}). Showing default values.
-        </div>
+        <AdminErrorBanner
+          title="Could not load saved settings from Supabase"
+          message={error}
+        />
       )}
 
       <SettingsForm initialData={settings || fallbackSettings} />

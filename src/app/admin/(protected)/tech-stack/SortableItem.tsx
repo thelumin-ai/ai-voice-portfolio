@@ -1,26 +1,41 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, Edit, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { GripVertical, Edit, Trash2, Wrench } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { AdminConfirmDialog, AdminStatusBadge } from '@/components/admin/AdminStates'
+import { useAdminToast } from '@/components/admin/AdminToast'
+import { isSafeHttpUrl } from '@/lib/url'
 import { deleteTechItem } from './actions'
 
-interface TechItem {
+export interface TechItem {
   id: string
-  name: string
-  category: string
-  icon_url: string
-  status: string
-  display_order: number
+  name?: string | null
+  category?: string | null
+  icon_url?: string | null
+  status?: string | null
+  display_order?: number | null
 }
 
-export function SortableItem({ id, item }: { id: string; item: TechItem }) {
+export function SortableItem({
+  id,
+  item,
+  reorderDisabled = false,
+}: {
+  id: string
+  item: TechItem
+  reorderDisabled?: boolean
+}) {
   const router = useRouter()
+  const toast = useAdminToast()
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
   const {
     attributes,
     listeners,
@@ -28,89 +43,126 @@ export function SortableItem({ id, item }: { id: string; item: TechItem }) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id })
+  } = useSortable({ id, disabled: reorderDisabled })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 10 : 1,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.6 : 1,
   }
 
+  const displayName = item.name?.trim() || 'Untitled Tool'
+  const iconUrl = item.icon_url?.trim() || ''
+  const hasSafeIcon =
+    Boolean(iconUrl) &&
+    (isSafeHttpUrl(iconUrl) || (iconUrl.startsWith('/') && !iconUrl.startsWith('//')))
+
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this tech item?')) {
+    setIsDeleting(true)
+    try {
       const res = await deleteTechItem(id)
       if (res?.error) {
-        alert(res.error)
+        toast.error(res.error)
       } else {
+        toast.success(`Deleted "${displayName}"`)
+        setConfirmOpen(false)
         router.refresh()
       }
+    } catch {
+      toast.error('Failed to delete tool')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`group relative p-5 bg-zinc-950 border-2 border-zinc-900 rounded-xl shadow-sm transition-all duration-300 overflow-hidden ${
-        isDragging ? 'shadow-2xl shadow-blue-500/20 ring-2 ring-blue-500 z-50 scale-[1.02]' : 'hover:border-zinc-700 hover:bg-zinc-900/50 hover:shadow-lg hover:shadow-black'
-      }`}
-    >
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    <>
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`group rounded-xl border border-adm-border bg-adm-surface-2/40 p-4 transition-all ${
+          isDragging
+            ? 'ring-2 ring-adm-accent shadow-xl bg-adm-surface'
+            : 'hover:border-adm-accent/40 hover:bg-adm-surface-2/80'
+        }`}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 min-w-0 flex-1">
+            <button
+              type="button"
+              disabled={reorderDisabled}
+              className={`p-2 rounded-lg shrink-0 transition-colors ${
+                reorderDisabled
+                  ? 'text-adm-subtle opacity-40 cursor-not-allowed'
+                  : 'cursor-grab text-adm-muted hover:text-adm-text hover:bg-adm-surface active:cursor-grabbing'
+              }`}
+              {...(reorderDisabled ? {} : attributes)}
+              {...(reorderDisabled ? {} : listeners)}
+              aria-label={`Drag to reorder ${displayName}`}
+              title={reorderDisabled ? 'Clear filters to reorder' : 'Drag to reorder'}
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
 
-      <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4 sm:gap-5 flex-1 min-w-0 w-full">
-          <div
-            {...attributes}
-            {...listeners}
-            className="cursor-grab p-2 rounded-lg text-zinc-600 hover:text-white hover:bg-zinc-800 transition-all flex-shrink-0"
-            title="Drag to reorder"
-          >
-            <GripVertical className="h-5 w-5" />
+            <div className="w-12 h-12 rounded-lg border border-adm-border bg-adm-surface flex items-center justify-center p-2 shrink-0">
+              {hasSafeIcon ? (
+                <Image
+                  src={iconUrl}
+                  alt={displayName}
+                  width={36}
+                  height={36}
+                  unoptimized
+                  className="w-9 h-9 object-contain"
+                />
+              ) : (
+                <Wrench className="h-5 w-5 text-adm-subtle" />
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm sm:text-base font-semibold text-adm-text truncate">
+                {displayName}
+              </h3>
+              <p className="text-xs font-medium text-adm-muted uppercase tracking-wide truncate mt-0.5">
+                {item.category || 'Uncategorized'}
+              </p>
+            </div>
           </div>
 
-          <div className="w-14 h-14 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-center p-2 group-hover:border-zinc-600 transition-colors shadow-inner flex-shrink-0">
-            {item.icon_url ? (
-              <Image
-                src={item.icon_url}
-                alt={item.name}
-                width={40}
-                height={40}
-                unoptimized
-                className="w-10 h-10 object-contain filter group-hover:brightness-125 transition-all"
-              />
-            ) : (
-              <span className="text-zinc-600 font-bold text-sm">?</span>
-            )}
-          </div>
+          <div className="flex items-center justify-between sm:justify-end gap-3 border-t sm:border-t-0 border-adm-border pt-3 sm:pt-0 shrink-0">
+            <AdminStatusBadge status={item.status} />
 
-          <div className="min-w-0 flex-1">
-            <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors truncate">{item.name}</h3>
-            <p className="text-xs font-bold font-mono tracking-widest text-zinc-500 mt-1 uppercase truncate">{item.category}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-zinc-800/50 pt-4 sm:pt-0 shrink-0">
-          <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md border ${
-            item.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-            item.status === 'draft' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-            'bg-zinc-800 text-zinc-400 border-zinc-700'
-          }`}>
-            {item.status}
-          </span>
-
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild className="bg-zinc-900 text-zinc-400 hover:text-white hover:bg-blue-600 border border-zinc-800 hover:border-transparent transition-all rounded-lg">
-              <Link href={`/admin/tech-stack/${id}`} aria-label={`Edit ${item.name}`}>
-                <Edit className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button type="button" variant="ghost" size="icon" aria-label={`Delete ${item.name}`} className="bg-zinc-900 text-zinc-400 hover:text-white hover:bg-red-600 border border-zinc-800 hover:border-transparent transition-all rounded-lg" onClick={handleDelete}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <Button variant="outline" size="icon" asChild>
+                <Link href={`/admin/tech-stack/${id}`} aria-label={`Edit ${displayName}`}>
+                  <Edit className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label={`Delete ${displayName}`}
+                onClick={() => setConfirmOpen(true)}
+                className="text-adm-danger-text hover:bg-adm-danger-bg hover:border-adm-danger-border"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <AdminConfirmDialog
+        open={confirmOpen}
+        title="Delete tool?"
+        description={`This will permanently remove "${displayName}" from your tech stack.`}
+        confirmLabel="Delete"
+        loading={isDeleting}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
+    </>
   )
 }

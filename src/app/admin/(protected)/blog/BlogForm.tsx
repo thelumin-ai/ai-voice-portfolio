@@ -3,27 +3,28 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useRouter } from 'next/navigation'
+import { Bot, Loader2, Sparkles } from 'lucide-react'
 import { blogPostSchema, BlogPostFormValues } from '@/lib/validations/blog'
-import { createBlogPost, updateBlogPost } from './actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { useRouter } from 'next/navigation'
-import { UploadCloud, Bot, Loader2, Sparkles } from 'lucide-react'
-import Image from 'next/image'
+import { AdminImageUpload } from '@/components/admin/AdminImageUpload'
+import { useAdminToast } from '@/components/admin/AdminToast'
 import { createClient } from '@/lib/supabase/client'
-import { validateImageFile } from '@/lib/url'
 import { getErrorMessage } from '@/lib/errors'
+import { createBlogPost, updateBlogPost } from './actions'
 
 interface BlogFormProps {
-  initialData?: BlogPostFormValues & { id: string }
+  initialData?: Partial<BlogPostFormValues> & { id?: string }
 }
 
 export function BlogForm({ initialData }: BlogFormProps) {
   const router = useRouter()
+  const toast = useAdminToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [uploadError, setUploadError] = useState<string | null>(null)
-  const [slugManuallyEdited, setSlugManuallyEdited] = useState(Boolean(initialData))
+  const [aiCoverError, setAiCoverError] = useState<string | null>(null)
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(Boolean(initialData?.id))
   const supabase = createClient()
 
   const [showAiWriter, setShowAiWriter] = useState(false)
@@ -37,82 +38,56 @@ export function BlogForm({ initialData }: BlogFormProps) {
   const [imageAiPrompt, setImageAiPrompt] = useState('')
   const [isGeneratingImage, setIsGeneratingImage] = useState(false)
 
+  const normalizedStatus =
+    initialData?.status === 'published' || initialData?.status === 'archived'
+      ? initialData.status
+      : 'draft'
+
   const form = useForm<BlogPostFormValues>({
     resolver: zodResolver(blogPostSchema),
-    defaultValues: initialData || {
-      title: '',
-      slug: '',
-      excerpt: '',
-      content: '',
-      cover_image_url: '',
-      author: 'Admin',
-      status: 'draft',
+    defaultValues: {
+      id: initialData?.id,
+      title: initialData?.title ?? '',
+      slug: initialData?.slug ?? '',
+      excerpt: initialData?.excerpt ?? '',
+      content: initialData?.content ?? '',
+      cover_image_url: initialData?.cover_image_url ?? '',
+      author: initialData?.author ?? 'Admin',
+      status: normalizedStatus,
     },
   })
 
-  // Auto-generate slug from title until manually edited
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const title = e.target.value
     form.setValue('title', title, { shouldValidate: true })
-    
+
     if (!slugManuallyEdited) {
-      const generatedSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+      const generatedSlug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '')
       form.setValue('slug', generatedSlug, { shouldValidate: true })
-    }
-  }
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const validationError = validateImageFile(file)
-    if (validationError) {
-      setUploadError(validationError)
-      e.target.value = ''
-      return
-    }
-
-    setUploadError(null)
-    try {
-      const fileExt = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'png'
-      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt}`
-      const filePath = `blog/${fileName}`
-
-      const { error: storageError } = await supabase.storage
-        .from('portfolio_media')
-        .upload(filePath, file)
-
-      if (storageError) throw storageError
-
-      const { data } = supabase.storage.from('portfolio_media').getPublicUrl(filePath)
-      form.setValue('cover_image_url', data.publicUrl, { shouldValidate: true })
-    } catch (err: unknown) {
-      setUploadError(getErrorMessage(err, 'Error uploading image'))
-    } finally {
-      e.target.value = ''
     }
   }
 
   const handleGenerateAI = async () => {
     if (!aiPrompt.trim()) {
-      setAiError("Please enter a prompt")
+      setAiError('Please enter a prompt')
       return
     }
-    
+
     setIsGenerating(true)
     setAiError(null)
 
     try {
-      const promptToSend = `Write a ${aiContentType} about: ${aiPrompt}. Ensure it is highly SEO optimized.`;
-      
+      const promptToSend = `Write a ${aiContentType} about: ${aiPrompt}. Ensure it is highly SEO optimized.`
       const response = await fetch('/api/generate-blog', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: promptToSend, provider: aiProvider })
+        body: JSON.stringify({ prompt: promptToSend, provider: aiProvider }),
       })
 
       const data = await response.json()
-
       if (!response.ok) {
         throw new Error(data.error || 'Failed to generate')
       }
@@ -124,8 +99,9 @@ export function BlogForm({ initialData }: BlogFormProps) {
       }
       if (data.excerpt) form.setValue('excerpt', data.excerpt, { shouldValidate: true })
       if (data.content) form.setValue('content', data.content, { shouldValidate: true })
-      
+
       setShowAiWriter(false)
+      toast.success('AI draft generated')
     } catch (err: unknown) {
       setAiError(getErrorMessage(err, 'Failed to generate'))
     } finally {
@@ -134,52 +110,60 @@ export function BlogForm({ initialData }: BlogFormProps) {
   }
 
   const handleGenerateCoverImage = async () => {
-    if (!imageAiPrompt.trim()) return;
-    setIsGeneratingImage(true);
-    setUploadError(null);
+    if (!imageAiPrompt.trim()) return
+    setIsGeneratingImage(true)
+    setAiCoverError(null)
     try {
       const response = await fetch('/api/generate-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: imageAiPrompt })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to generate');
-      
-      const res = await fetch(`data:${data.mimeType};base64,${data.base64}`);
-      const blob = await res.blob();
-      const mimeExt = (data.mimeType?.split('/')[1] || 'jpeg').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const file = new File([blob], `ai-cover-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${mimeExt}`, { type: data.mimeType });
-      
-      const filePath = `covers/${file.name}`;
-      const { error: storageError } = await supabase.storage.from('portfolio_media').upload(filePath, file);
-      if (storageError) throw storageError;
+        body: JSON.stringify({ prompt: imageAiPrompt }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Failed to generate')
 
-      const { data: publicData } = supabase.storage.from('portfolio_media').getPublicUrl(filePath);
-      form.setValue('cover_image_url', publicData.publicUrl, { shouldValidate: true });
-      setShowImageAi(false);
+      const res = await fetch(`data:${data.mimeType};base64,${data.base64}`)
+      const blob = await res.blob()
+      const mimeExt =
+        (data.mimeType?.split('/')[1] || 'jpeg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+      const file = new File(
+        [blob],
+        `ai-cover-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${mimeExt}`,
+        { type: data.mimeType }
+      )
+
+      const filePath = `covers/${file.name}`
+      const { error: storageError } = await supabase.storage
+        .from('portfolio_media')
+        .upload(filePath, file)
+      if (storageError) throw storageError
+
+      const { data: publicData } = supabase.storage
+        .from('portfolio_media')
+        .getPublicUrl(filePath)
+      form.setValue('cover_image_url', publicData.publicUrl, { shouldValidate: true })
+      setShowImageAi(false)
+      toast.success('Cover image generated')
     } catch (err: unknown) {
-      setUploadError(getErrorMessage(err, 'Error generating image'));
+      setAiCoverError(getErrorMessage(err, 'Error generating image'))
     } finally {
-      setIsGeneratingImage(false);
+      setIsGeneratingImage(false)
     }
   }
 
   const onSubmit = async (values: BlogPostFormValues) => {
     setIsSubmitting(true)
     setError(null)
-    
+
     try {
-      let result
-      if (initialData?.id) {
-        result = await updateBlogPost(initialData.id, values)
-      } else {
-        result = await createBlogPost(values)
-      }
+      const result = initialData?.id
+        ? await updateBlogPost(initialData.id, values)
+        : await createBlogPost(values)
 
       if (result.error) {
         setError(result.error)
       } else {
+        toast.success(initialData?.id ? 'Blog post updated' : 'Blog post created')
         router.push('/admin/blog')
         router.refresh()
       }
@@ -191,80 +175,107 @@ export function BlogForm({ initialData }: BlogFormProps) {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-20">
-      {error && <div className="p-4 bg-red-100 text-red-800 rounded-md">{error}</div>}
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-16">
+      {error && (
+        <div
+          role="alert"
+          className="rounded-xl border border-adm-danger-border bg-adm-danger-bg p-4 text-sm text-adm-danger-text"
+        >
+          {error}
+        </div>
+      )}
 
       <Card>
-        <CardContent className="p-6 space-y-6">
+        <CardContent className="p-6 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Post Title</label>
+            <div className="space-y-1.5">
+              <label htmlFor="blog-title" className="adm-label">
+                Post Title <span className="text-adm-danger-text">*</span>
+              </label>
               <input
+                id="blog-title"
                 {...form.register('title')}
                 onChange={handleTitleChange}
-                className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700 font-medium text-lg"
+                className="adm-input"
                 placeholder="e.g. The Future of Voice AI"
               />
               {form.formState.errors.title && (
-                <p className="text-sm text-red-500">{form.formState.errors.title.message}</p>
+                <p className="adm-error">{form.formState.errors.title.message}</p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">URL Slug</label>
+            <div className="space-y-1.5">
+              <label htmlFor="blog-slug" className="adm-label">
+                URL Slug <span className="text-adm-danger-text">*</span>
+              </label>
               <input
+                id="blog-slug"
                 {...form.register('slug', {
                   onChange: () => setSlugManuallyEdited(true),
                 })}
-                className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-950 text-gray-500"
+                className="adm-input font-mono"
                 placeholder="the-future-of-voice-ai"
               />
               {form.formState.errors.slug && (
-                <p className="text-sm text-red-500">{form.formState.errors.slug.message}</p>
+                <p className="adm-error">{form.formState.errors.slug.message}</p>
               )}
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Short Excerpt</label>
+          <div className="space-y-1.5">
+            <label htmlFor="blog-excerpt" className="adm-label">
+              Short Excerpt
+            </label>
             <textarea
+              id="blog-excerpt"
               {...form.register('excerpt')}
               rows={2}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
-              placeholder="A brief summary for the blog preview card..."
+              className="adm-input"
+              placeholder="A brief summary shown on the blog index cards..."
             />
             {form.formState.errors.excerpt && (
-              <p className="text-sm text-red-500">{form.formState.errors.excerpt.message}</p>
+              <p className="adm-error">{form.formState.errors.excerpt.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
             <div className="flex flex-wrap justify-between items-center gap-2">
-              <label className="text-sm font-medium">Content (Markdown Support)</label>
-              <Button type="button" variant="outline" size="sm" onClick={() => setShowAiWriter(!showAiWriter)} className="text-purple-500 border-purple-200 hover:bg-purple-50 dark:hover:bg-purple-900/20">
-                <Sparkles className="w-4 h-4 mr-2" /> AI Writer
+              <label htmlFor="blog-content" className="adm-label">
+                Content (Markdown) <span className="text-adm-danger-text">*</span>
+              </label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAiWriter(!showAiWriter)}
+              >
+                <Sparkles className="w-4 h-4 mr-2 text-adm-accent" />
+                AI Writer
               </Button>
             </div>
-            
+
             {showAiWriter && (
-              <div className="p-4 bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30 rounded-lg space-y-4 mb-4">
+              <div className="p-4 bg-adm-accent-soft border border-adm-accent/30 rounded-xl space-y-4">
                 <div className="flex flex-wrap justify-between items-center gap-3">
-                  <h4 className="font-semibold text-purple-700 dark:text-purple-400 flex items-center"><Bot className="w-4 h-4 mr-2" /> Generate with AI</h4>
+                  <h4 className="text-sm font-semibold text-adm-text flex items-center gap-2">
+                    <Bot className="w-4 h-4 text-adm-accent" />
+                    Generate Draft with AI
+                  </h4>
                   <div className="flex flex-wrap gap-2">
-                    <select 
-                      value={aiContentType} 
+                    <select
+                      value={aiContentType}
                       onChange={(e) => setAiContentType(e.target.value)}
-                      className="text-sm px-2 py-1 border rounded dark:bg-zinc-900 dark:border-zinc-700"
+                      className="adm-input w-auto"
                     >
                       <option value="SEO Article">SEO Article</option>
                       <option value="Case Study">Case Study</option>
                       <option value="How-To Guide">How-To Guide</option>
                       <option value="Thought Leadership">Thought Leadership</option>
                     </select>
-                    <select 
-                      value={aiProvider} 
+                    <select
+                      value={aiProvider}
                       onChange={(e) => setAiProvider(e.target.value)}
-                      className="text-sm px-2 py-1 border rounded dark:bg-zinc-900 dark:border-zinc-700"
+                      className="adm-input w-auto"
                     >
                       <option value="openai">OpenAI (GPT-4o)</option>
                       <option value="anthropic">Anthropic (Claude 3 Opus)</option>
@@ -272,31 +283,51 @@ export function BlogForm({ initialData }: BlogFormProps) {
                     </select>
                   </div>
                 </div>
-                <textarea 
+                <textarea
                   value={aiPrompt}
                   onChange={(e) => setAiPrompt(e.target.value)}
-                  placeholder="e.g. Write a 1000-word blog post about how AI voice agents are replacing traditional call centers in the real estate industry. Use a professional but engaging tone."
-                  className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700 text-sm"
+                  placeholder="Describe the topic, target audience, and key takeaways..."
+                  className="adm-input"
                   rows={3}
                 />
-                {aiError && <p className="text-xs text-red-500">{aiError}</p>}
+                {aiError && <p className="adm-error">{aiError}</p>}
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowAiWriter(false)}>Cancel</Button>
-                  <Button type="button" size="sm" className="bg-purple-600 hover:bg-purple-700 text-white" onClick={handleGenerateAI} disabled={isGenerating}>
-                    {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</> : 'Generate Post'}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAiWriter(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleGenerateAI}
+                    disabled={isGenerating}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      'Generate Post'
+                    )}
                   </Button>
                 </div>
               </div>
             )}
 
             <textarea
+              id="blog-content"
               {...form.register('content')}
-              rows={15}
-              className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700 font-mono text-sm leading-relaxed"
+              rows={14}
+              className="adm-input font-mono text-sm leading-relaxed"
               placeholder="# Introduction&#10;&#10;Write your post content here using Markdown..."
             />
             {form.formState.errors.content && (
-              <p className="text-sm text-red-500">{form.formState.errors.content.message}</p>
+              <p className="adm-error">{form.formState.errors.content.message}</p>
             )}
           </div>
         </CardContent>
@@ -305,67 +336,85 @@ export function BlogForm({ initialData }: BlogFormProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2">
           <CardContent className="p-6 space-y-4">
-            <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
-              <label className="text-sm font-medium">Cover Image</label>
-              <Button type="button" variant="outline" size="sm" onClick={() => setShowImageAi(!showImageAi)} className="text-purple-500 border-purple-200 hover:bg-purple-50 dark:hover:bg-purple-900/20">
-                <Sparkles className="w-4 h-4 mr-2" /> AI Generate
-              </Button>
-            </div>
-            
             {showImageAi && (
-              <div className="p-4 bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30 rounded-lg space-y-4 mb-4">
-                <h4 className="font-semibold text-purple-700 dark:text-purple-400 flex items-center"><Bot className="w-4 h-4 mr-2" /> Generate Cover Image</h4>
-                <textarea 
+              <div className="p-4 bg-adm-accent-soft border border-adm-accent/30 rounded-xl space-y-3">
+                <h4 className="text-sm font-semibold text-adm-text flex items-center gap-2">
+                  <Bot className="w-4 h-4 text-adm-accent" />
+                  Generate Cover Image
+                </h4>
+                <textarea
                   value={imageAiPrompt}
                   onChange={(e) => setImageAiPrompt(e.target.value)}
-                  placeholder="e.g. A futuristic robot holding a glowing microphone, digital art, high quality"
-                  className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700 text-sm"
+                  placeholder="Describe the editorial visual style..."
+                  className="adm-input"
                   rows={2}
                 />
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowImageAi(false)}>Cancel</Button>
-                  <Button type="button" size="sm" className="bg-purple-600 hover:bg-purple-700 text-white" onClick={handleGenerateCoverImage} disabled={isGeneratingImage}>
-                    {isGeneratingImage ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</> : 'Generate Image'}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowImageAi(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleGenerateCoverImage}
+                    disabled={isGeneratingImage}
+                  >
+                    {isGeneratingImage ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      'Generate Image'
+                    )}
                   </Button>
                 </div>
               </div>
             )}
 
-            <div className="flex items-center gap-4">
-              <label className="cursor-pointer flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-md hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
-                <UploadCloud className="w-8 h-8 text-gray-400 mb-2" />
-                <span className="text-sm text-gray-500">Upload Image</span>
-                <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-              </label>
-            </div>
-            {uploadError && (
-              <p className="text-sm text-red-500">{uploadError}</p>
-            )}
-            {form.formState.errors.cover_image_url && (
-              <p className="text-sm text-red-500">{form.formState.errors.cover_image_url.message}</p>
-            )}
-            {form.watch('cover_image_url') && (
-              <div className="relative rounded-md overflow-hidden border dark:border-zinc-800 h-48 mt-4">
-                <Image
-                  src={form.watch('cover_image_url') || ''}
-                  alt="Cover"
-                  fill
-                  unoptimized
-                  className="object-cover"
-                />
-              </div>
-            )}
-            <input type="hidden" {...form.register('cover_image_url')} />
+            <AdminImageUpload
+              label="Cover Image (Optional)"
+              hint="PNG, JPG, WebP, GIF, or AVIF up to 5 MB."
+              folder="blog"
+              prefix="blog"
+              aspect="video"
+              allowManualUrl
+              value={form.watch('cover_image_url') || ''}
+              onChange={(url) => {
+                setAiCoverError(null)
+                form.setValue('cover_image_url', url, { shouldValidate: true })
+              }}
+              error={form.formState.errors.cover_image_url?.message || aiCoverError || undefined}
+              extraActions={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowImageAi(!showImageAi)}
+                >
+                  <Sparkles className="w-4 h-4 mr-2 text-adm-accent" />
+                  AI Generate
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-6 space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Status</label>
+            <div className="space-y-1.5">
+              <label htmlFor="blog-status" className="adm-label">
+                Status
+              </label>
               <select
+                id="blog-status"
                 {...form.register('status')}
-                className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700 font-medium"
+                className="adm-input"
               >
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
@@ -373,21 +422,29 @@ export function BlogForm({ initialData }: BlogFormProps) {
               </select>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Author</label>
+            <div className="space-y-1.5">
+              <label htmlFor="blog-author" className="adm-label">
+                Author <span className="text-adm-danger-text">*</span>
+              </label>
               <input
+                id="blog-author"
                 {...form.register('author')}
-                className="w-full px-3 py-2 border rounded-md dark:bg-zinc-900 dark:border-zinc-700"
+                className="adm-input"
               />
+              {form.formState.errors.author && (
+                <p className="adm-error">{form.formState.errors.author.message}</p>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="flex justify-end gap-4">
-        <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+      <div className="flex justify-end gap-3">
+        <Button type="button" variant="outline" onClick={() => router.back()}>
+          Cancel
+        </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : initialData ? 'Update Post' : 'Create Post'}
+          {isSubmitting ? 'Saving...' : initialData?.id ? 'Update Post' : 'Create Post'}
         </Button>
       </div>
     </form>

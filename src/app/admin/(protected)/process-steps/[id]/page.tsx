@@ -1,6 +1,9 @@
+import { notFound } from 'next/navigation'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { getProcessStep } from '../actions'
 import { ProcessStepForm } from '../ProcessStepForm'
-import { notFound } from 'next/navigation'
+
+export const dynamic = 'force-dynamic'
 
 export default async function EditProcessStepPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params
@@ -11,11 +14,14 @@ export default async function EditProcessStepPage({ params }: { params: Promise<
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Step</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Update process step details.</p>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <AdminPageHeader
+        title="Edit Process Step"
+        description={`Updating "${step.title || 'Process Step'}"`}
+        backHref="/admin/process-steps"
+        backLabel="Back to Process Steps"
+      />
+
       <ProcessStepForm initialData={step} />
     </div>
   )

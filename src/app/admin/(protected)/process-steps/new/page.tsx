@@ -1,12 +1,16 @@
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { ProcessStepForm } from '../ProcessStepForm'
 
 export default function NewProcessStepPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Add Step</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Add a new step to your agency process.</p>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <AdminPageHeader
+        title="Add Process Step"
+        description="Add a new stage to your agency implementation timeline."
+        backHref="/admin/process-steps"
+        backLabel="Back to Process Steps"
+      />
+
       <ProcessStepForm />
     </div>
   )

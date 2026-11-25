@@ -1,23 +1,23 @@
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
+import { AdminErrorBanner } from '@/components/admin/AdminStates'
 import ContentForm from './ContentForm'
-import { getContentSettings } from './actions'
+import { getAdminContentSettings } from './actions'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ContentPage() {
-  const { hero, about, problem } = await getContentSettings()
+  const { hero, about, problem, error } = await getAdminContentSettings()
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Content Editor</h1>
-        <p className="text-zinc-400 mt-1">Customize the text and messaging on your public-facing pages.</p>
-      </div>
-
-      <ContentForm
-        initialHero={hero}
-        initialAbout={about}
-        initialProblem={problem}
+    <div className="max-w-4xl mx-auto space-y-6">
+      <AdminPageHeader
+        title="Content Editor"
+        description="Customize the Hero, About, and Problem copy shown on your homepage."
       />
+
+      {error && <AdminErrorBanner title="Failed to load content settings" message={error} />}
+
+      <ContentForm initialHero={hero} initialAbout={about} initialProblem={problem} />
     </div>
   )
 }

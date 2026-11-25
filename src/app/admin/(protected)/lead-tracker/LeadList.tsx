@@ -1,82 +1,131 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import {
+  Building,
+  ChevronLeft,
+  ChevronRight,
+  Mail,
+  Phone,
+  Search,
+  Trash2,
+  Users,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { updateLeadStatus, deleteLead } from './actions'
-import { Trash2, Mail, Phone, Building, Users, Search, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import {
+  AdminConfirmDialog,
+  AdminEmptyState,
+  AdminStatusBadge,
+} from '@/components/admin/AdminStates'
+import { useAdminToast } from '@/components/admin/AdminToast'
+import { deleteLead, updateLeadStatus } from './actions'
 
 interface Lead {
   id: string
-  name: string
-  email: string
-  phone: string | null
-  company: string | null
-  message: string | null
-  status: 'new' | 'contacted' | 'closed'
-  created_at: string
+  name?: string | null
+  email?: string | null
+  phone?: string | null
+  company?: string | null
+  message?: string | null
+  status?: 'new' | 'contacted' | 'closed' | string | null
+  created_at?: string | null
 }
 
 const PAGE_SIZE = 10
 
-export function LeadList({ initialLeads }: { initialLeads: Lead[] }) {
+function formatLeadDate(raw: string | null | undefined): string {
+  if (!raw) return '—'
+  const date = new Date(raw)
+  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString()
+}
+
+export function LeadList({
+  initialLeads,
+  hasFetchError = false,
+}: {
+  initialLeads: Lead[]
+  hasFetchError?: boolean
+}) {
   const [leads, setLeads] = useState(initialLeads)
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [actionError, setActionError] = useState<string | null>(null)
+  const [prevInitial, setPrevInitial] = useState(initialLeads)
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Lead | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | Lead['status']>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'new' | 'contacted' | 'closed'>('all')
   const [page, setPage] = useState(1)
+  const toast = useAdminToast()
 
-  useEffect(() => {
+  if (prevInitial !== initialLeads) {
+    setPrevInitial(initialLeads)
     setLeads(initialLeads)
-  }, [initialLeads])
-
-  const handleStatusChange = async (id: string, newStatus: 'new' | 'contacted' | 'closed') => {
-    setIsUpdating(true)
-    setActionError(null)
-    const result = await updateLeadStatus(id, newStatus)
-
-    if (result.success) {
-      setLeads((prev) => prev.map(lead => lead.id === id ? { ...lead, status: newStatus } : lead))
-    } else {
-      setActionError(result.error || 'Failed to update lead status')
-    }
-    setIsUpdating(false)
   }
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this lead?')) {
-      setIsUpdating(true)
-      setActionError(null)
-      const result = await deleteLead(id)
-
+  const handleStatusChange = async (id: string, newStatus: 'new' | 'contacted' | 'closed') => {
+    setUpdatingId(id)
+    try {
+      const result = await updateLeadStatus(id, newStatus)
       if (result.success) {
-        setLeads((prev) => prev.filter(lead => lead.id !== id))
+        setLeads((prev) =>
+          prev.map((lead) => (lead.id === id ? { ...lead, status: newStatus } : lead))
+        )
+        toast.success(`Lead status marked "${newStatus}"`)
       } else {
-        setActionError(result.error || 'Failed to delete lead')
+        toast.error(result.error || 'Failed to update lead status')
       }
-      setIsUpdating(false)
+    } catch {
+      toast.error('Failed to update lead status')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return
+    setIsDeleting(true)
+    try {
+      const result = await deleteLead(deleteTarget.id)
+      if (result.success) {
+        setLeads((prev) => prev.filter((lead) => lead.id !== deleteTarget.id))
+        toast.success(`Deleted lead "${deleteTarget.name || deleteTarget.email || ''}"`)
+        setDeleteTarget(null)
+      } else {
+        toast.error(result.error || 'Failed to delete lead')
+      }
+    } catch {
+      toast.error('Failed to delete lead')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
   if (leads.length === 0) {
-    return (
-      <div className="p-12 text-center flex flex-col items-center justify-center bg-zinc-900/40 rounded-2xl border border-zinc-800/50 backdrop-blur-sm">
-        <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
-          <Users className="w-8 h-8 text-zinc-500" />
+    if (hasFetchError) {
+      return (
+        <div className="adm-surface adm-card-pad text-center text-sm text-adm-muted">
+          Fix the error above and click Retry to load leads.
         </div>
-        <h3 className="text-lg font-medium text-zinc-200 mb-2">No Leads Yet</h3>
-        <p className="text-zinc-500 max-w-sm mx-auto">When users submit the contact form, they will appear here.</p>
+      )
+    }
+    return (
+      <div className="adm-surface adm-card-pad">
+        <AdminEmptyState
+          icon={Users}
+          title="No leads yet"
+          description="Inbound submissions from your website contact form or cost estimator will appear here."
+        />
       </div>
     )
   }
 
   const query = searchQuery.trim().toLowerCase()
   const filteredLeads = leads.filter((lead) => {
-    if (statusFilter !== 'all' && lead.status !== statusFilter) return false
+    const normalizedStatus = (lead.status || 'new').toLowerCase()
+    if (statusFilter !== 'all' && normalizedStatus !== statusFilter) return false
     if (!query) return true
     return (
-      lead.name.toLowerCase().includes(query) ||
-      lead.email.toLowerCase().includes(query) ||
+      (lead.name || '').toLowerCase().includes(query) ||
+      (lead.email || '').toLowerCase().includes(query) ||
       (lead.company || '').toLowerCase().includes(query) ||
       (lead.message || '').toLowerCase().includes(query)
     )
@@ -84,28 +133,16 @@ export function LeadList({ initialLeads }: { initialLeads: Lead[] }) {
 
   const totalPages = Math.max(1, Math.ceil(filteredLeads.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
-  const paginatedLeads = filteredLeads.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const paginatedLeads = filteredLeads.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  )
 
   return (
     <div className="space-y-4">
-      {actionError && (
-        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between gap-3">
-          <span>{actionError}</span>
-          <button
-            type="button"
-            onClick={() => setActionError(null)}
-            className="p-1 hover:text-white transition-colors shrink-0"
-            aria-label="Dismiss error"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* Search & Filter Controls */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between bg-zinc-900/40 p-3 rounded-xl border border-zinc-800/50">
+      <div className="adm-surface p-3 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         <div className="relative flex-1 min-w-0">
-          <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-adm-subtle absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="search"
             value={searchQuery}
@@ -114,17 +151,17 @@ export function LeadList({ initialLeads }: { initialLeads: Lead[] }) {
               setPage(1)
             }}
             placeholder="Search leads by name, email, company, or message..."
-            className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
+            className="adm-input pl-9"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => {
-            setStatusFilter(e.target.value as 'all' | Lead['status'])
+            setStatusFilter(e.target.value as 'all' | 'new' | 'contacted' | 'closed')
             setPage(1)
           }}
           aria-label="Filter leads by status"
-          className="px-3 py-2 text-sm rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-200 focus:outline-none focus:border-blue-500 shrink-0"
+          className="adm-input sm:w-48 shrink-0"
         >
           <option value="all">All Statuses ({leads.length})</option>
           <option value="new">New</option>
@@ -134,85 +171,129 @@ export function LeadList({ initialLeads }: { initialLeads: Lead[] }) {
       </div>
 
       {filteredLeads.length === 0 ? (
-        <div className="p-10 text-center bg-zinc-900/30 rounded-2xl border border-zinc-800/50 text-zinc-400 text-sm">
+        <div className="adm-surface p-8 text-center text-sm text-adm-muted">
           No leads match your current filter.
         </div>
       ) : (
-        <div className={`space-y-4 ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}>
-          {paginatedLeads.map(lead => (
-            <div key={lead.id} className="bg-zinc-900/40 rounded-2xl border border-zinc-800/50 overflow-hidden backdrop-blur-sm group hover:border-zinc-700/50 transition-all duration-300">
-              <div className="flex flex-col md:flex-row">
-                {/* Status indicator bar */}
-                <div className={`h-2 md:h-auto w-full md:w-2 shrink-0 ${
-                  lead.status === 'new' ? 'bg-blue-500' :
-                  lead.status === 'contacted' ? 'bg-amber-500' :
-                  'bg-emerald-500'
-                }`} />
+        <div className="space-y-4">
+          {paginatedLeads.map((lead) => {
+            const leadName = lead.name?.trim() || 'Unknown Contact'
+            const leadEmail = lead.email?.trim() || ''
+            const leadStatus =
+              lead.status === 'contacted' || lead.status === 'closed' ? lead.status : 'new'
+            const barClass =
+              leadStatus === 'new'
+                ? 'bg-adm-accent'
+                : leadStatus === 'contacted'
+                ? 'bg-amber-500'
+                : 'bg-emerald-500'
 
-                <div className="flex-1 p-5 sm:p-6 space-y-4 min-w-0">
-                  <div className="flex flex-wrap justify-between items-start gap-2">
-                    <div className="min-w-0">
-                      <h3 className="text-xl font-bold text-white mb-1 group-hover:text-blue-400 transition-colors break-words">{lead.name}</h3>
-                      <div className="flex flex-wrap gap-3 sm:gap-4 mt-2 text-sm text-zinc-400">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <Mail className="w-4 h-4 text-zinc-500 shrink-0" />
-                          <a href={`mailto:${lead.email}`} className="hover:text-white transition-colors truncate">{lead.email}</a>
+            return (
+              <div key={lead.id} className="adm-surface overflow-hidden">
+                <div className="flex flex-col md:flex-row">
+                  <div className={`h-1.5 md:h-auto w-full md:w-1.5 shrink-0 ${barClass}`} />
+
+                  <div className="flex-1 p-5 space-y-3 min-w-0">
+                    <div className="flex flex-wrap justify-between items-start gap-2">
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                          <h3 className="text-lg font-semibold text-adm-text break-words">
+                            {leadName}
+                          </h3>
+                          <AdminStatusBadge status={leadStatus} />
                         </div>
-                        {lead.phone && (
-                          <div className="flex items-center gap-1.5">
-                            <Phone className="w-4 h-4 text-zinc-500 shrink-0" />
-                            <a href={`tel:${lead.phone}`} className="hover:text-white transition-colors">{lead.phone}</a>
-                          </div>
-                        )}
-                        {lead.company && (
-                          <div className="flex items-center gap-1.5">
-                            <Building className="w-4 h-4 text-zinc-500 shrink-0" />
-                            <span className="text-zinc-300">{lead.company}</span>
-                          </div>
-                        )}
+                        <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-adm-muted">
+                          {leadEmail && (
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <Mail className="w-3.5 h-3.5 text-adm-subtle shrink-0" />
+                              <a
+                                href={`mailto:${leadEmail}`}
+                                className="hover:text-adm-text transition-colors truncate"
+                              >
+                                {leadEmail}
+                              </a>
+                            </div>
+                          )}
+                          {lead.phone && (
+                            <div className="flex items-center gap-1.5">
+                              <Phone className="w-3.5 h-3.5 text-adm-subtle shrink-0" />
+                              <a
+                                href={`tel:${lead.phone}`}
+                                className="hover:text-adm-text transition-colors"
+                              >
+                                {lead.phone}
+                              </a>
+                            </div>
+                          )}
+                          {lead.company && (
+                            <div className="flex items-center gap-1.5">
+                              <Building className="w-3.5 h-3.5 text-adm-subtle shrink-0" />
+                              <span className="text-adm-text">{lead.company}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
+                      <span className="text-xs font-mono text-adm-muted bg-adm-surface-2 px-2 py-1 rounded border border-adm-border shrink-0">
+                        {formatLeadDate(lead.created_at)}
+                      </span>
                     </div>
-                    <div className="text-xs font-mono text-zinc-500 bg-zinc-950/50 px-2 py-1 rounded-md border border-zinc-800/50 shrink-0">
-                      {new Date(lead.created_at).toLocaleDateString()}
-                    </div>
+
+                    {lead.message && (
+                      <div className="p-3.5 bg-adm-surface-2/60 rounded-lg border border-adm-border text-sm text-adm-text leading-relaxed whitespace-pre-wrap break-words">
+                        {lead.message}
+                      </div>
+                    )}
                   </div>
 
-                  {lead.message && (
-                    <div className="p-4 bg-zinc-950/50 rounded-xl border border-zinc-800/50 text-sm text-zinc-300 leading-relaxed shadow-inner whitespace-pre-wrap break-words">
-                      {lead.message}
+                  <div className="bg-adm-surface-2/40 p-4 sm:p-5 flex flex-col sm:flex-row md:flex-col items-stretch sm:items-end md:items-stretch justify-between md:justify-center gap-3 border-t md:border-t-0 md:border-l border-adm-border md:w-52 shrink-0">
+                    <div className="w-full space-y-1.5">
+                      <label
+                        htmlFor={`lead-status-${lead.id}`}
+                        className="text-xs font-semibold text-adm-muted uppercase tracking-wider block"
+                      >
+                        Status
+                      </label>
+                      <select
+                        id={`lead-status-${lead.id}`}
+                        value={leadStatus}
+                        disabled={updatingId === lead.id}
+                        onChange={(e) =>
+                          handleStatusChange(
+                            lead.id,
+                            e.target.value as 'new' | 'contacted' | 'closed'
+                          )
+                        }
+                        className="adm-input"
+                      >
+                        <option value="new">New Lead</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="closed">Closed / Won</option>
+                      </select>
                     </div>
-                  )}
-                </div>
 
-                <div className="bg-zinc-950/30 p-5 sm:p-6 flex flex-col sm:flex-row md:flex-col items-stretch sm:items-end md:items-stretch justify-between md:justify-center gap-3 sm:gap-4 border-t md:border-t-0 md:border-l border-zinc-800/50 md:w-56 shrink-0 backdrop-blur-sm">
-                  <div className="w-full space-y-2">
-                    <label htmlFor={`lead-status-${lead.id}`} className="text-xs font-bold text-zinc-500 uppercase tracking-widest block">Status</label>
-                    <select
-                      id={`lead-status-${lead.id}`}
-                      value={lead.status}
-                      onChange={(e) => handleStatusChange(lead.id, e.target.value as Lead['status'])}
-                      className="w-full px-3 py-2.5 text-sm border rounded-lg bg-zinc-900 border-zinc-700 font-medium text-white shadow-inner focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all outline-none"
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDeleteTarget(lead)}
+                      className="text-adm-danger-text hover:bg-adm-danger-bg hover:border-adm-danger-border w-full shrink-0"
                     >
-                      <option value="new">New Lead</option>
-                      <option value="contacted">Contacted</option>
-                      <option value="closed">Closed / Won</option>
-                    </select>
+                      <Trash2 className="w-4 h-4 mr-1.5" />
+                      Delete
+                    </Button>
                   </div>
-
-                  <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-950/30 w-full border border-transparent hover:border-red-900/50 transition-all shrink-0" onClick={() => handleDelete(lead.id)}>
-                    <Trash2 className="w-4 h-4 mr-2" /> Delete Lead
-                  </Button>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
       {totalPages > 1 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-zinc-400">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-adm-muted">
           <span>
-            Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredLeads.length)} of {filteredLeads.length}
+            Showing {(currentPage - 1) * PAGE_SIZE + 1}–
+            {Math.min(currentPage * PAGE_SIZE, filteredLeads.length)} of {filteredLeads.length}
           </span>
           <div className="flex items-center gap-2">
             <Button
@@ -221,9 +302,9 @@ export function LeadList({ initialLeads }: { initialLeads: Lead[] }) {
               size="sm"
               disabled={currentPage <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="border-zinc-800 text-zinc-300 hover:bg-zinc-800"
             >
-              <ChevronLeft className="w-4 h-4 mr-1" /> Prev
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Prev
             </Button>
             <span className="font-mono px-2">
               Page {currentPage} / {totalPages}
@@ -234,13 +315,23 @@ export function LeadList({ initialLeads }: { initialLeads: Lead[] }) {
               size="sm"
               disabled={currentPage >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="border-zinc-800 text-zinc-300 hover:bg-zinc-800"
             >
-              Next <ChevronRight className="w-4 h-4 ml-1" />
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
         </div>
       )}
+
+      <AdminConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Delete lead?"
+        description={`This will permanently delete the lead from "${deleteTarget?.name || deleteTarget?.email || 'this contact'}".`}
+        confirmLabel="Delete"
+        loading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

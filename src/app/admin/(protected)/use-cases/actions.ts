@@ -50,7 +50,7 @@ export async function getUseCases() {
     .select('*')
     .order('display_order', { ascending: true })
 
-  if (error) return { error: 'Failed to fetch use cases' }
+  if (error) return { error: error.message || 'Failed to fetch use cases' }
   return { data }
 }
 
@@ -66,7 +66,7 @@ export async function getUseCase(id: string) {
     .eq('id', id)
     .single()
 
-  if (error) return { error: 'Failed to fetch use case' }
+  if (error) return { error: error.message || 'Failed to fetch use case' }
   return { data }
 }
 
@@ -196,7 +196,7 @@ export async function updateUseCaseOrder(items: { id: string; display_order: num
       .update({ display_order: item.display_order })
       .eq('id', item.id)
 
-    if (error) return { error: 'Failed to update order' }
+    if (error) return { error: error.message || 'Failed to update order' }
   }
 
   revalidatePath('/admin/use-cases')

@@ -39,7 +39,7 @@ export async function getServices() {
 
   if (error) {
     console.error('Error fetching services:', error)
-    return { error: 'Failed to fetch services' }
+    return { error: error.message || 'Failed to fetch services' }
   }
 
   return { data }
@@ -59,7 +59,7 @@ export async function getService(id: string) {
 
   if (error) {
     console.error('Error fetching service:', error)
-    return { error: 'Failed to fetch service' }
+    return { error: error.message || 'Failed to fetch service' }
   }
 
   return { data }
@@ -158,7 +158,7 @@ export async function updateServiceOrder(items: { id: string; display_order: num
       .update({ display_order: item.display_order })
       .eq('id', item.id)
 
-    if (error) return { error: 'Failed to update order' }
+    if (error) return { error: error.message || 'Failed to update order' }
   }
 
   revalidatePath('/admin/services')

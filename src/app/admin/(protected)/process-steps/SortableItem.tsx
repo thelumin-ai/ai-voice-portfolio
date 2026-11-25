@@ -1,25 +1,41 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, Edit, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { AdminConfirmDialog, AdminStatusBadge } from '@/components/admin/AdminStates'
+import { useAdminToast } from '@/components/admin/AdminToast'
 import { deleteProcessStep } from './actions'
 
-interface ProcessStepItem {
+export interface ProcessStepItem {
   id: string
-  title: string
-  description: string
-  icon_url: string
-  status: string
-  display_order: number
+  title?: string | null
+  description?: string | null
+  icon_url?: string | null
+  status?: string | null
+  display_order?: number | null
 }
 
-export function SortableItem({ id, item }: { id: string; item: ProcessStepItem }) {
+export function SortableItem({
+  id,
+  item,
+  stepNumber,
+  reorderDisabled = false,
+}: {
+  id: string
+  item: ProcessStepItem
+  stepNumber: number
+  reorderDisabled?: boolean
+}) {
   const router = useRouter()
+  const toast = useAdminToast()
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
   const {
     attributes,
     listeners,
@@ -27,77 +43,113 @@ export function SortableItem({ id, item }: { id: string; item: ProcessStepItem }
     transform,
     transition,
     isDragging,
-  } = useSortable({ id })
+  } = useSortable({ id, disabled: reorderDisabled })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 10 : 1,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.6 : 1,
   }
 
+  const displayTitle = item.title?.trim() || 'Untitled Step'
+
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this process step?')) {
+    setIsDeleting(true)
+    try {
       const res = await deleteProcessStep(id)
       if (res?.error) {
-        alert(res.error)
+        toast.error(res.error)
       } else {
+        toast.success(`Deleted step "${displayTitle}"`)
+        setConfirmOpen(false)
         router.refresh()
       }
+    } catch {
+      toast.error('Failed to delete process step')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`group relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 bg-zinc-900/60 border border-zinc-800 rounded-2xl shadow-sm backdrop-blur-sm transition-all duration-300 ${
-        isDragging ? 'shadow-2xl shadow-blue-500/20 ring-2 ring-blue-500 z-50 scale-[1.02]' : 'hover:border-blue-500/50 hover:bg-zinc-800/80'
-      }`}
-    >
-      <div className="flex items-center gap-4 sm:gap-5 flex-1 min-w-0">
-        <div
-          {...attributes}
-          {...listeners}
-          className="cursor-grab p-2 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-700 transition-all shrink-0"
-          title="Drag to reorder"
-        >
-          <GripVertical className="h-5 w-5" />
-        </div>
+    <>
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`group rounded-xl border border-adm-border bg-adm-surface-2/40 p-4 transition-all ${
+          isDragging
+            ? 'ring-2 ring-adm-accent shadow-xl bg-adm-surface'
+            : 'hover:border-adm-accent/40 hover:bg-adm-surface-2/80'
+        }`}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 min-w-0 flex-1">
+            <button
+              type="button"
+              disabled={reorderDisabled}
+              className={`p-2 rounded-lg shrink-0 transition-colors ${
+                reorderDisabled
+                  ? 'text-adm-subtle opacity-40 cursor-not-allowed'
+                  : 'cursor-grab text-adm-muted hover:text-adm-text hover:bg-adm-surface active:cursor-grabbing'
+              }`}
+              {...(reorderDisabled ? {} : attributes)}
+              {...(reorderDisabled ? {} : listeners)}
+              aria-label={`Drag to reorder ${displayTitle}`}
+              title={reorderDisabled ? 'Clear filters to reorder' : 'Drag to reorder'}
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
 
-        <div className="relative shrink-0">
-          <div className="absolute inset-0 bg-blue-500 rounded-full blur-md opacity-20 group-hover:opacity-60 transition-opacity" />
-          <div className="relative w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center bg-zinc-950 border border-blue-500/30 text-blue-400 rounded-full font-black text-base sm:text-lg shadow-inner">
-            {item.display_order + 1}
+            <div className="w-10 h-10 flex items-center justify-center bg-adm-accent-soft border border-adm-accent/30 text-adm-accent rounded-full font-bold text-sm shrink-0">
+              {stepNumber}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm sm:text-base font-semibold text-adm-text truncate">
+                {displayTitle}
+              </h3>
+              {item.description && (
+                <p className="text-xs sm:text-sm text-adm-muted line-clamp-1 mt-0.5">
+                  {item.description}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between sm:justify-end gap-3 border-t sm:border-t-0 border-adm-border pt-3 sm:pt-0 shrink-0">
+            <AdminStatusBadge status={item.status} />
+
+            <div className="flex items-center gap-1.5">
+              <Button variant="outline" size="icon" asChild>
+                <Link href={`/admin/process-steps/${id}`} aria-label={`Edit ${displayTitle}`}>
+                  <Edit className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label={`Delete ${displayTitle}`}
+                onClick={() => setConfirmOpen(true)}
+                className="text-adm-danger-text hover:bg-adm-danger-bg hover:border-adm-danger-border"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
-
-        <div className="flex-1 min-w-0">
-          <h3 className="text-base sm:text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors truncate">{item.title}</h3>
-          <p className="text-sm text-zinc-400 line-clamp-1">{item.description}</p>
-        </div>
       </div>
 
-      <div className="flex items-center justify-between sm:justify-end gap-3 pt-3 sm:pt-0 sm:pl-4 border-t sm:border-t-0 sm:border-l border-zinc-800 w-full sm:w-auto shrink-0">
-        <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md border ${
-          item.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-          item.status === 'draft' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-          'bg-zinc-800 text-zinc-400 border-zinc-700'
-        }`}>
-          {item.status}
-        </span>
-
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" asChild className="bg-zinc-800 text-zinc-300 hover:text-white hover:bg-blue-600 border border-zinc-700 hover:border-transparent transition-all rounded-lg">
-            <Link href={`/admin/process-steps/${id}`} aria-label={`Edit ${item.title}`}>
-              <Edit className="h-4 w-4" />
-            </Link>
-          </Button>
-          <Button type="button" variant="ghost" size="icon" aria-label={`Delete ${item.title}`} className="bg-zinc-800 text-zinc-300 hover:text-white hover:bg-red-600 border border-zinc-700 hover:border-transparent transition-all rounded-lg" onClick={handleDelete}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </div>
+      <AdminConfirmDialog
+        open={confirmOpen}
+        title="Delete process step?"
+        description={`This will permanently remove "${displayTitle}" from your workflow timeline.`}
+        confirmLabel="Delete"
+        loading={isDeleting}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
+    </>
   )
 }

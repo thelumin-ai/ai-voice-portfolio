@@ -1,83 +1,116 @@
-import { getServices } from './actions'
 import Link from 'next/link'
-import { Plus, Pencil, Briefcase } from 'lucide-react'
+import { Briefcase, Pencil, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
+import {
+  AdminEmptyState,
+  AdminErrorBanner,
+  AdminStatusBadge,
+} from '@/components/admin/AdminStates'
+import { getServices } from './actions'
 import { DeleteServiceButton } from './DeleteServiceButton'
+
+export const dynamic = 'force-dynamic'
 
 export default async function ServicesPage() {
   const { data: services, error } = await getServices()
 
-  if (error) {
-    return <div className="p-8 text-red-500 bg-red-500/10 rounded-xl border border-red-500/20">Error loading services. Please ensure your database is updated.</div>
-  }
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/50 p-6 rounded-2xl border border-zinc-800/50 backdrop-blur-sm">
-        <div>
-          <h1 className="text-2xl font-black text-white tracking-tight mb-1">Services &amp; Solutions</h1>
-          <p className="text-sm text-zinc-400">Manage the core offerings displayed on your homepage.</p>
-        </div>
-        <Link href="/admin/services/new" className="self-start sm:self-auto">
-          <Button className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20"><Plus className="w-4 h-4 mr-2" /> Add Service</Button>
-        </Link>
-      </div>
+      <AdminPageHeader
+        title="Services & Solutions"
+        description="Manage the core offerings and capability cards showcased on your homepage."
+        actions={
+          <Button asChild>
+            <Link href="/admin/services/new">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Service
+            </Link>
+          </Button>
+        }
+      />
 
-      <div className="bg-zinc-900/40 rounded-2xl border border-zinc-800/50 overflow-hidden backdrop-blur-sm">
+      {error && <AdminErrorBanner title="Failed to load services" message={error} />}
+
+      <div className="adm-surface overflow-hidden">
         {services && services.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[600px]">
+            <table className="w-full text-left border-collapse min-w-[560px]">
               <thead>
-                <tr className="border-b border-zinc-800/50 bg-zinc-900/50">
-                  <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Service</th>
-                  <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Description</th>
-                  <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Status</th>
-                  <th className="py-4 px-6 text-xs font-semibold text-zinc-400 uppercase tracking-wider text-right">Actions</th>
+                <tr className="border-b border-adm-border bg-adm-surface-2/60">
+                  <th className="py-3.5 px-5 text-xs font-semibold text-adm-muted uppercase tracking-wider">
+                    Service
+                  </th>
+                  <th className="py-3.5 px-5 text-xs font-semibold text-adm-muted uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th className="py-3.5 px-5 text-xs font-semibold text-adm-muted uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="py-3.5 px-5 text-xs font-semibold text-adm-muted uppercase tracking-wider text-right">
+                    Actions
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/50">
-                {services.map((service) => (
-                  <tr key={service.id} className="hover:bg-zinc-800/30 transition-colors group">
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center font-bold shadow-inner shrink-0">
-                          {service.icon_name?.charAt(0) || 'S'}
+              <tbody className="divide-y divide-adm-border">
+                {services.map((service) => {
+                  const titleLabel = service.title || 'Untitled Service'
+                  return (
+                    <tr key={service.id} className="hover:bg-adm-surface-2/40 transition-colors">
+                      <td className="py-3.5 px-5">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-9 h-9 rounded-lg bg-adm-accent-soft text-adm-accent border border-adm-accent/25 flex items-center justify-center font-bold text-xs shrink-0">
+                            {(service.icon_name || titleLabel).charAt(0).toUpperCase()}
+                          </div>
+                          <span className="font-semibold text-adm-text">{titleLabel}</span>
                         </div>
-                        <span className="font-semibold text-zinc-200 group-hover:text-white transition-colors">{service.title}</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 text-sm text-zinc-400">
-                      <span className="line-clamp-1 max-w-xs">{service.description}</span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className={`px-2.5 py-1 text-xs font-medium rounded-md border ${
-                        service.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                        service.status === 'draft' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                        'bg-zinc-800 text-zinc-400 border-zinc-700'
-                      }`}>
-                        {service.status}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Link href={`/admin/services/${service.id}`}>
-                          <Button variant="ghost" size="sm" aria-label={`Edit ${service.title}`} className="text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent hover:border-zinc-700 transition-all"><Pencil className="w-4 h-4" /></Button>
-                        </Link>
-                        <DeleteServiceButton id={service.id} title={service.title} />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="py-3.5 px-5 text-sm text-adm-muted">
+                        <span className="line-clamp-1 max-w-md">{service.description || '—'}</span>
+                      </td>
+                      <td className="py-3.5 px-5">
+                        <AdminStatusBadge status={service.status} />
+                      </td>
+                      <td className="py-3.5 px-5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button variant="outline" size="icon" asChild>
+                            <Link
+                              href={`/admin/services/${service.id}`}
+                              aria-label={`Edit ${titleLabel}`}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Link>
+                          </Button>
+                          <DeleteServiceButton id={service.id} title={titleLabel} />
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
         ) : (
-          <div className="p-12 text-center flex flex-col items-center justify-center">
-            <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
-              <Briefcase className="w-8 h-8 text-zinc-500" />
-            </div>
-            <h3 className="text-lg font-medium text-zinc-200 mb-2">No Services Found</h3>
-            <p className="text-zinc-500 max-w-sm mx-auto">Create your first service to showcase your offerings to potential clients.</p>
+          <div className="adm-card-pad">
+            {error ? (
+              <p className="py-4 text-center text-sm text-adm-muted">
+                Fix the error above and click Retry to load services.
+              </p>
+            ) : (
+              <AdminEmptyState
+                icon={Briefcase}
+                title="No services yet"
+                description="Create your first service card to showcase your offerings."
+                action={
+                  <Button asChild size="sm">
+                    <Link href="/admin/services/new">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Service
+                    </Link>
+                  </Button>
+                }
+              />
+            )}
           </div>
         )}
       </div>

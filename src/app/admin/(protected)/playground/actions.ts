@@ -39,7 +39,7 @@ export async function getPlaygroundApps() {
 
   if (error) {
     console.error('Error fetching playground apps:', error)
-    return { error: 'Failed to fetch playground apps' }
+    return { error: error.message || 'Failed to fetch playground apps' }
   }
 
   return { data }
@@ -59,7 +59,7 @@ export async function getPlaygroundApp(id: string) {
 
   if (error) {
     console.error('Error fetching playground app:', error)
-    return { error: 'Failed to fetch playground app' }
+    return { error: error.message || 'Failed to fetch playground app' }
   }
 
   return { data }
@@ -171,7 +171,7 @@ export async function updatePlaygroundOrder(items: { id: string; display_order: 
 
     if (error) {
       console.error('Error updating order:', error)
-      return { error: 'Failed to update order' }
+      return { error: error.message || 'Failed to update order' }
     }
   }
 

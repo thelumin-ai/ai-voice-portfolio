@@ -87,3 +87,174 @@
 .swiper-pagination {
   bottom: 0 !important;
 }
+
+
+/* ==========================================================================
+   Admin design system
+   Scoped to `.admin-root`. Theme (mode / accent / density) is applied through
+   data attributes set by the admin shell, so every admin screen restyles
+   together and nothing leaks into the public site.
+   ========================================================================== */
+@theme inline {
+  --color-adm-bg: var(--adm-bg);
+  --color-adm-surface: var(--adm-surface);
+  --color-adm-surface-2: var(--adm-surface-2);
+  --color-adm-border: var(--adm-border);
+  --color-adm-text: var(--adm-text);
+  --color-adm-muted: var(--adm-muted);
+  --color-adm-subtle: var(--adm-subtle);
+  --color-adm-accent: var(--adm-accent);
+  --color-adm-accent-hover: var(--adm-accent-hover);
+  --color-adm-accent-fg: var(--adm-accent-fg);
+  --color-adm-accent-soft: var(--adm-accent-soft);
+  --color-adm-success-bg: var(--adm-success-bg);
+  --color-adm-success-border: var(--adm-success-border);
+  --color-adm-success-text: var(--adm-success-text);
+  --color-adm-warn-bg: var(--adm-warn-bg);
+  --color-adm-warn-border: var(--adm-warn-border);
+  --color-adm-warn-text: var(--adm-warn-text);
+  --color-adm-danger-bg: var(--adm-danger-bg);
+  --color-adm-danger-border: var(--adm-danger-border);
+  --color-adm-danger-text: var(--adm-danger-text);
+  --color-adm-info-bg: var(--adm-info-bg);
+  --color-adm-info-border: var(--adm-info-border);
+  --color-adm-info-text: var(--adm-info-text);
+}
+
+.admin-root {
+  --adm-bg: #0b0b0f;
+  --adm-surface: #131318;
+  --adm-surface-2: #1b1b22;
+  --adm-border: #2a2a33;
+  --adm-text: #f4f4f5;
+  --adm-muted: #a1a1aa;
+  --adm-subtle: #71717a;
+
+  --adm-accent: #3b82f6;
+  --adm-accent-hover: #2563eb;
+  --adm-accent-fg: #ffffff;
+  --adm-accent-soft: rgba(59, 130, 246, 0.14);
+
+  --adm-success-bg: rgba(16, 185, 129, 0.12);
+  --adm-success-border: rgba(16, 185, 129, 0.28);
+  --adm-success-text: #34d399;
+
+  --adm-warn-bg: rgba(245, 158, 11, 0.12);
+  --adm-warn-border: rgba(245, 158, 11, 0.28);
+  --adm-warn-text: #fbbf24;
+
+  --adm-danger-bg: rgba(239, 68, 68, 0.12);
+  --adm-danger-border: rgba(239, 68, 68, 0.28);
+  --adm-danger-text: #f87171;
+
+  --adm-info-bg: rgba(59, 130, 246, 0.12);
+  --adm-info-border: rgba(59, 130, 246, 0.28);
+  --adm-info-text: #60a5fa;
+
+  --adm-control-h: 2.5rem;
+  --adm-pad: 1.5rem;
+  --adm-gap: 1.5rem;
+
+  color-scheme: dark;
+}
+
+.admin-root[data-mode="light"] {
+  --adm-bg: #f5f6f8;
+  --adm-surface: #ffffff;
+  --adm-surface-2: #f0f1f4;
+  --adm-border: #e2e4e9;
+  --adm-text: #16181d;
+  --adm-muted: #515866;
+  --adm-subtle: #7b8494;
+
+  --adm-success-bg: #ecfdf5;
+  --adm-success-border: #a7f3d0;
+  --adm-success-text: #047857;
+
+  --adm-warn-bg: #fffbeb;
+  --adm-warn-border: #fde68a;
+  --adm-warn-text: #b45309;
+
+  --adm-danger-bg: #fef2f2;
+  --adm-danger-border: #fecaca;
+  --adm-danger-text: #b91c1c;
+
+  --adm-info-bg: #eff6ff;
+  --adm-info-border: #bfdbfe;
+  --adm-info-text: #1d4ed8;
+
+  color-scheme: light;
+}
+
+.admin-root[data-accent="violet"] {
+  --adm-accent: #8b5cf6;
+  --adm-accent-hover: #7c3aed;
+  --adm-accent-soft: rgba(139, 92, 246, 0.14);
+}
+.admin-root[data-accent="emerald"] {
+  --adm-accent: #10b981;
+  --adm-accent-hover: #059669;
+  --adm-accent-soft: rgba(16, 185, 129, 0.14);
+}
+.admin-root[data-accent="rose"] {
+  --adm-accent: #f43f5e;
+  --adm-accent-hover: #e11d48;
+  --adm-accent-soft: rgba(244, 63, 94, 0.14);
+}
+.admin-root[data-accent="amber"] {
+  --adm-accent: #f59e0b;
+  --adm-accent-hover: #d97706;
+  --adm-accent-fg: #1a1203;
+  --adm-accent-soft: rgba(245, 158, 11, 0.15);
+}
+.admin-root[data-accent="cyan"] {
+  --adm-accent: #06b6d4;
+  --adm-accent-hover: #0891b2;
+  --adm-accent-soft: rgba(6, 182, 212, 0.14);
+}
+
+.admin-root[data-density="compact"] {
+  --adm-control-h: 2.125rem;
+  --adm-pad: 1rem;
+  --adm-gap: 1rem;
+}
+
+@layer components {
+  .adm-input {
+    @apply w-full rounded-lg border border-adm-border bg-adm-surface-2 px-3 py-2 text-sm text-adm-text placeholder:text-adm-subtle transition-colors focus:border-adm-accent focus:outline-none focus:ring-2 focus:ring-adm-accent/30 disabled:cursor-not-allowed disabled:opacity-60;
+    min-height: var(--adm-control-h);
+  }
+
+  textarea.adm-input {
+    min-height: 5rem;
+  }
+
+  .adm-label {
+    @apply block text-sm font-medium text-adm-text;
+  }
+
+  .adm-hint {
+    @apply text-xs text-adm-subtle;
+  }
+
+  .adm-error {
+    @apply text-sm text-adm-danger-text;
+  }
+
+  .adm-checkbox {
+    @apply h-4 w-4 rounded border-adm-border;
+    accent-color: var(--adm-accent);
+  }
+
+  .adm-surface {
+    @apply rounded-xl border border-adm-border bg-adm-surface text-adm-text shadow-sm;
+  }
+
+  .adm-card-pad {
+    padding: var(--adm-pad);
+  }
+
+  .adm-stack {
+    gap: var(--adm-gap);
+  }
+}

@@ -1,25 +1,34 @@
-import { getBlogPosts } from './actions'
-import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { PenSquare } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
+import { AdminErrorBanner } from '@/components/admin/AdminStates'
+import { getBlogPosts } from './actions'
 import { BlogList } from './BlogList'
 
+export const dynamic = 'force-dynamic'
+
 export default async function BlogAdminPage() {
-  const { data: posts } = await getBlogPosts()
+  const { data: posts, error } = await getBlogPosts()
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/50 p-6 rounded-2xl border border-zinc-800/50 backdrop-blur-sm">
-        <div>
-          <h1 className="text-2xl font-black text-white tracking-tight mb-1">Blog &amp; Insights</h1>
-          <p className="text-sm text-zinc-400">Manage your published articles and drafts.</p>
-        </div>
-        <Link href="/admin/blog/new" className="self-start sm:self-auto">
-          <Button className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20"><PenSquare className="w-4 h-4 mr-2" /> Write Post</Button>
-        </Link>
-      </div>
+      <AdminPageHeader
+        title="Blog & Insights"
+        description="Manage your published articles, drafts, and AI-assisted posts."
+        actions={
+          <Button asChild>
+            <Link href="/admin/blog/new">
+              <PenSquare className="w-4 h-4 mr-2" />
+              Write Post
+            </Link>
+          </Button>
+        }
+      />
 
-      <BlogList initialPosts={posts || []} />
+      {error && <AdminErrorBanner title="Failed to load blog posts" message={error} />}
+
+      <BlogList initialPosts={posts || []} hasFetchError={Boolean(error)} />
     </div>
   )
 }

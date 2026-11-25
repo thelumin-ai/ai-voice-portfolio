@@ -1,12 +1,16 @@
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { TechStackForm } from '../TechStackForm'
 
 export default function NewTechStackPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Add Tool</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Add a new technology or tool to your stack.</p>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <AdminPageHeader
+        title="Add Tool"
+        description="Add a new technology, API, or voice engine to your stack."
+        backHref="/admin/tech-stack"
+        backLabel="Back to Tech Stack"
+      />
+
       <TechStackForm />
     </div>
   )

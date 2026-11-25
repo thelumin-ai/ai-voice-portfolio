@@ -1,26 +1,41 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, Edit, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { AdminConfirmDialog, AdminStatusBadge } from '@/components/admin/AdminStates'
+import { useAdminToast } from '@/components/admin/AdminToast'
+import { isSafeHttpUrl } from '@/lib/url'
 import { deleteTestimonial } from './actions'
 
-interface TestimonialItem {
+export interface TestimonialItem {
   id: string
-  client_name: string
-  company: string
-  status: string
-  display_order: number
-  image_url?: string
+  client_name?: string | null
+  company?: string | null
+  status?: string | null
+  display_order?: number | null
+  image_url?: string | null
 }
 
-export function SortableItem({ id, item }: { id: string; item: TestimonialItem }) {
+export function SortableItem({
+  id,
+  item,
+  reorderDisabled = false,
+}: {
+  id: string
+  item: TestimonialItem
+  reorderDisabled?: boolean
+}) {
   const router = useRouter()
+  const toast = useAdminToast()
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
   const {
     attributes,
     listeners,
@@ -28,98 +43,128 @@ export function SortableItem({ id, item }: { id: string; item: TestimonialItem }
     transform,
     transition,
     isDragging,
-  } = useSortable({ id })
+  } = useSortable({ id, disabled: reorderDisabled })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 10 : 1,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.6 : 1,
   }
 
+  const displayName = item.client_name?.trim() || 'Unnamed Client'
+  const imageUrl = item.image_url?.trim() || ''
+  const hasSafeImage =
+    Boolean(imageUrl) &&
+    (isSafeHttpUrl(imageUrl) || (imageUrl.startsWith('/') && !imageUrl.startsWith('//')))
+
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this testimonial?')) {
+    setIsDeleting(true)
+    try {
       const res = await deleteTestimonial(id)
       if (res?.error) {
-        alert(res.error)
+        toast.error(res.error)
       } else {
+        toast.success(`Deleted testimonial from "${displayName}"`)
+        setConfirmOpen(false)
         router.refresh()
       }
+    } catch {
+      toast.error('Failed to delete testimonial')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`group relative p-6 bg-zinc-900/60 border border-zinc-800 rounded-2xl shadow-sm backdrop-blur-sm transition-all duration-300 overflow-hidden ${
-        isDragging ? 'shadow-2xl shadow-blue-500/20 ring-2 ring-blue-500 z-50 scale-[1.02]' : 'hover:border-zinc-600/50 hover:bg-zinc-800/80'
-      }`}
-    >
-      <div className="absolute -top-4 -right-4 text-9xl text-zinc-800/30 font-serif leading-none select-none pointer-events-none group-hover:text-blue-900/20 transition-colors duration-500">
-        &ldquo;
-      </div>
+    <>
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`group rounded-xl border border-adm-border bg-adm-surface-2/40 p-4 transition-all ${
+          isDragging
+            ? 'ring-2 ring-adm-accent shadow-xl bg-adm-surface'
+            : 'hover:border-adm-accent/40 hover:bg-adm-surface-2/80'
+        }`}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 min-w-0 flex-1">
+            <button
+              type="button"
+              disabled={reorderDisabled}
+              className={`p-2 rounded-lg shrink-0 transition-colors ${
+                reorderDisabled
+                  ? 'text-adm-subtle opacity-40 cursor-not-allowed'
+                  : 'cursor-grab text-adm-muted hover:text-adm-text hover:bg-adm-surface active:cursor-grabbing'
+              }`}
+              {...(reorderDisabled ? {} : attributes)}
+              {...(reorderDisabled ? {} : listeners)}
+              aria-label={`Drag to reorder ${displayName}`}
+              title={reorderDisabled ? 'Clear filters to reorder' : 'Drag to reorder'}
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
 
-      <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4 sm:gap-5 w-full sm:w-auto min-w-0">
-          <div
-            {...attributes}
-            {...listeners}
-            className="cursor-grab p-2 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-700 transition-all flex-shrink-0"
-            title="Drag to reorder"
-          >
-            <GripVertical className="h-5 w-5" />
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-3 min-w-0">
-              {item.image_url ? (
-                <Image
-                  src={item.image_url}
-                  alt={item.client_name}
-                  width={32}
-                  height={32}
-                  unoptimized
-                  className="w-8 h-8 rounded-full object-cover border border-zinc-700 shrink-0"
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700 shrink-0">
-                  <span className="text-xs font-bold text-zinc-400">{item.client_name.charAt(0)}</span>
-                </div>
-              )}
-              <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors truncate">
-                {item.client_name}
-              </h3>
-            </div>
-            {item.company && (
-              <p className="text-sm font-medium text-zinc-400 mt-1 tracking-wide uppercase pl-11 truncate">
-                {item.company}
-              </p>
+            {hasSafeImage ? (
+              <Image
+                src={imageUrl}
+                alt={displayName}
+                width={40}
+                height={40}
+                unoptimized
+                className="w-10 h-10 rounded-full object-cover border border-adm-border shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-adm-accent-soft border border-adm-accent/25 flex items-center justify-center shrink-0">
+                <span className="text-xs font-bold text-adm-accent">
+                  {displayName.charAt(0).toUpperCase()}
+                </span>
+              </div>
             )}
+
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm sm:text-base font-semibold text-adm-text truncate">
+                {displayName}
+              </h3>
+              {item.company && (
+                <p className="text-xs text-adm-muted truncate mt-0.5">{item.company}</p>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-zinc-800/50 pt-4 sm:pt-0 shrink-0">
-          <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md border ${
-            item.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-            item.status === 'draft' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-            'bg-zinc-800 text-zinc-400 border-zinc-700'
-          }`}>
-            {item.status}
-          </span>
+          <div className="flex items-center justify-between sm:justify-end gap-3 border-t sm:border-t-0 border-adm-border pt-3 sm:pt-0 shrink-0">
+            <AdminStatusBadge status={item.status} />
 
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild className="bg-zinc-800 text-zinc-300 hover:text-white hover:bg-blue-600 border border-zinc-700 hover:border-transparent transition-all rounded-lg">
-              <Link href={`/admin/testimonials/${id}`} aria-label={`Edit ${item.client_name}`}>
-                <Edit className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button type="button" variant="ghost" size="icon" aria-label={`Delete ${item.client_name}`} className="bg-zinc-800 text-zinc-300 hover:text-white hover:bg-red-600 border border-zinc-700 hover:border-transparent transition-all rounded-lg" onClick={handleDelete}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <Button variant="outline" size="icon" asChild>
+                <Link href={`/admin/testimonials/${id}`} aria-label={`Edit ${displayName}`}>
+                  <Edit className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label={`Delete ${displayName}`}
+                onClick={() => setConfirmOpen(true)}
+                className="text-adm-danger-text hover:bg-adm-danger-bg hover:border-adm-danger-border"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <AdminConfirmDialog
+        open={confirmOpen}
+        title="Delete testimonial?"
+        description={`This will permanently remove the testimonial from "${displayName}".`}
+        confirmLabel="Delete"
+        loading={isDeleting}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
+    </>
   )
 }

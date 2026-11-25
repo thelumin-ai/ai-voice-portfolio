@@ -12,11 +12,11 @@ export interface Webhook {
   created_at: string
 }
 
-export async function getWebhooks(): Promise<Webhook[]> {
+export async function getAdminWebhooks(): Promise<{ data: Webhook[]; error?: string }> {
   try {
     const auth = await requireAdmin()
     if (auth.error || !auth.supabase) {
-      return []
+      return { data: [], error: 'Unauthorized' }
     }
 
     const { data, error } = await auth.supabase
@@ -27,14 +27,24 @@ export async function getWebhooks(): Promise<Webhook[]> {
 
     if (error) {
       console.error('Error fetching webhooks:', error)
-      return []
+      return { data: [], error: error.message || 'Failed to fetch webhooks' }
     }
 
-    return Array.isArray(data?.setting_value) ? (data.setting_value as Webhook[]) : []
+    return {
+      data: Array.isArray(data?.setting_value) ? (data.setting_value as Webhook[]) : [],
+    }
   } catch (error) {
-    console.error('Error in getWebhooks:', error)
-    return []
+    console.error('Error in getAdminWebhooks:', error)
+    return {
+      data: [],
+      error: error instanceof Error ? error.message : 'Failed to fetch webhooks',
+    }
   }
+}
+
+export async function getWebhooks(): Promise<Webhook[]> {
+  const { data } = await getAdminWebhooks()
+  return data
 }
 
 export async function saveWebhooks(webhooks: Webhook[]) {

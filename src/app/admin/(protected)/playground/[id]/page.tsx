@@ -1,6 +1,9 @@
+import { notFound } from 'next/navigation'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { getPlaygroundApp } from '../actions'
 import { PlaygroundForm } from '../PlaygroundForm'
-import { notFound } from 'next/navigation'
+
+export const dynamic = 'force-dynamic'
 
 export default async function EditPlaygroundPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params
@@ -11,11 +14,14 @@ export default async function EditPlaygroundPage({ params }: { params: Promise<{
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit App</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Update playground app details.</p>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <AdminPageHeader
+        title="Edit Playground App"
+        description={`Updating "${app.title || 'Playground App'}"`}
+        backHref="/admin/playground"
+        backLabel="Back to Playground"
+      />
+
       <PlaygroundForm initialData={app} />
     </div>
   )

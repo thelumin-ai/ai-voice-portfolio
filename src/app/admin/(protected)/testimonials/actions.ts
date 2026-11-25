@@ -3,6 +3,7 @@
 import { createPublicClient } from '@/lib/supabase/public'
 import { testimonialSchema, TestimonialFormValues } from '@/lib/validations/testimonial'
 import { requireAdmin } from '@/lib/auth/admin'
+import { deleteStorageFileByUrl } from '@/lib/storage'
 import { revalidatePath } from 'next/cache'
 
 /**
@@ -46,7 +47,7 @@ export async function getAdminTestimonials() {
 
   if (error) {
     console.error('Error fetching admin testimonials:', error)
-    return { error: 'Failed to fetch testimonials' }
+    return { error: error.message || 'Failed to fetch testimonials' }
   }
 
   return { data }
@@ -66,7 +67,7 @@ export async function getTestimonial(id: string) {
 
   if (error) {
     console.error('Error fetching testimonial:', error)
-    return { error: 'Failed to fetch testimonial' }
+    return { error: error.message || 'Failed to fetch testimonial' }
   }
 
   return { data }
@@ -123,6 +124,12 @@ export async function updateTestimonial(id: string, data: TestimonialFormValues)
 
   const validatedData = parsed.data
 
+  const { data: current } = await auth.supabase
+    .from('testimonials')
+    .select('image_url')
+    .eq('id', id)
+    .maybeSingle()
+
   const { error } = await auth.supabase
     .from('testimonials')
     .update({
@@ -142,6 +149,10 @@ export async function updateTestimonial(id: string, data: TestimonialFormValues)
     return { error: error.message }
   }
 
+  if (current?.image_url && current.image_url !== (validatedData.image_url || '')) {
+    await deleteStorageFileByUrl(auth.supabase, current.image_url)
+  }
+
   revalidatePath('/admin/testimonials')
   revalidatePath('/')
   return { success: true }
@@ -153,6 +164,12 @@ export async function deleteTestimonial(id: string) {
     return { error: 'Unauthorized' }
   }
 
+  const { data: current } = await auth.supabase
+    .from('testimonials')
+    .select('image_url')
+    .eq('id', id)
+    .maybeSingle()
+
   const { error } = await auth.supabase
     .from('testimonials')
     .delete()
@@ -161,6 +178,10 @@ export async function deleteTestimonial(id: string) {
   if (error) {
     console.error('Error deleting testimonial:', error)
     return { error: error.message }
+  }
+
+  if (current?.image_url) {
+    await deleteStorageFileByUrl(auth.supabase, current.image_url)
   }
 
   revalidatePath('/admin/testimonials')
@@ -182,7 +203,7 @@ export async function updateTestimonialOrder(items: { id: string; display_order:
 
     if (error) {
       console.error('Error updating order:', error)
-      return { error: 'Failed to update order' }
+      return { error: error.message || 'Failed to update order' }
     }
   }
 
