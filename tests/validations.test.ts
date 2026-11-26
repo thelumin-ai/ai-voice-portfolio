@@ -6,6 +6,7 @@ import { blogPostSchema } from '../src/lib/validations/blog.ts'
 import { settingsSchema } from '../src/lib/validations/settings.ts'
 import { processStepSchema } from '../src/lib/validations/processStep.ts'
 import { useCaseSchema } from '../src/lib/validations/useCase.ts'
+import { serviceSchema } from '../src/lib/validations/service.ts'
 
 test('portfolioSchema requires cover image and enforces 2,500-character description limit', () => {
   const basePortfolio = {
@@ -159,5 +160,32 @@ test('useCaseSchema validates flow steps and expected results arrays', () => {
       status: 'published',
     }).success,
     true
+  )
+})
+
+test('serviceSchema accepts relative use-case routes and https URLs while blocking unsafe protocols', () => {
+  const baseService = {
+    title: 'Outbound Sales & Lead Gen',
+    description: 'Proactive AI voice agents',
+    icon_name: 'PhoneOutgoing',
+    status: 'published' as const,
+  }
+
+  assert.equal(
+    serviceSchema.safeParse({ ...baseService, link: '/use-cases/sales' }).success,
+    true
+  )
+  assert.equal(
+    serviceSchema.safeParse({ ...baseService, link: 'https://example.com/sales' }).success,
+    true
+  )
+  assert.equal(serviceSchema.safeParse({ ...baseService, link: '' }).success, true)
+  assert.equal(
+    serviceSchema.safeParse({ ...baseService, link: '//evil.example.com' }).success,
+    false
+  )
+  assert.equal(
+    serviceSchema.safeParse({ ...baseService, link: 'javascript:alert(1)' }).success,
+    false
   )
 })

@@ -68,6 +68,7 @@ export interface UseCaseRecord {
   icon_name?: string | null
   status?: string
   display_order?: number
+  created_at?: string
 }
 
 export interface TestimonialRecord {

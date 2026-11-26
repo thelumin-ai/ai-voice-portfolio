@@ -8,6 +8,8 @@ import { ArrowRight, type LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getPublishedUseCases } from "@/app/admin/(protected)/use-cases/actions";
 import type { UseCaseRecord } from "@/lib/types";
+import { RICH_USE_CASES, mergePublishedUseCases } from "@/lib/useCasesData";
+import { isSafeHttpUrl } from "@/lib/url";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import "swiper/css";
@@ -23,48 +25,26 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
     return result;
 }
 
-const defaultUseCases: UseCaseRecord[] = [
-    {
-        name: "Real Estate",
-        icon_name: "Home",
-        industry_slug: "real-estate",
-        cover_image_url: "https://images.unsplash.com/photo-1560184897-ae75f418493e?q=80&w=1000&auto=format&fit=crop",
-        headline: "Speed-to-Lead AI Calling",
-        subhead: "AI voice agents for real estate.",
-        problem: "Leads go cold in minutes. AI agents call instantly, qualify prospects, and book showings on autopilot.",
-        results: [{ stat: "300%", label: "Increase in connect rate" }]
-    },
-    {
-        name: "Solar & Energy",
-        icon_name: "Sun",
-        industry_slug: "solar",
-        cover_image_url: "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?q=80&w=1000&auto=format&fit=crop",
-        headline: "High-Volume Pre-Qualification",
-        subhead: "AI voice agents for solar sales.",
-        problem: "Sales reps waste hours dialing un-qualified homeowners or renters.",
-        results: [{ stat: "12hrs", label: "Saved per rep weekly" }]
-    },
-    {
-        name: "Home Services",
-        icon_name: "Hammer",
-        industry_slug: "home-services",
-        cover_image_url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=1000&auto=format&fit=crop",
-        headline: "24/7 Booking & Dispatch",
-        subhead: "AI voice agents for home services.",
-        problem: "Missed calls mean missed revenue. Customers call competitors when you don't answer.",
-        results: [{ stat: "40%", label: "More bookings captured" }]
+const FALLBACK_COVER =
+    "https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop";
+
+function resolveCoverUrl(url?: string | null): string {
+    if (!url) return FALLBACK_COVER;
+    if (isSafeHttpUrl(url) || (url.startsWith("/") && !url.startsWith("//"))) {
+        return url;
     }
-];
+    return FALLBACK_COVER;
+}
 
 export default function UseCases() {
-    const [useCases, setUseCases] = useState<UseCaseRecord[]>(defaultUseCases);
+    const [useCases, setUseCases] = useState<UseCaseRecord[]>(RICH_USE_CASES);
 
     useEffect(() => {
         const fetchCases = async () => {
             try {
                 const { data } = await getPublishedUseCases();
                 if (data && data.length > 0) {
-                    setUseCases(data as UseCaseRecord[]);
+                    setUseCases(mergePublishedUseCases(data as UseCaseRecord[]));
                 }
             } catch (error) {
                 console.error("Failed to fetch use cases:", error);
@@ -150,7 +130,7 @@ export default function UseCases() {
                                                     <div className="absolute inset-0 z-0">
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent z-10" />
                                                         <Image
-                                                            src={useCase.cover_image_url || 'https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop'}
+                                                            src={resolveCoverUrl(useCase.cover_image_url)}
                                                             alt={useCase.name}
                                                             fill
                                                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

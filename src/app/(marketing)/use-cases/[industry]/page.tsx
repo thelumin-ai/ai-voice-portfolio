@@ -1,407 +1,684 @@
-import { getPublishedUseCaseBySlug } from "@/app/admin/(protected)/use-cases/actions";
-import { getSiteSettings } from "@/app/admin/(protected)/settings/actions";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ChevronRight, CheckCircle2 } from "lucide-react";
-import WebRTCVoiceDemo from "@/components/WebRTCVoiceDemo";
-import { sanitizeHref } from "@/lib/url";
-import { serializeJsonLd } from "@/lib/seo/jsonLd";
-import type { UseCaseFlowStep, UseCaseRecord, UseCaseResultItem } from "@/lib/types";
+import { getPublishedUseCaseBySlug } from '@/app/admin/(protected)/use-cases/actions'
+import { getSiteSettings } from '@/app/admin/(protected)/settings/actions'
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import Image from 'next/image'
+import * as LucideIcons from 'lucide-react'
+import {
+  ArrowRight,
+  CheckCircle2,
+  ChevronRight,
+  Cpu,
+  MessageSquareQuote,
+  PhoneCall,
+  Sparkles,
+  Workflow,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react'
+import WebRTCVoiceDemo from '@/components/WebRTCVoiceDemo'
+import { sanitizeHref, isSafeHttpUrl } from '@/lib/url'
+import { serializeJsonLd } from '@/lib/seo/jsonLd'
+import {
+  RICH_USE_CASES,
+  resolveRichUseCase,
+  type UseCaseAccent,
+} from '@/lib/useCasesData'
 
-interface UseCaseDetail extends Omit<UseCaseRecord, 'problem'> {
-    problem: string;
-    vapiAgentId?: string;
+const iconRegistry = LucideIcons as unknown as Record<string, LucideIcon>
+
+const ACCENT_STYLES: Record<
+  UseCaseAccent,
+  {
+    badge: string
+    glow: string
+    iconBox: string
+    statText: string
+    stepBadge: string
+    borderHover: string
+    ctaBtn: string
+    aiBubble: string
+  }
+> = {
+  blue: {
+    badge:
+      'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25',
+    glow: 'bg-blue-600/20',
+    iconBox: 'bg-blue-600 text-white shadow-blue-600/25',
+    statText: 'from-blue-600 to-indigo-500 dark:from-white dark:to-blue-400',
+    stepBadge:
+      'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30',
+    borderHover: 'hover:border-blue-500/40',
+    ctaBtn: 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/20',
+    aiBubble:
+      'bg-blue-600/10 border-blue-500/25 text-gray-900 dark:text-zinc-100',
+  },
+  amber: {
+    badge:
+      'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/25',
+    glow: 'bg-amber-500/20',
+    iconBox: 'bg-amber-500 text-zinc-950 shadow-amber-500/25',
+    statText: 'from-amber-600 to-orange-500 dark:from-white dark:to-amber-400',
+    stepBadge:
+      'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30',
+    borderHover: 'hover:border-amber-500/40',
+    ctaBtn: 'bg-amber-500 hover:bg-amber-400 text-zinc-950 shadow-amber-500/20',
+    aiBubble:
+      'bg-amber-500/10 border-amber-500/25 text-gray-900 dark:text-zinc-100',
+  },
+  emerald: {
+    badge:
+      'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25',
+    glow: 'bg-emerald-500/20',
+    iconBox: 'bg-emerald-600 text-white shadow-emerald-600/25',
+    statText:
+      'from-emerald-600 to-teal-500 dark:from-white dark:to-emerald-400',
+    stepBadge:
+      'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30',
+    borderHover: 'hover:border-emerald-500/40',
+    ctaBtn:
+      'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20',
+    aiBubble:
+      'bg-emerald-500/10 border-emerald-500/25 text-gray-900 dark:text-zinc-100',
+  },
+  violet: {
+    badge:
+      'bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-500/25',
+    glow: 'bg-violet-600/20',
+    iconBox: 'bg-violet-600 text-white shadow-violet-600/25',
+    statText:
+      'from-violet-600 to-purple-500 dark:from-white dark:to-violet-400',
+    stepBadge:
+      'bg-violet-500/15 text-violet-700 dark:text-violet-400 border-violet-500/30',
+    borderHover: 'hover:border-violet-500/40',
+    ctaBtn:
+      'bg-violet-600 hover:bg-violet-500 text-white shadow-violet-600/20',
+    aiBubble:
+      'bg-violet-500/10 border-violet-500/25 text-gray-900 dark:text-zinc-100',
+  },
+  cyan: {
+    badge:
+      'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/25',
+    glow: 'bg-cyan-500/20',
+    iconBox: 'bg-cyan-600 text-white shadow-cyan-600/25',
+    statText: 'from-cyan-600 to-blue-500 dark:from-white dark:to-cyan-400',
+    stepBadge:
+      'bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border-cyan-500/30',
+    borderHover: 'hover:border-cyan-500/40',
+    ctaBtn: 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-600/20',
+    aiBubble:
+      'bg-cyan-500/10 border-cyan-500/25 text-gray-900 dark:text-zinc-100',
+  },
+  rose: {
+    badge:
+      'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25',
+    glow: 'bg-rose-500/20',
+    iconBox: 'bg-rose-600 text-white shadow-rose-600/25',
+    statText: 'from-rose-600 to-pink-500 dark:from-white dark:to-rose-400',
+    stepBadge:
+      'bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30',
+    borderHover: 'hover:border-rose-500/40',
+    ctaBtn: 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/20',
+    aiBubble:
+      'bg-rose-500/10 border-rose-500/25 text-gray-900 dark:text-zinc-100',
+  },
 }
 
-const fallbackUseCases: Record<string, UseCaseDetail> = {
-    "real-estate": {
-        name: "Real Estate",
-        industry_slug: "real-estate",
-        headline: "Speed-to-Lead AI Calling",
-        subhead: "AI voice agents that call new leads within seconds, qualify buyers and sellers, and book showings — all on autopilot, 24/7.",
-        problem: "In real estate, the first agent to call wins the deal. Studies show leads contacted within 5 minutes are 21x more likely to convert — yet the average agent response time is over 2 hours. By then, the lead has already spoken to your competitor.",
-        features: ["Instant callback in under 5 seconds", "Intelligent buyer/seller qualification", "Automated showing & open house scheduling", "Live hot-transfer to your top agents", "CRM auto-sync with lead scoring", "Multi-language support for diverse markets"],
-        flow: [
-            { step: "Lead Captured", desc: "A new buyer or seller submits a form on Zillow, Realtor.com, or your website." },
-            { step: "AI Calls in Seconds", desc: "The AI agent calls the lead within 5 seconds, introduces itself, and begins qualifying." },
-            { step: "Smart Qualification", desc: "The agent asks about budget, timeline, preferred neighborhoods, and financing status." },
-            { step: "Hot Transfer or Booking", desc: "Qualified leads are instantly transferred to your best agent, or a showing is booked directly on your calendar." },
-        ],
-        results: [{ stat: "300%", label: "Increase in connect rate" }, { stat: "<5s", label: "Speed to lead" }, { stat: "21x", label: "Higher conversion odds" }],
-        vapiAgentId: "087efbdc-3fcf-4329-a12e-819eb64d3882",
-    },
-    "solar": {
-        name: "Solar & Energy",
-        industry_slug: "solar",
-        headline: "High-Volume Pre-Qualification",
-        subhead: "AI agents that pre-qualify solar leads at scale, filtering by homeownership, utility costs, and roof eligibility.",
-        problem: "Sales reps waste hours dialing un-qualified homeowners or renters. Manual dialing can't keep up with lead volume.",
-        features: ["Utility bill size filtering", "Homeowner verification", "Virtual consultation booking", "Roof eligibility screening", "Automated follow-ups"],
-        flow: [
-            { step: "Lead Ingested", desc: "Leads arrive from Facebook ads, Google, or purchased lists." },
-            { step: "AI Pre-Screen", desc: "The agent verifies homeownership and asks about utility costs." },
-            { step: "Qualification", desc: "Eligible leads are scored and prioritized." },
-            { step: "Consultation Booked", desc: "Qualified homeowners are booked for a virtual or in-person consultation." },
-        ],
-        results: [{ stat: "12hrs", label: "Saved per rep weekly" }, { stat: "4x", label: "Lead throughput" }],
-    },
-    "home-services": {
-        name: "Home Services",
-        industry_slug: "home-services",
-        headline: "24/7 Booking & Dispatch",
-        subhead: "Never miss a service call again. AI agents answer, book, and dispatch — even after hours.",
-        problem: "Missed calls mean missed revenue. Customers call competitors when you don't answer the phone.",
-        features: ["After-hours answering", "Appointment booking", "Emergency dispatch routing", "Service type classification", "Customer callback scheduling"],
-        flow: [
-            { step: "Customer Calls", desc: "A homeowner calls your business line for plumbing, HVAC, or electrical work." },
-            { step: "AI Answers", desc: "The voice agent picks up 24/7, identifies the service needed." },
-            { step: "Booking", desc: "The agent books the appointment based on crew availability." },
-            { step: "Dispatch", desc: "Emergency calls are flagged and dispatched immediately." },
-        ],
-        results: [{ stat: "40%", label: "More bookings captured" }, { stat: "24/7", label: "Availability" }],
-    },
-    "consulting": {
-        name: "Consulting & Agencies",
-        industry_slug: "consulting",
-        headline: "Client Intake Automation",
-        subhead: "Streamline your client onboarding with AI-powered discovery calls and intake automation.",
-        problem: "Manual intake processes slow down onboarding and frustrate potential clients who want to get started quickly.",
-        features: ["Automated discovery calls", "Smart intake forms via voice", "CRM auto-sync", "Project scope estimation", "Meeting scheduling"],
-        flow: [
-            { step: "Lead Inquires", desc: "A potential client reaches out via your website or referral." },
-            { step: "AI Discovery Call", desc: "The AI agent conducts a structured discovery conversation." },
-            { step: "Intake Captured", desc: "All requirements, budget, and timeline data are captured automatically." },
-            { step: "Handoff to Team", desc: "A fully briefed summary is delivered to your consulting team." },
-        ],
-        results: [{ stat: "60%", label: "Faster client onboarding" }, { stat: "3x", label: "More discovery calls" }],
-    },
-    "finance": {
-        name: "Finance & Insurance",
-        industry_slug: "finance",
-        headline: "Compliance-Ready Outreach",
-        subhead: "AI agents that handle regulated outreach with built-in compliance guardrails and audit trails.",
-        problem: "Regulatory requirements make manual outreach slow and risky. One wrong word can mean costly fines.",
-        features: ["Scripted compliance calls", "Consent management", "Audit trail recording", "Do-not-call list integration", "Regulatory script adherence"],
-        flow: [
-            { step: "Campaign Setup", desc: "Configure compliant scripts and targeting parameters." },
-            { step: "AI Outreach", desc: "The agent makes calls following strict regulatory guidelines." },
-            { step: "Consent Captured", desc: "All consent and opt-in/opt-out decisions are recorded." },
-            { step: "Audit Ready", desc: "Complete call recordings and transcripts are stored for audit." },
-        ],
-        results: [{ stat: "99%", label: "Compliance adherence" }, { stat: "50%", label: "Cost reduction" }],
-    },
-    "customer-support": {
-        name: "Customer Support",
-        industry_slug: "customer-support",
-        headline: "Tier-1 Support Automation",
-        subhead: "Resolve common support tickets instantly with AI voice agents, and seamlessly hand off complex issues to humans.",
-        problem: "Support teams are overwhelmed with repetitive tickets that don't need human agents, causing long wait times for everyone.",
-        features: ["FAQ resolution via voice", "Smart ticket creation", "Seamless human handoff", "Sentiment analysis", "Multi-language support"],
-        flow: [
-            { step: "Customer Calls", desc: "A customer calls your support line with an issue." },
-            { step: "AI Triages", desc: "The agent identifies the issue type and attempts resolution." },
-            { step: "Auto-Resolve", desc: "Common issues like password resets or billing questions are handled instantly." },
-            { step: "Human Handoff", desc: "Complex issues are seamlessly transferred to a live agent with full context." },
-        ],
-        results: [{ stat: "70%", label: "Tickets auto-resolved" }, { stat: "< 30s", label: "Average resolution time" }],
-    },
-    "sales": {
-        name: "Sales Automation",
-        industry_slug: "sales",
-        headline: "AI-Powered Sales Outreach",
-        subhead: "High-volume AI dialers that call leads within seconds of form submission, qualify them against your criteria, and book appointments — turning cold lists into warm pipelines.",
-        problem: "Sales teams burn hours manually dialing cold leads, leaving hot prospects waiting. By the time a rep gets to a new lead, competitors have already made contact. Manual outreach simply can't scale.",
-        features: ["Instant lead callback in under 5 seconds", "Intelligent objection handling", "Real-time CRM deal stage updates", "Automated follow-up sequences", "Live hot-transfer to closers", "Custom qualification scripts"],
-        flow: [
-            { step: "Lead Captured", desc: "A prospect fills out a form, clicks an ad, or enters your funnel from any source." },
-            { step: "AI Calls Instantly", desc: "The AI sales agent calls within 5 seconds, introduces itself, and begins the pitch." },
-            { step: "Smart Qualification", desc: "The agent qualifies the lead based on budget, authority, need, and timeline (BANT)." },
-            { step: "Book or Transfer", desc: "Qualified leads are booked for a demo or hot-transferred to your best closer." },
-        ],
-        results: [{ stat: "5x", label: "More leads contacted" }, { stat: "<5s", label: "Speed to lead" }, { stat: "32%", label: "Meeting set rate" }],
-    },
-    "ivr": {
-        name: "Interactive Voice Response",
-        industry_slug: "ivr",
-        headline: "Conversational IVR 2.0",
-        subhead: "Replace frustrating phone menus with conversational AI that understands natural language and solves problems instantly — no more 'Press 1 for Sales'.",
-        problem: "Traditional IVR systems frustrate callers with rigid menus and long hold times. Customers abandon calls, satisfaction scores drop, and your team wastes resources handling misdirected calls.",
-        features: ["Natural language understanding", "Intent-based routing", "Self-service resolution for common queries", "Seamless handoff to live agents with context", "Multi-language voice recognition", "Real-time analytics dashboard"],
-        flow: [
-            { step: "Caller Dials In", desc: "A customer calls your business line and is greeted by a conversational AI agent." },
-            { step: "Natural Conversation", desc: "Instead of pressing buttons, the caller simply states their need in plain language." },
-            { step: "Instant Resolution", desc: "The AI resolves the issue directly — checking order status, resetting passwords, or answering FAQs." },
-            { step: "Smart Routing", desc: "Complex issues are routed to the right department with full conversation context attached." },
-        ],
-        results: [{ stat: "80%", label: "Self-service rate" }, { stat: "60%", label: "Reduced call transfers" }, { stat: "4.8★", label: "Caller satisfaction" }],
-    },
-    "scheduling": {
-        name: "Appointment Scheduling",
-        industry_slug: "scheduling",
-        headline: "AI-Driven Appointment Setting",
-        subhead: "AI agents that call prospects, find a time that works for everyone, and book directly into your calendar system — eliminating scheduling friction entirely.",
-        problem: "Scheduling appointments manually wastes hours of back-and-forth. No-shows cost revenue, double-bookings create chaos, and after-hours inquiries go unanswered until the next business day.",
-        features: ["Direct Google Calendar & Calendly integration", "Automated reminder calls & SMS", "No-show follow-up sequences", "Multi-timezone support", "Rescheduling & cancellation handling", "Waitlist management"],
-        flow: [
-            { step: "Lead Engaged", desc: "A prospect expresses interest via your website, ad, or existing customer list." },
-            { step: "AI Calls to Book", desc: "The AI agent calls the prospect and proposes available time slots from your calendar." },
-            { step: "Appointment Confirmed", desc: "The booking is confirmed and synced to your calendar with all lead details attached." },
-            { step: "Reminders Sent", desc: "Automated reminder calls and texts are sent 24 hours and 1 hour before the appointment." },
-        ],
-        results: [{ stat: "45%", label: "More appointments booked" }, { stat: "70%", label: "No-show reduction" }, { stat: "24/7", label: "Booking availability" }],
-    },
-    "crm-integration": {
-        name: "CRM & ERP Integration",
-        industry_slug: "crm-integration",
-        headline: "Seamless CRM & ERP Connectivity",
-        subhead: "Connect AI voice agents to your existing CRM, ERP, or helpdesk systems for real-time data synchronization, automated workflows, and zero manual data entry.",
-        problem: "Disconnected systems create data silos. Sales reps spend 30% of their time on manual data entry instead of selling. Leads fall through the cracks when information doesn't flow between platforms.",
-        features: ["Native HubSpot & Salesforce integration", "GoHighLevel two-way sync", "Real-time deal stage updates", "Automated contact creation & enrichment", "Custom webhook pipelines", "ERP data push (SAP, Oracle, NetSuite)"],
-        flow: [
-            { step: "Call Completed", desc: "An AI voice agent finishes a call with a prospect or customer." },
-            { step: "Data Extracted", desc: "Key information (name, email, intent, qualification status) is automatically parsed from the transcript." },
-            { step: "CRM Updated", desc: "Contact records, deal stages, and notes are created or updated in your CRM in real-time." },
-            { step: "Workflows Triggered", desc: "Downstream automations fire — email sequences, Slack alerts, task assignments — all automatically." },
-        ],
-        results: [{ stat: "100%", label: "Data logged automatically" }, { stat: "95%", label: "Data accuracy" }, { stat: "10hrs", label: "Saved per rep weekly" }],
-    },
-    "multi-language": {
-        name: "Multi-Language Support",
-        industry_slug: "multi-language",
-        headline: "Global AI Voice Agents",
-        subhead: "Communicate with your global audience effortlessly. Our AI agents fluidly switch between 30+ languages in real-time, breaking down language barriers at scale.",
-        problem: "Hiring multilingual support staff is expensive and hard to scale. International customers get frustrated when they can't communicate in their preferred language, leading to lost deals and poor satisfaction scores.",
-        features: ["Real-time language detection", "30+ language support", "Accent-aware speech recognition", "Cultural context adaptation", "Seamless mid-call language switching", "Localized response generation"],
-        flow: [
-            { step: "Caller Connects", desc: "An international customer calls your business line from anywhere in the world." },
-            { step: "Language Detected", desc: "The AI instantly detects the caller's language and switches to match within the first sentence." },
-            { step: "Native Conversation", desc: "The full conversation happens in the caller's preferred language with natural fluency." },
-            { step: "Data Synced", desc: "Call notes and CRM data are captured in both the original language and English translation." },
-        ],
-        results: [{ stat: "30+", label: "Languages supported" }, { stat: "98%", label: "Detection accuracy" }, { stat: "3x", label: "International lead capture" }],
-    },
-    "custom-dashboards": {
-        name: "Custom AI Dashboards",
-        industry_slug: "custom-dashboards",
-        headline: "Real-Time AI Analytics",
-        subhead: "Get complete visibility into your AI agent performance with custom dashboards showing call transcripts, sentiment analysis, conversion metrics, and actionable insights.",
-        problem: "Without proper analytics, you're flying blind. You can't optimize what you can't measure. Generic reporting tools don't capture the nuances of AI voice agent performance.",
-        features: ["Real-time call monitoring", "Sentiment analysis heatmaps", "Conversion funnel tracking", "Agent performance scoring", "Custom KPI dashboards", "Automated weekly reports"],
-        flow: [
-            { step: "Calls Processed", desc: "Every AI voice agent call is automatically transcribed, analyzed, and scored." },
-            { step: "Metrics Computed", desc: "Key metrics — conversion rate, sentiment score, call duration, objection frequency — are calculated in real-time." },
-            { step: "Dashboard Updated", desc: "Your custom dashboard refreshes with live data, charts, and trend analysis." },
-            { step: "Insights Delivered", desc: "Automated alerts and weekly digest reports highlight opportunities for optimization." },
-        ],
-        results: [{ stat: "360°", label: "Performance visibility" }, { stat: "15%", label: "Conversion improvement" }, { stat: "Real-time", label: "Data refresh" }],
-    },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ industry: string }>
+}) {
+  const { industry } = await params
+  const { data: dbUseCase } = await getPublishedUseCaseBySlug(industry)
+  const data = resolveRichUseCase(industry, dbUseCase)
 
-export async function generateMetadata({ params }: { params: Promise<{ industry: string }> }) {
-    const { industry } = await params;
-    const { data: useCase } = await getPublishedUseCaseBySlug(industry);
-    const data = useCase || fallbackUseCases[industry];
+  if (!data) {
+    return { title: 'Use Case Not Found' }
+  }
 
-    if (!data) {
-        return { title: 'Use Case Not Found' };
-    }
+  return {
+    title: `${data.name} AI Voice Agents — ${data.headline} | Abimbola.AI`,
+    description: data.subhead,
+    alternates: { canonical: `/use-cases/${industry}` },
+    ...(data.cover_image_url
+      ? {
+          openGraph: {
+            title: `${data.name} — ${data.headline}`,
+            description: data.subhead,
+            images: [data.cover_image_url],
+          },
+        }
+      : {}),
+  }
+}
 
-    return {
-        title: `${data.name} — ${data.headline} | Abimbola.AI`,
+export default async function IndustryPage({
+  params,
+}: {
+  params: Promise<{ industry: string }>
+}) {
+  const { industry } = await params
+
+  const { data: dbUseCase } = await getPublishedUseCaseBySlug(industry)
+  const data = resolveRichUseCase(industry, dbUseCase)
+
+  if (!data) {
+    notFound()
+  }
+
+  const palette = ACCENT_STYLES[data.accent] || ACCENT_STYLES.blue
+  const HeroIcon = (data.icon_name && iconRegistry[data.icon_name]) || Cpu
+
+  const { data: settings } = await getSiteSettings()
+  let rawConsult =
+    'https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021'
+  if (settings?.consultation_provider === 'fiverr' && settings?.consultation_link_fiverr) {
+    rawConsult = settings.consultation_link_fiverr
+  } else if (
+    settings?.consultation_provider === 'calendly' &&
+    settings?.consultation_link_calendly
+  ) {
+    rawConsult = settings.consultation_link_calendly
+  } else if (settings?.consultation_link_upwork) {
+    rawConsult = settings.consultation_link_upwork
+  }
+  const consultationLink = sanitizeHref(rawConsult, '/#consultation')
+
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL || 'https://abimbola-ai-portfolio.vercel.app'
+  ).replace(/\/+$/, '')
+  const pageUrl = `${siteUrl}/use-cases/${industry}`
+
+  const useCaseStructuredData = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Service',
+        name: `${data.name} — ${data.headline}`,
         description: data.subhead,
-        alternates: { canonical: `/use-cases/${industry}` },
-        ...(data.cover_image_url
-            ? {
-                  openGraph: {
-                      title: `${data.name} — ${data.headline}`,
-                      description: data.subhead,
-                      images: [data.cover_image_url],
-                  },
-              }
-            : {}),
-    };
-}
-
-export default async function IndustryPage({ params }: { params: Promise<{ industry: string }> }) {
-    const { industry } = await params;
-
-    const { data: useCase, error } = await getPublishedUseCaseBySlug(industry);
-    const fallback = fallbackUseCases[industry];
-
-    if ((error || !useCase) && !fallback) {
-        notFound();
-    }
-
-    const data = useCase || fallback;
-
-    const { data: settings } = await getSiteSettings();
-    let rawConsult = "https://www.upwork.com/services/product/development-it-abimbola-1889268991195383021";
-    if (settings?.consultation_provider === 'fiverr' && settings?.consultation_link_fiverr) {
-        rawConsult = settings.consultation_link_fiverr;
-    } else if (settings?.consultation_provider === 'calendly' && settings?.consultation_link_calendly) {
-        rawConsult = settings.consultation_link_calendly;
-    } else if (settings?.consultation_link_upwork) {
-        rawConsult = settings.consultation_link_upwork;
-    }
-    const consultationLink = sanitizeHref(rawConsult, "/#consultation");
-    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://abimbola-ai-portfolio.vercel.app').replace(/\/+$/, '');
-    const pageUrl = `${siteUrl}/use-cases/${industry}`;
-    const useCaseStructuredData = {
-        '@context': 'https://schema.org',
-        '@graph': [
-            {
-                '@type': 'Service',
-                name: `${data.name} — ${data.headline}`,
-                description: data.subhead,
-                serviceType: data.name,
-                url: pageUrl,
-                provider: {
-                    '@type': 'Person',
-                    name: 'Abimbola Akinsanmi',
-                },
-            },
-            {
-                '@type': 'BreadcrumbList',
-                itemListElement: [
-                    { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
-                    { '@type': 'ListItem', position: 2, name: 'Use Cases', item: `${siteUrl}/use-cases` },
-                    { '@type': 'ListItem', position: 3, name: data.name, item: pageUrl },
-                ],
-            },
+        serviceType: `${data.name} AI Voice Automation`,
+        url: pageUrl,
+        provider: {
+          '@type': 'Person',
+          name: 'Abimbola Akinsanmi',
+        },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'Use Cases',
+            item: `${siteUrl}/use-cases`,
+          },
+          { '@type': 'ListItem', position: 3, name: data.name, item: pageUrl },
         ],
-    };
+      },
+    ],
+  }
 
-    return (
-        <div className="bg-black text-white min-h-screen pt-16 pb-16 overflow-x-clip">
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: serializeJsonLd(useCaseStructuredData) }}
-            />
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Breadcrumbs */}
-                <div className="flex flex-wrap items-center text-sm text-gray-400 mb-8 gap-1">
-                    <Link href="/" className="hover:text-white transition-colors">Home</Link>
-                    <ChevronRight className="h-4 w-4 mx-1" />
-                    <Link href="/use-cases" className="hover:text-white transition-colors">Use Cases</Link>
-                    <ChevronRight className="h-4 w-4 mx-1" />
-                    <span className="text-white bg-white/10 px-2 py-1 rounded">{data.name}</span>
-                </div>
+  const hasSafeCover =
+    Boolean(data.cover_image_url) &&
+    (isSafeHttpUrl(data.cover_image_url) ||
+      (data.cover_image_url.startsWith('/') && !data.cover_image_url.startsWith('//')))
 
-                <div className="max-w-4xl mb-20 relative">
-                    <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-600/20 blur-[50px] rounded-full pointer-events-none" />
-                    <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight relative z-10">
-                        {data.headline}
-                    </h1>
-                    <p className="text-xl text-gray-400 leading-relaxed">
-                        {data.subhead}
-                    </p>
-                </div>
+  // Pick 3 related use cases for cross-discovery at the bottom
+  const currentIdx = RICH_USE_CASES.findIndex((u) => u.industry_slug === data.industry_slug)
+  const relatedUseCases = RICH_USE_CASES.filter(
+    (u) => u.industry_slug !== data.industry_slug
+  ).slice(currentIdx >= 0 ? currentIdx % Math.max(1, RICH_USE_CASES.length - 4) : 0, (currentIdx >= 0 ? currentIdx % Math.max(1, RICH_USE_CASES.length - 4) : 0) + 3)
 
-                {/* Content grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
-                    {/* Left Column (Info) */}
-                    <div className="lg:col-span-7 space-y-16">
-                        <section>
-                            <h2 className="text-2xl font-bold text-white mb-4 border-b border-white/10 pb-2">The Challenge</h2>
-                            <p className="text-gray-300 text-lg leading-relaxed">{data.problem}</p>
-                        </section>
+  return (
+    <div className="bg-white dark:bg-black text-gray-900 dark:text-white min-h-screen pt-14 pb-24 transition-colors duration-300 overflow-x-clip">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(useCaseStructuredData) }}
+      />
 
-                        <section>
-                            <h2 className="text-2xl font-bold text-white mb-6 border-b border-white/10 pb-2">What The AI Does</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {data.features?.map((feature: string, i: number) => (
-                                    <div key={i} className="flex items-start">
-                                        <CheckCircle2 className="h-5 w-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" />
-                                        <span className="text-gray-300">{feature}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1320px]">
+        {/* Breadcrumbs */}
+        <nav
+          aria-label="Breadcrumb"
+          className="flex flex-wrap items-center text-sm text-gray-500 dark:text-zinc-400 mb-8 gap-1"
+        >
+          <Link href="/" className="hover:text-black dark:hover:text-white transition-colors">
+            Home
+          </Link>
+          <ChevronRight className="h-4 w-4 mx-1 opacity-60" />
+          <Link
+            href="/use-cases"
+            className="hover:text-black dark:hover:text-white transition-colors"
+          >
+            Use Cases
+          </Link>
+          <ChevronRight className="h-4 w-4 mx-1 opacity-60" />
+          <span className="font-medium text-gray-900 dark:text-white bg-black/5 dark:bg-white/10 px-2.5 py-0.5 rounded-md">
+            {data.name}
+          </span>
+        </nav>
 
-                        <section>
-                            <h2 className="text-2xl font-bold text-white mb-6 border-b border-white/10 pb-2">Conversation Flow Logic</h2>
-                            <div className="space-y-4">
-                                {data.flow?.map((step: UseCaseFlowStep, i: number) => (
-                                    <div key={i} className="bg-zinc-900/80 border border-white/10 rounded-2xl p-6 flex gap-4 items-start">
-                                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold border border-blue-500/30">
-                                            {i + 1}
-                                        </div>
-                                        <div>
-                                            <h3 className="text-white font-semibold mb-1">{step.step}</h3>
-                                            <p className="text-gray-400 text-sm">{step.desc}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    </div>
+        {/* Tailored Industry Hero */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center mb-20 relative">
+          <div
+            className={`absolute -top-16 -left-16 w-72 h-72 ${palette.glow} blur-[90px] rounded-full pointer-events-none`}
+          />
 
-                    {/* Right Column (Demo & Results) */}
-                    <div className="lg:col-span-5 space-y-8">
-                        <div className="bg-zinc-900/80 backdrop-blur-lg border border-blue-500/30 rounded-2xl p-6 xl:sticky xl:top-20">
-                            <h2 className="text-xl font-bold text-white mb-2">Talk to the Agent</h2>
-                            <p className="text-gray-400 text-sm mb-6">Test the live AI configuration for the {data.name} industry.</p>
-
-                            {data.vapiAgentId ? (
-                                <div className="mb-6">
-                                    <WebRTCVoiceDemo
-                                        agentRole={data.name}
-                                        vapiAgentId={(() => {
-                                            const urlOrId = data.vapiAgentId;
-                                            if (urlOrId.includes('vapi.ai')) {
-                                                try {
-                                                    const urlObj = new URL(urlOrId);
-                                                    const assistantId = urlObj.searchParams.get('assistantId') || urlObj.searchParams.get('id');
-                                                    if (assistantId) return assistantId;
-                                                } catch {}
-                                            }
-                                            return urlOrId;
-                                        })()}
-                                    />
-                                </div>
-                            ) : (
-                                <div className="bg-black rounded-lg border border-white/10 p-4 mb-6 text-center">
-                                    <div className="w-16 h-16 bg-blue-500/10 rounded-full mx-auto flex items-center justify-center mb-3">
-                                        <div className="w-8 h-8 bg-blue-500 rounded-full animate-pulse" />
-                                    </div>
-                                    <p className="text-sm text-gray-500 italic">No agent configured for this use case.</p>
-                                </div>
-                            )}
-
-                            <Link
-                                href="/playground"
-                                className="block w-full text-center py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors"
-                            >
-                                Test in Playground
-                            </Link>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4">
-                            <h2 className="text-lg font-semibold text-white mb-2">Expected Results</h2>
-                            {data.results?.map((result: UseCaseResultItem, i: number) => (
-                                <div key={i} className="bg-zinc-900 border border-white/10 rounded-xl p-4 flex flex-col items-center text-center">
-                                    <span className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-400 mb-1">{result.stat}</span>
-                                    <span className="text-xs text-gray-400 uppercase tracking-wider">{result.label}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Final CTA */}
-                <div className="mt-24 text-center bg-zinc-900/80 backdrop-blur-lg rounded-2xl p-8 md:p-12 border border-blue-500/20">
-                    <h2 className="text-3xl font-bold text-white mb-4">Ready to automate your {data.name} operations?</h2>
-                    <p className="text-gray-400 mb-8 max-w-2xl mx-auto">Stop leaving money on the table. Let&apos;s build a custom voice AI system designed perfectly for your specific business logic.</p>
-                    <Link
-                        href={consultationLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center rounded-lg bg-white px-8 py-4 text-sm font-bold text-black shadow-sm hover:bg-gray-200 transition-all"
-                    >
-                        Book Strategy Session
-                    </Link>
-                </div>
+          <div className="lg:col-span-7 relative z-10 space-y-6">
+            <div
+              className={`inline-flex items-center gap-2.5 rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider backdrop-blur-sm ${palette.badge}`}
+            >
+              <span
+                className={`inline-flex h-6 w-6 items-center justify-center rounded-full shadow-sm ${palette.iconBox}`}
+              >
+                <HeroIcon className="h-3.5 w-3.5" />
+              </span>
+              <span className="text-gray-800 dark:text-zinc-200">{data.categoryTag}</span>
             </div>
+
+            <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-extrabold tracking-tight text-gray-950 dark:text-white leading-[1.1]">
+              {data.headline}
+            </h1>
+
+            <p className="text-lg sm:text-xl text-gray-600 dark:text-zinc-300 leading-relaxed max-w-2xl">
+              {data.subhead}
+            </p>
+
+            {/* Hero Actions */}
+            <div className="flex flex-wrap items-center gap-4 pt-2">
+              <Link
+                href={consultationLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold shadow-lg transition-all ${palette.ctaBtn}`}
+              >
+                <PhoneCall className="h-4 w-4" />
+                <span>Build My {data.name} Agent</span>
+              </Link>
+              <Link
+                href="/playground"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-black/15 dark:border-white/15 bg-black/[0.03] dark:bg-white/[0.04] px-6 py-3.5 text-sm font-semibold text-gray-900 dark:text-white hover:bg-black/[0.07] dark:hover:bg-white/10 transition-colors"
+              >
+                <span>Try Live Voice Demos</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* Key Outcome Strip */}
+            {data.results && data.results.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4">
+                {data.results.map((result, i) => (
+                  <div
+                    key={i}
+                    className="rounded-2xl border border-black/10 dark:border-white/10 bg-gray-50/90 dark:bg-zinc-900/70 p-4"
+                  >
+                    <div
+                      className={`text-2xl sm:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r ${palette.statText}`}
+                    >
+                      {result.stat}
+                    </div>
+                    <div className="text-xs font-medium text-gray-600 dark:text-zinc-400 uppercase tracking-wider mt-1">
+                      {result.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Hero Visual Card */}
+          <div className="lg:col-span-5 relative z-10">
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl border border-black/10 dark:border-white/15 shadow-2xl bg-zinc-900">
+              {hasSafeCover && (
+                <Image
+                  src={data.cover_image_url}
+                  alt={`${data.name} AI Voice Agent Deployment`}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 45vw"
+                  className="object-cover"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+              <div className="absolute bottom-0 inset-x-0 p-6 text-white">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/80 mb-1.5">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>{data.name} Deployment Blueprint</span>
+                </div>
+                <p className="text-sm text-zinc-200 leading-snug">
+                  Custom-trained on {data.name.toLowerCase()} terminology, objection handling, and real-time calendar/CRM APIs.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-    );
+
+        {/* Main Two-Column Deep Dive */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+          {/* Left 7 Columns: Specific Industry Narrative, Scenarios, Pipeline & Capabilities */}
+          <div className="lg:col-span-7 space-y-16">
+            {/* 1. The Industry Bottleneck */}
+            <section className="rounded-3xl border border-black/10 dark:border-white/10 bg-gray-50/80 dark:bg-zinc-950 p-6 sm:p-8 space-y-4">
+              <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
+                <Zap className="h-4 w-4" />
+                <span>Why {data.name} Teams Lose Calls &amp; Revenue</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-950 dark:text-white">
+                The {data.name} Bottleneck
+              </h2>
+              <p className="text-gray-700 dark:text-zinc-300 text-base sm:text-lg leading-relaxed">
+                {data.problem}
+              </p>
+            </section>
+
+            {/* 2. Deep-Dive Architecture Narrative */}
+            <section className="space-y-4">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-950 dark:text-white">
+                {data.deepDive.title}
+              </h2>
+              <div className="space-y-4 text-gray-600 dark:text-zinc-300 text-base sm:text-lg leading-relaxed">
+                {data.deepDive.paragraphs.map((paragraph, idx) => (
+                  <p key={idx}>{paragraph}</p>
+                ))}
+              </div>
+            </section>
+
+            {/* 3. High-Impact Industry Scenarios */}
+            <section className="space-y-6">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-950 dark:text-white">
+                  High-Impact {data.name} Workflows
+                </h2>
+                <p className="text-sm sm:text-base text-gray-600 dark:text-zinc-400 mt-1">
+                  Specific inbound and outbound call types automated for {data.name.toLowerCase()} operations.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {data.scenarios.map((scenario, idx) => (
+                  <div
+                    key={idx}
+                    className={`rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-900/70 p-6 transition-colors ${palette.borderHover}`}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <span
+                        className={`inline-flex h-7 w-7 items-center justify-center rounded-lg border text-xs font-bold ${palette.stepBadge}`}
+                      >
+                        0{idx + 1}
+                      </span>
+                      <h3 className="text-lg font-bold text-gray-950 dark:text-white">
+                        {scenario.title}
+                      </h3>
+                    </div>
+
+                    <div className="grid gap-2.5 text-sm">
+                      <p className="text-gray-600 dark:text-zinc-400">
+                        <strong className="text-gray-900 dark:text-zinc-200">Trigger: </strong>
+                        {scenario.trigger}
+                      </p>
+                      <p className="text-gray-600 dark:text-zinc-400">
+                        <strong className="text-gray-900 dark:text-zinc-200">AI Action: </strong>
+                        {scenario.action}
+                      </p>
+                      <p className="text-gray-800 dark:text-zinc-200 font-medium pt-1">
+                        <strong className="text-emerald-600 dark:text-emerald-400">Outcome: </strong>
+                        {scenario.outcome}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* 4. End-to-End Call Architecture */}
+            <section className="space-y-6">
+              <div className="flex items-center gap-2.5">
+                <Workflow className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-950 dark:text-white">
+                  End-to-End Call Execution Flow
+                </h2>
+              </div>
+
+              <div className="space-y-4">
+                {data.flow.map((step, i) => (
+                  <div
+                    key={i}
+                    className="rounded-2xl border border-black/10 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-900/60 p-5 sm:p-6 flex gap-4 items-start"
+                  >
+                    <div
+                      className={`flex-shrink-0 w-9 h-9 rounded-full border flex items-center justify-center font-bold text-sm ${palette.stepBadge}`}
+                    >
+                      {i + 1}
+                    </div>
+                    <div>
+                      <h3 className="text-gray-950 dark:text-white font-bold text-base sm:text-lg mb-1">
+                        {step.step}
+                      </h3>
+                      <p className="text-gray-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
+                        {step.desc}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* 5. Capabilities & Integrations */}
+            <section className="space-y-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-950 dark:text-white">
+                Built-In {data.name} Capabilities
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {data.features.map((feature, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-3 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-900/50 p-4"
+                  >
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm font-medium text-gray-800 dark:text-zinc-200">
+                      {feature}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {data.integrations && data.integrations.length > 0 && (
+                <div className="pt-4 space-y-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                    Common {data.name} Stack &amp; API Integrations
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {data.integrations.map((tool) => (
+                      <span
+                        key={tool}
+                        className="rounded-lg border border-black/10 dark:border-white/10 bg-gray-100 dark:bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-gray-800 dark:text-zinc-300"
+                      >
+                        {tool}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+          </div>
+
+          {/* Right 5 Columns: Sample Call Dialogue + Live Demo (if configured) */}
+          <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
+            {/* Live WebRTC Demo Card when agent ID is configured */}
+            {data.vapiAgentId && (
+              <div className="rounded-3xl border border-black/10 dark:border-white/15 bg-gray-50 dark:bg-zinc-900/90 p-6 shadow-xl">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <h2 className="text-xl font-bold text-gray-950 dark:text-white">
+                    Talk to the {data.name} Agent
+                  </h2>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    Live
+                  </span>
+                </div>
+                <p className="text-gray-600 dark:text-zinc-400 text-sm mb-5">
+                  Start a live microphone session to test real-time qualification for {data.name}.
+                </p>
+                <WebRTCVoiceDemo
+                  agentRole={data.name}
+                  vapiAgentId={(() => {
+                    const urlOrId = data.vapiAgentId
+                    if (urlOrId.includes('vapi.ai')) {
+                      try {
+                        const urlObj = new URL(urlOrId)
+                        const assistantId =
+                          urlObj.searchParams.get('assistantId') || urlObj.searchParams.get('id')
+                        if (assistantId) return assistantId
+                      } catch {
+                        // Ignore URL parse issues and use raw ID
+                      }
+                    }
+                    return urlOrId
+                  })()}
+                />
+              </div>
+            )}
+
+            {/* Realistic Industry Call Transcript Card */}
+            <div className="rounded-3xl border border-black/10 dark:border-white/15 bg-gray-50/90 dark:bg-zinc-900/90 p-6 shadow-xl space-y-5">
+              <div className="border-b border-black/10 dark:border-white/10 pb-4">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-1">
+                  <MessageSquareQuote className="h-4 w-4" />
+                  <span>Example {data.name} Call Flow</span>
+                </div>
+                <h2 className="text-lg font-bold text-gray-950 dark:text-white">
+                  {data.sampleDialogue.agentName}
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                  Scenario: {data.sampleDialogue.context}
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {data.sampleDialogue.turns.map((turn, idx) => {
+                  const isAi = turn.speaker === 'AI'
+                  return (
+                    <div
+                      key={idx}
+                      className={`rounded-2xl border p-3.5 text-sm leading-relaxed ${
+                        isAi
+                          ? palette.aiBubble
+                          : 'bg-white dark:bg-black/60 border-black/10 dark:border-white/10 text-gray-700 dark:text-zinc-300 ml-4'
+                      }`}
+                    >
+                      <span className="block text-[11px] font-bold uppercase tracking-wider opacity-70 mb-1">
+                        {isAi ? data.sampleDialogue.agentName : 'Caller'}
+                      </span>
+                      <p>{turn.text}</p>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="pt-2 space-y-2.5">
+                <Link
+                  href="/playground"
+                  className={`flex w-full items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all shadow-md ${palette.ctaBtn}`}
+                >
+                  <span>Test Live Voice Agents in Playground</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/#estimator"
+                  className="block w-full text-center py-2.5 px-4 rounded-xl border border-black/10 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                >
+                  Estimate Scope &amp; Pricing for {data.name}
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Related Use Cases Cross-Navigation */}
+        {relatedUseCases.length > 0 && (
+          <section className="mt-24 pt-16 border-t border-black/10 dark:border-white/10">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-950 dark:text-white">
+                  Explore Other Dedicated Use Cases
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-zinc-400 mt-1">
+                  See how voice AI is architected for adjacent industries and workflows.
+                </p>
+              </div>
+              <Link
+                href="/use-cases"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                <span>View all 12 use cases</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {relatedUseCases.map((item) => {
+                const RelIcon = (item.icon_name && iconRegistry[item.icon_name]) || Cpu
+                return (
+                  <Link
+                    key={item.industry_slug}
+                    href={`/use-cases/${item.industry_slug}`}
+                    className="group rounded-2xl border border-black/10 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-900/60 p-6 flex flex-col justify-between hover:border-blue-500/40 transition-all"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-4">
+                        <span className="h-10 w-10 rounded-xl bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                          <RelIcon className="h-5 w-5" />
+                        </span>
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                          {item.categoryTag}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-950 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {item.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-zinc-400 mt-1.5 line-clamp-2">
+                        {item.subhead}
+                      </p>
+                    </div>
+                    <div className="mt-5 inline-flex items-center text-xs font-bold text-blue-600 dark:text-blue-400">
+                      <span>Read {item.name} breakdown</span>
+                      <ArrowRight className="ml-1.5 h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* Tailored Bottom CTA */}
+        <div className="mt-20 text-center bg-gray-950 dark:bg-zinc-900/90 rounded-3xl p-8 sm:p-12 border border-black/10 dark:border-white/15 text-white relative overflow-hidden">
+          <div
+            className={`absolute -bottom-20 left-1/2 -translate-x-1/2 w-96 h-48 ${palette.glow} blur-[90px] pointer-events-none`}
+          />
+          <div className="relative z-10 max-w-2xl mx-auto space-y-5">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+              Ready to deploy AI voice agents for {data.name}?
+            </h2>
+            <p className="text-zinc-300 text-base sm:text-lg">
+              Let&apos;s map your exact {data.name.toLowerCase()} call scripts, qualification logic, and{' '}
+              {data.integrations.slice(0, 2).join(' / ')} integrations in a 1-on-1 architecture session.
+            </p>
+            <div className="pt-2">
+              <Link
+                href={consultationLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-xl bg-white px-8 py-4 text-sm font-bold text-black shadow-lg hover:bg-zinc-200 transition-all"
+              >
+                Book Your {data.name} Strategy Session
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }

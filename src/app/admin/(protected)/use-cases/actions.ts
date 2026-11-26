@@ -4,6 +4,7 @@ import { createPublicClient } from '@/lib/supabase/public'
 import { useCaseSchema, UseCaseFormValues } from '@/lib/validations/useCase'
 import { requireAdmin } from '@/lib/auth/admin'
 import { deleteStorageFileByUrl } from '@/lib/storage'
+import { RICH_USE_CASES } from '@/lib/useCasesData'
 import { revalidatePath } from 'next/cache'
 
 export async function getPublishedUseCases() {
@@ -197,6 +198,41 @@ export async function updateUseCaseOrder(items: { id: string; display_order: num
       .eq('id', item.id)
 
     if (error) return { error: error.message || 'Failed to update order' }
+  }
+
+  revalidatePath('/admin/use-cases')
+  revalidatePath('/use-cases')
+  revalidatePath('/')
+  return { success: true }
+}
+
+export async function seedDefaultUseCases() {
+  const auth = await requireAdmin()
+  if (auth.error || !auth.supabase) {
+    return { error: 'Unauthorized' }
+  }
+
+  const rows = RICH_USE_CASES.map((item, idx) => ({
+    industry_slug: item.industry_slug,
+    name: item.name,
+    headline: item.headline,
+    subhead: item.subhead,
+    problem: item.problem,
+    features: item.features,
+    flow: item.flow,
+    results: item.results,
+    cover_image_url: item.cover_image_url,
+    icon_name: item.icon_name,
+    status: 'published',
+    display_order: idx,
+  }))
+
+  const { error } = await auth.supabase
+    .from('use_cases')
+    .upsert(rows, { onConflict: 'industry_slug', ignoreDuplicates: true })
+
+  if (error) {
+    return { error: error.message }
   }
 
   revalidatePath('/admin/use-cases')

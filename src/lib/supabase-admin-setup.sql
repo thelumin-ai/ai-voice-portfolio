@@ -348,11 +348,14 @@ CREATE TABLE IF NOT EXISTS public.services (
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     icon_name TEXT NOT NULL,
+    link TEXT,
     status TEXT NOT NULL DEFAULT 'published',
     display_order INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+ALTER TABLE public.services ADD COLUMN IF NOT EXISTS link TEXT;
 
 ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
 

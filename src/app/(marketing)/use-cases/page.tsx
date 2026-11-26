@@ -1,250 +1,121 @@
-import { getPublishedUseCases } from "@/app/admin/(protected)/use-cases/actions";
-import Link from "next/link";
-import Image from "next/image";
-import { ArrowRight, type LucideIcon } from "lucide-react";
-import * as LucideIcons from "lucide-react";
-import type { UseCaseRecord } from "@/lib/types";
+import { getPublishedUseCases } from '@/app/admin/(protected)/use-cases/actions'
+import Link from 'next/link'
+import Image from 'next/image'
+import { ArrowRight, type LucideIcon } from 'lucide-react'
+import * as LucideIcons from 'lucide-react'
+import { mergePublishedUseCases } from '@/lib/useCasesData'
+import { isSafeHttpUrl } from '@/lib/url'
 
-interface UseCaseSummary extends Omit<UseCaseRecord, 'subhead'> {
-    subhead?: string;
-}
+const iconRegistry = LucideIcons as unknown as Record<string, LucideIcon>
 
-const iconRegistry = LucideIcons as unknown as Record<string, LucideIcon>;
+export const dynamic = 'force-dynamic'
 
 export const metadata = {
-    title: "AI Voice Agent Use Cases | Abimbola.AI",
-    description: "Explore industry-specific AI voice agent deployments across Real Estate, Solar, Home Services, Consulting, Finance, and Customer Support.",
-    alternates: { canonical: '/use-cases' },
-};
+  title: 'AI Voice Agent Use Cases & Industry Deployments | Abimbola.AI',
+  description:
+    'Explore dedicated AI voice agent architectures across Real Estate, Solar, Home Services, Consulting, Finance, Customer Support, Outbound Sales, IVR 2.0, Scheduling, CRM Sync, Multi-Language, and Custom Analytics.',
+  alternates: { canonical: '/use-cases' },
+}
 
-const defaultUseCases = [
-    {
-        id: "default-1",
-        name: "Real Estate",
-        icon_name: "Home",
-        industry_slug: "real-estate",
-        cover_image_url: "https://images.unsplash.com/photo-1560184897-ae75f418493e?q=80&w=1000&auto=format&fit=crop",
-        headline: "Speed-to-Lead AI Calling",
-        problem: "Leads go cold in minutes. AI agents call instantly, qualify prospects, and book showings on autopilot.",
-        features: ["Instant callback < 5s", "Live transfers to agents", "Smart showing scheduler"],
-        results: [{ stat: "300%", label: "Increase in connect rate" }],
-        status: "published",
-    },
-    {
-        id: "default-2",
-        name: "Solar & Energy",
-        icon_name: "Sun",
-        industry_slug: "solar",
-        cover_image_url: "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?q=80&w=1000&auto=format&fit=crop",
-        headline: "High-Volume Pre-Qualification",
-        problem: "Sales reps waste hours dialing un-qualified homeowners or renters.",
-        features: ["Utility bill size filtering", "Homeowner verification", "Virtual consultation booking"],
-        results: [{ stat: "12hrs", label: "Saved per rep weekly" }],
-        status: "published",
-    },
-    {
-        id: "default-3",
-        name: "Home Services",
-        icon_name: "Hammer",
-        industry_slug: "home-services",
-        cover_image_url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=1000&auto=format&fit=crop",
-        headline: "24/7 Booking & Dispatch",
-        problem: "Missed calls mean missed revenue. Customers call competitors when you don't answer.",
-        features: ["After-hours answering", "Appointment booking", "Emergency dispatch routing"],
-        results: [{ stat: "40%", label: "More bookings captured" }],
-        status: "published",
-    },
-    {
-        id: "default-4",
-        name: "Consulting & Agencies",
-        icon_name: "Briefcase",
-        industry_slug: "consulting",
-        cover_image_url: "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1000&auto=format&fit=crop",
-        headline: "Client Intake Automation",
-        problem: "Manual intake processes slow down onboarding and frustrate potential clients.",
-        features: ["Automated discovery calls", "Smart intake forms via voice", "CRM auto-sync"],
-        results: [{ stat: "60%", label: "Faster client onboarding" }],
-        status: "published",
-    },
-    {
-        id: "default-5",
-        name: "Finance & Insurance",
-        icon_name: "BarChart",
-        industry_slug: "finance",
-        cover_image_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop",
-        headline: "Compliance-Ready Outreach",
-        problem: "Regulatory requirements make manual outreach slow and risky.",
-        features: ["Scripted compliance calls", "Consent management", "Audit trail recording"],
-        results: [{ stat: "99%", label: "Compliance adherence" }],
-        status: "published",
-    },
-    {
-        id: "default-6",
-        name: "Customer Support",
-        icon_name: "Headphones",
-        industry_slug: "customer-support",
-        cover_image_url: "https://images.unsplash.com/photo-1596524430615-b46475ddff6e?q=80&w=1000&auto=format&fit=crop",
-        headline: "Tier-1 Support Automation",
-        problem: "Support teams are overwhelmed with repetitive tickets that don't need human agents.",
-        features: ["FAQ resolution via voice", "Smart ticket creation", "Seamless human handoff"],
-        results: [{ stat: "70%", label: "Tickets auto-resolved" }],
-        status: "published",
-    },
-    {
-        id: "default-7",
-        name: "Sales Automation",
-        icon_name: "PhoneOutgoing",
-        industry_slug: "sales",
-        cover_image_url: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=1000&auto=format&fit=crop",
-        headline: "AI-Powered Sales Outreach",
-        problem: "Sales teams burn hours manually dialing cold leads while hot prospects go unanswered.",
-        features: ["Instant lead callback", "Intelligent objection handling", "CRM deal stage updates"],
-        results: [{ stat: "5x", label: "More leads contacted" }],
-        status: "published",
-    },
-    {
-        id: "default-8",
-        name: "Interactive Voice Response",
-        icon_name: "MessageSquare",
-        industry_slug: "ivr",
-        cover_image_url: "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?q=80&w=1000&auto=format&fit=crop",
-        headline: "Conversational IVR 2.0",
-        problem: "Traditional IVR systems frustrate callers with rigid menus and long hold times.",
-        features: ["Natural language understanding", "Intent-based routing", "Self-service resolution"],
-        results: [{ stat: "80%", label: "Self-service rate" }],
-        status: "published",
-    },
-    {
-        id: "default-9",
-        name: "Appointment Scheduling",
-        icon_name: "Calendar",
-        industry_slug: "scheduling",
-        cover_image_url: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=1000&auto=format&fit=crop",
-        headline: "AI-Driven Appointment Setting",
-        problem: "Scheduling manually wastes hours of back-and-forth and leads to no-shows.",
-        features: ["Calendar integration", "Automated reminders", "No-show follow-ups"],
-        results: [{ stat: "45%", label: "More appointments booked" }],
-        status: "published",
-    },
-    {
-        id: "default-10",
-        name: "CRM & ERP Integration",
-        icon_name: "Database",
-        industry_slug: "crm-integration",
-        cover_image_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1000&auto=format&fit=crop",
-        headline: "Seamless CRM & ERP Connectivity",
-        problem: "Disconnected systems create data silos and waste hours on manual data entry.",
-        features: ["HubSpot & Salesforce sync", "Real-time deal updates", "Custom webhooks"],
-        results: [{ stat: "100%", label: "Data logged automatically" }],
-        status: "published",
-    },
-    {
-        id: "default-11",
-        name: "Multi-Language Support",
-        icon_name: "Globe",
-        industry_slug: "multi-language",
-        cover_image_url: "https://images.unsplash.com/photo-1526280760714-f9e8b26f318f?q=80&w=1000&auto=format&fit=crop",
-        headline: "Global AI Voice Agents",
-        problem: "Hiring multilingual support staff is expensive and doesn't scale.",
-        features: ["30+ languages", "Real-time detection", "Accent-aware recognition"],
-        results: [{ stat: "30+", label: "Languages supported" }],
-        status: "published",
-    },
-    {
-        id: "default-12",
-        name: "Custom AI Dashboards",
-        icon_name: "BarChart3",
-        industry_slug: "custom-dashboards",
-        cover_image_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop",
-        headline: "Real-Time AI Analytics",
-        problem: "Without proper analytics, you can't optimize AI agent performance.",
-        features: ["Real-time monitoring", "Sentiment analysis", "Conversion tracking"],
-        results: [{ stat: "360°", label: "Performance visibility" }],
-        status: "published",
-    },
-];
-
-const getIcon = (iconName: string): LucideIcon => {
-    return iconRegistry[iconName] || LucideIcons.Briefcase;
-};
+const getIcon = (iconName?: string | null): LucideIcon => {
+  return (iconName && iconRegistry[iconName]) || LucideIcons.Briefcase
+}
 
 export default async function UseCasesIndexPage() {
-    let useCases: UseCaseSummary[] = defaultUseCases;
-    try {
-        const { data } = await getPublishedUseCases();
-        if (data && data.length > 0) {
-            useCases = data as UseCaseSummary[];
-        }
-    } catch (error) {
-        console.error("Failed to fetch use cases:", error);
-    }
+  let dbData = null
+  try {
+    const { data } = await getPublishedUseCases()
+    dbData = data
+  } catch (error) {
+    console.error('Failed to fetch use cases:', error)
+  }
 
-    return (
-        <div className="bg-white dark:bg-black min-h-screen pt-16 pb-16 transition-colors duration-300 overflow-x-clip">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Hero Header */}
-                <div className="max-w-3xl mb-16">
-                    <div className="relative">
-                        <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-600/20 blur-[50px] rounded-full pointer-events-none" />
-                        <h1 className="text-4xl md:text-6xl font-extrabold text-black dark:text-white mb-6 leading-tight relative z-10 transition-colors duration-300">
-                            Industry-Specific{" "}
-                            <span className="text-gray-500">AI Deployments</span>
-                        </h1>
-                        <p className="text-xl text-gray-600 dark:text-gray-400 leading-relaxed transition-colors duration-300">
-                            Discover how our AI voice agents are transforming operations
-                            across multiple industries with tailored solutions.
-                        </p>
-                    </div>
-                </div>
+  const useCases = mergePublishedUseCases(dbData)
 
-                {/* Use Cases Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {useCases.map((useCase) => {
-                        const IconComponent = getIcon(useCase.icon_name || 'Briefcase');
-                        return (
-                            <Link
-                                key={useCase.id || useCase.name}
-                                href={`/use-cases/${useCase.industry_slug}`}
-                                className="block group"
-                            >
-                                <div className="relative overflow-hidden rounded-2xl border border-black/10 dark:border-white/10 aspect-[4/3] flex flex-col justify-end p-6 shadow-md dark:shadow-none hover:shadow-xl transition-all duration-500">
-                                    {/* Background Image */}
-                                    <div className="absolute inset-0 z-0">
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20 z-10" />
-                                        <Image
-                                            src={
-                                                useCase.cover_image_url ||
-                                                "https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop"
-                                            }
-                                            alt={useCase.name}
-                                            fill
-                                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                                            className="object-cover transform scale-100 group-hover:scale-110 transition-transform duration-700"
-                                        />
-                                    </div>
-
-                                    {/* Content */}
-                                    <div className="relative z-20 transform translate-y-0 md:translate-y-2 md:group-hover:translate-y-0 transition-transform duration-500">
-                                        <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 border border-white/20 transition-all duration-500 group-hover:bg-blue-600 group-hover:border-blue-500/50">
-                                            <IconComponent className="h-6 w-6 text-white transition-colors duration-500" />
-                                        </div>
-                                        <h2 className="text-2xl font-semibold text-white mb-1">
-                                            {useCase.name}
-                                        </h2>
-                                        <p className="text-sm text-gray-300 mb-2 line-clamp-2">
-                                            {useCase.headline}
-                                        </p>
-                                        <div className="flex items-center text-sm font-medium text-blue-300 opacity-100 md:opacity-0 transform md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-500 delay-100">
-                                            Explore{" "}
-                                            <ArrowRight className="ml-2 h-3 w-3" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </Link>
-                        );
-                    })}
-                </div>
-            </div>
+  return (
+    <div className="bg-white dark:bg-black min-h-screen pt-16 pb-20 transition-colors duration-300 overflow-x-clip">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1360px]">
+        {/* Hero Header */}
+        <div className="max-w-3xl mb-16">
+          <div className="relative">
+            <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-600/20 blur-[50px] rounded-full pointer-events-none" />
+            <h1 className="text-4xl md:text-6xl font-extrabold text-black dark:text-white mb-6 leading-tight relative z-10 transition-colors duration-300">
+              Dedicated <span className="text-blue-600 dark:text-blue-500">AI Voice</span> Use Cases
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-400 leading-relaxed transition-colors duration-300">
+              Every industry and phone workflow has its own caller psychology, qualification logic, and CRM stack. Select a use case below to explore its full architecture, real call scenarios, and sample conversation transcript.
+            </p>
+          </div>
         </div>
-    );
+
+        {/* Use Cases Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
+          {useCases.map((useCase) => {
+            const IconComponent = getIcon(useCase.icon_name)
+            const coverUrl =
+              useCase.cover_image_url &&
+              (isSafeHttpUrl(useCase.cover_image_url) ||
+                (useCase.cover_image_url.startsWith('/') &&
+                  !useCase.cover_image_url.startsWith('//')))
+                ? useCase.cover_image_url
+                : 'https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop'
+            const topStat = useCase.results?.[0]
+
+            return (
+              <Link
+                key={useCase.industry_slug}
+                href={`/use-cases/${useCase.industry_slug}`}
+                className="group rounded-3xl border border-black/10 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-950 overflow-hidden flex flex-col hover:border-blue-500/50 hover:shadow-2xl transition-all duration-300"
+              >
+                <div className="relative h-52 w-full overflow-hidden bg-zinc-900">
+                  <Image
+                    src={coverUrl}
+                    alt={useCase.name}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover transform scale-100 group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+
+                  <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2">
+                    <span className="rounded-full bg-black/60 backdrop-blur-md border border-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-200">
+                      {useCase.categoryTag}
+                    </span>
+                    {topStat && (
+                      <span className="rounded-full bg-blue-600/90 backdrop-blur-md px-2.5 py-1 text-xs font-bold text-white">
+                        {topStat.stat}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="absolute bottom-4 left-5 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-blue-600 group-hover:border-blue-500 transition-colors">
+                      <IconComponent className="h-5 w-5" />
+                    </div>
+                    <h2 className="text-xl font-bold text-white">{useCase.name}</h2>
+                  </div>
+                </div>
+
+                <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                  <div className="space-y-2">
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+                      {useCase.headline}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-zinc-400 line-clamp-3 leading-relaxed">
+                      {useCase.subhead}
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-black/5 dark:border-white/10 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400">
+                    <span>Explore {useCase.name} Architecture</span>
+                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
 }

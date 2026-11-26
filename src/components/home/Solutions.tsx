@@ -19,6 +19,35 @@ interface SolutionItem extends Pick<ServiceRecord, "id" | "title" | "description
 
 const iconRegistry = LucideIcons as unknown as Record<string, LucideIcon>;
 
+const SERVICE_SLUG_HINTS: Array<{ match: RegExp; href: string }> = [
+    { match: /support|inbound|helpdesk|ticket/i, href: "/use-cases/customer-support" },
+    { match: /sales|outbound|qualif|sdr/i, href: "/use-cases/sales" },
+    { match: /ivr|routing|reception|menu/i, href: "/use-cases/ivr" },
+    { match: /schedul|calendar|appointment|booking/i, href: "/use-cases/scheduling" },
+    { match: /crm|erp|integrat|webhook|hubspot|salesforce/i, href: "/use-cases/crm-integration" },
+    { match: /language|multilingual|global|spanish/i, href: "/use-cases/multi-language" },
+    { match: /dashboard|analytic|sentiment|telemetry|qa/i, href: "/use-cases/custom-dashboards" },
+    { match: /real estate|property|broker/i, href: "/use-cases/real-estate" },
+    { match: /solar|energy/i, href: "/use-cases/solar" },
+    { match: /home service|hvac|plumb|dispatch/i, href: "/use-cases/home-services" },
+    { match: /consult|agency|legal|intake/i, href: "/use-cases/consulting" },
+    { match: /finance|insur|mortgage|compliance/i, href: "/use-cases/finance" },
+];
+
+function resolveSolutionHref(solution: SolutionItem): string {
+    const explicit = solution.href || solution.link;
+    if (explicit && explicit.trim() && explicit.trim() !== "/use-cases") {
+        return sanitizeHref(explicit, "/use-cases");
+    }
+    const haystack = `${solution.title || ""} ${solution.description || ""}`;
+    for (const rule of SERVICE_SLUG_HINTS) {
+        if (rule.match.test(haystack)) {
+            return rule.href;
+        }
+    }
+    return sanitizeHref(explicit, "/use-cases");
+}
+
 function chunkArray<T>(arr: T[], size: number): T[][] {
     const result: T[][] = [];
     for (let i = 0; i < arr.length; i += size) {
@@ -148,7 +177,7 @@ export default function Solutions() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 auto-rows-fr">
                                     {slideItems.map((solution, index) => {
                                         const Icon = getIcon(solution.icon_name);
-                                        const href = sanitizeHref(solution.href || solution.link, '/use-cases');
+                                        const href = resolveSolutionHref(solution);
                                         return (
                                             <div
                                                 key={solution.id || index}

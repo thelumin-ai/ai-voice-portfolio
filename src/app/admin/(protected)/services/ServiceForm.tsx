@@ -32,6 +32,7 @@ export function ServiceForm({ initialData }: ServiceFormProps) {
       title: initialData?.title ?? '',
       description: initialData?.description ?? '',
       icon_name: initialData?.icon_name ?? 'PhoneIncoming',
+      link: initialData?.link ?? '',
       status: normalizedStatus,
       display_order: typeof initialData?.display_order === 'number' ? initialData.display_order : 0,
     },
@@ -81,7 +82,7 @@ export function ServiceForm({ initialData }: ServiceFormProps) {
               id="service-title"
               {...form.register('title')}
               className="adm-input"
-              placeholder="e.g. AI Voice Agents"
+              placeholder="e.g. Inbound Customer Support AI"
             />
             {form.formState.errors.title && (
               <p className="adm-error">{form.formState.errors.title.message}</p>
@@ -104,7 +105,7 @@ export function ServiceForm({ initialData }: ServiceFormProps) {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <label htmlFor="service-icon" className="adm-label">
                 Lucide Icon Name <span className="text-adm-danger-text">*</span>
@@ -113,10 +114,10 @@ export function ServiceForm({ initialData }: ServiceFormProps) {
                 id="service-icon"
                 {...form.register('icon_name')}
                 className="adm-input"
-                placeholder="e.g. PhoneIncoming, UserCheck, Zap"
+                placeholder="e.g. Headphones, PhoneOutgoing"
               />
               <p className="adm-hint">
-                Browse icon names at{' '}
+                Browse icons at{' '}
                 <a
                   href="https://lucide.dev/icons"
                   target="_blank"
@@ -129,6 +130,22 @@ export function ServiceForm({ initialData }: ServiceFormProps) {
               </p>
               {form.formState.errors.icon_name && (
                 <p className="adm-error">{form.formState.errors.icon_name.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="service-link" className="adm-label">
+                Target Use Case Route (Optional)
+              </label>
+              <input
+                id="service-link"
+                {...form.register('link')}
+                className="adm-input font-mono"
+                placeholder="/use-cases/customer-support"
+              />
+              <p className="adm-hint">Dedicated page opened by &ldquo;Learn more&rdquo;.</p>
+              {form.formState.errors.link && (
+                <p className="adm-error">{form.formState.errors.link.message}</p>
               )}
             </div>
 

@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next'
 import { getPublishedBlogPosts } from '@/app/admin/(protected)/blog/actions'
 import { getPublishedUseCases } from '@/app/admin/(protected)/use-cases/actions'
+import { mergePublishedUseCases } from '@/lib/useCasesData'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,16 +35,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let useCasePaths: MetadataRoute.Sitemap = []
   try {
     const { data: useCases } = await getPublishedUseCases()
-    if (useCases && Array.isArray(useCases)) {
-      useCasePaths = useCases.map((uc) => ({
-        url: `${baseUrl}/use-cases/${uc.industry_slug}`,
-        lastModified: new Date(uc.created_at || Date.now()),
-        changeFrequency: 'weekly',
-        priority: 0.7,
-      }))
-    }
+    const mergedUseCases = mergePublishedUseCases(
+      Array.isArray(useCases) ? useCases : null
+    )
+    useCasePaths = mergedUseCases.map((uc) => ({
+      url: `${baseUrl}/use-cases/${uc.industry_slug}`,
+      lastModified: new Date(uc.created_at || Date.now()),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    }))
   } catch (error) {
     console.error('Error rendering dynamic sitemap use cases:', error)
+    useCasePaths = mergePublishedUseCases(null).map((uc) => ({
+      url: `${baseUrl}/use-cases/${uc.industry_slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    }))
   }
 
   return [...staticPaths, ...blogPaths, ...useCasePaths]

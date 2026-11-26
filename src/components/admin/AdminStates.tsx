@@ -67,17 +67,23 @@ export function AdminErrorBanner({
 }
 
 interface AdminEmptyStateProps {
-  icon: LucideIcon
+  icon: LucideIcon | React.ReactNode
   title: string
   description: string
   action?: React.ReactNode
 }
 
-export function AdminEmptyState({ icon: Icon, title, description, action }: AdminEmptyStateProps) {
+export function AdminEmptyState({ icon, title, description, action }: AdminEmptyStateProps) {
+  const renderedIcon = React.isValidElement(icon)
+    ? icon
+    : typeof icon === 'function' || (typeof icon === 'object' && icon !== null)
+    ? React.createElement(icon as LucideIcon, { className: 'h-6 w-6' })
+    : null
+
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-adm-border bg-adm-surface/60 px-6 py-12 text-center">
       <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-adm-border bg-adm-surface-2 text-adm-muted">
-        <Icon className="h-6 w-6" />
+        {renderedIcon}
       </div>
       <h3 className="text-base font-semibold text-adm-text">{title}</h3>
       <p className="mt-1 max-w-sm text-sm text-adm-muted">{description}</p>
