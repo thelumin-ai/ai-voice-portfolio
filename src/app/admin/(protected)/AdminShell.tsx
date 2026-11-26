@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { ExternalLink, Menu, Moon, Palette, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-react'
+import { ExternalLink, Moon, Palette, PanelLeft, Sun } from 'lucide-react'
 import type { AdminBranding } from '@/lib/types'
 import { AdminPreferencesProvider, useAdminPreferences } from '@/components/admin/AdminPreferencesContext'
 import { AdminToastProvider } from '@/components/admin/AdminToast'
@@ -45,23 +45,38 @@ function AdminShellInner({ userEmail, branding, children }: AdminShellProps) {
   const [appearanceOpen, setAppearanceOpen] = useState(false)
   const pathname = usePathname()
   const [prevPathname, setPrevPathname] = useState(pathname)
-  const { preferences, toggleMode, toggleSidebarCollapsed } = useAdminPreferences()
+  const { preferences, toggleMode, toggleSidebarCollapsed, setSidebarCollapsed } =
+    useAdminPreferences()
 
   if (prevPathname !== pathname) {
     setPrevPathname(pathname)
     setMobileMenuOpen(false)
   }
 
+  // Escape closes mobile drawer; Ctrl/Cmd+B toggles desktop sidebar like ElevenLabs
   useEffect(() => {
-    if (!mobileMenuOpen) return
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMobileMenuOpen(false)
+      if (e.key === 'Escape' && mobileMenuOpen) {
+        setMobileMenuOpen(false)
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+        const target = e.target as HTMLElement | null
+        const isEditable =
+          target?.tagName === 'INPUT' ||
+          target?.tagName === 'TEXTAREA' ||
+          target?.isContentEditable
+        if (!isEditable) {
+          e.preventDefault()
+          toggleSidebarCollapsed()
+        }
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [mobileMenuOpen])
+  }, [mobileMenuOpen, toggleSidebarCollapsed])
 
   const sectionTitle = getRouteTitle(pathname)
+  const sidebarTooltipLabel = preferences.sidebarCollapsed ? 'Open sidebar' : 'Close sidebar'
 
   return (
     <div
@@ -70,18 +85,19 @@ function AdminShellInner({ userEmail, branding, children }: AdminShellProps) {
       data-accent={preferences.accent}
       data-density={preferences.density}
     >
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex shrink-0">
+      {/* Persistent Sidebar / Compact Icon Rail on Tablet & Desktop (>= 768px) */}
+      <aside className="hidden md:flex shrink-0">
         <AdminSidebar
           branding={branding}
           collapsed={preferences.sidebarCollapsed}
+          onExpandAndSearch={() => setSidebarCollapsed(false)}
         />
       </aside>
 
-      {/* Mobile Slide-Over Drawer */}
+      {/* Mobile Slide-Over Drawer (< 768px) */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 z-50 lg:hidden flex"
+          className="fixed inset-0 z-50 md:hidden flex"
           role="dialog"
           aria-modal="true"
           aria-label="Admin navigation"
@@ -103,31 +119,39 @@ function AdminShellInner({ userEmail, branding, children }: AdminShellProps) {
 
       {/* Main Column */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top Bar */}
-        <header className="h-16 border-b border-adm-border bg-adm-surface/95 backdrop-blur-md flex items-center justify-between px-4 sm:px-6 shrink-0 gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
+        {/* Top Bar — ElevenLabs-style sidebar toggle button right beside the sidebar border */}
+        <header className="h-14 border-b border-adm-border bg-adm-surface/95 backdrop-blur-md flex items-center justify-between px-3 sm:px-5 shrink-0 gap-3 relative z-20">
+          <div className="flex items-center gap-2 min-w-0">
+            {/* Mobile (< 768px) sidebar button */}
             <button
               type="button"
-              onClick={() => setMobileMenuOpen(true)}
-              aria-label="Open navigation menu"
-              className="lg:hidden p-2 -ml-1.5 rounded-lg text-adm-muted hover:text-adm-text hover:bg-adm-surface-2 focus:outline-none focus:ring-2 focus:ring-adm-accent/40"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              aria-label={mobileMenuOpen ? 'Close sidebar' : 'Open sidebar'}
+              className="md:hidden inline-flex h-8 w-8 items-center justify-center rounded-lg text-adm-muted hover:text-adm-text hover:bg-adm-surface-2 focus:outline-none focus:ring-2 focus:ring-adm-accent/40 transition-colors"
             >
-              <Menu className="w-5 h-5" />
+              <PanelLeft className="h-[18px] w-[18px]" />
             </button>
 
-            <button
-              type="button"
-              onClick={toggleSidebarCollapsed}
-              aria-label={preferences.sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              title={preferences.sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              className="hidden lg:inline-flex p-2 -ml-1.5 rounded-lg text-adm-muted hover:text-adm-text hover:bg-adm-surface-2 focus:outline-none focus:ring-2 focus:ring-adm-accent/40 transition-colors"
-            >
-              {preferences.sidebarCollapsed ? (
-                <PanelLeftOpen className="w-4 h-4" />
-              ) : (
-                <PanelLeftClose className="w-4 h-4" />
-              )}
-            </button>
+            {/* Desktop & Tablet (>= 768px) ElevenLabs-style sidebar toggle button with instant pill tooltip */}
+            <div className="relative hidden md:inline-flex items-center group">
+              <button
+                type="button"
+                onClick={toggleSidebarCollapsed}
+                aria-label={sidebarTooltipLabel}
+                aria-expanded={!preferences.sidebarCollapsed}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-adm-muted hover:text-adm-text hover:bg-adm-surface-2 focus:outline-none focus:ring-2 focus:ring-adm-accent/40 transition-colors"
+              >
+                <PanelLeft className="h-[18px] w-[18px]" />
+              </button>
+              <span
+                role="tooltip"
+                className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 rounded-md bg-zinc-900 px-2.5 py-1 text-xs font-medium text-white shadow-lg border border-white/10 whitespace-nowrap opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-150"
+              >
+                {sidebarTooltipLabel}
+              </span>
+            </div>
+
+            <div className="h-4 w-px bg-adm-border mx-0.5 hidden sm:block" />
 
             <div className="min-w-0 flex items-center gap-2">
               <span className="text-sm font-semibold text-adm-text truncate">{sectionTitle}</span>
@@ -174,12 +198,12 @@ function AdminShellInner({ userEmail, branding, children }: AdminShellProps) {
             </button>
 
             <div className="flex items-center gap-2 pl-1 sm:pl-2 border-l border-adm-border">
-              <div className="w-8 h-8 rounded-full bg-adm-accent-soft border border-adm-accent/30 flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-full bg-adm-accent-soft border border-adm-accent/30 flex items-center justify-center shrink-0">
                 <span className="text-xs font-bold text-adm-accent">
                   {userEmail ? userEmail.charAt(0).toUpperCase() : 'A'}
                 </span>
               </div>
-              <span className="text-xs font-medium text-adm-muted hidden lg:block truncate max-w-[180px]">
+              <span className="text-xs font-medium text-adm-muted hidden xl:block truncate max-w-[180px]">
                 {userEmail}
               </span>
             </div>

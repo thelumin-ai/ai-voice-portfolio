@@ -180,6 +180,7 @@ export function AdminPreferencesProvider({ children }: { children: React.ReactNo
     const current = getSnapshot()
     persistPreferences({
       ...DEFAULT_ADMIN_PREFERENCES,
+      sidebarCollapsed: current.sidebarCollapsed,
       widgetOrder: current.widgetOrder,
       hiddenWidgets: current.hiddenWidgets,
     })

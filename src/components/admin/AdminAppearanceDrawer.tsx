@@ -22,7 +22,6 @@ export function AdminAppearanceDrawer({ open, onClose }: AdminAppearanceDrawerPr
     setMode,
     setAccent,
     setDensity,
-    setSidebarCollapsed,
     resetAppearance,
   } = useAdminPreferences()
 
@@ -155,35 +154,6 @@ export function AdminAppearanceDrawer({ open, onClose }: AdminAppearanceDrawerPr
                     key={item.id}
                     type="button"
                     onClick={() => setDensity(item.id as AdminDensity)}
-                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
-                      active
-                        ? 'border-adm-accent bg-adm-accent-soft text-adm-accent'
-                        : 'border-adm-border bg-adm-surface-2/60 text-adm-muted hover:text-adm-text'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Sidebar Layout */}
-          <div className="space-y-2.5">
-            <span className="text-xs font-semibold uppercase tracking-wider text-adm-muted">
-              Desktop Sidebar
-            </span>
-            <div className="grid grid-cols-2 gap-2.5">
-              {[
-                { collapsed: false, label: 'Expanded' },
-                { collapsed: true, label: 'Compact Rail' },
-              ].map((item) => {
-                const active = preferences.sidebarCollapsed === item.collapsed
-                return (
-                  <button
-                    key={item.label}
-                    type="button"
-                    onClick={() => setSidebarCollapsed(item.collapsed)}
                     className={`rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
                       active
                         ? 'border-adm-accent bg-adm-accent-soft text-adm-accent'
